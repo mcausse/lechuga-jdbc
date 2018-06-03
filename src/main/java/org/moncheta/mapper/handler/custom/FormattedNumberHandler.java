@@ -1,4 +1,4 @@
-package org.moncheta.mapper.handler;
+package org.moncheta.mapper.handler.custom;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,6 +7,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 
 import org.moncheta.jdbc.ResultSetUtils;
+import org.moncheta.mapper.handler.Handler;
 
 public class FormattedNumberHandler implements Handler {
 

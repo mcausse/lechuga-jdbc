@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.moncheta.jdbc.exception.BaseException;
-import org.moncheta.mapper.ReflectUtils;
+import org.moncheta.mapper.util.ReflectUtils;
 
 public class EnumeratedHandler implements Handler {
 

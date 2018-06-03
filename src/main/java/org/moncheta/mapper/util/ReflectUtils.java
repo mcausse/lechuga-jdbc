@@ -1,4 +1,4 @@
-package org.moncheta.mapper;
+package org.moncheta.mapper.util;
 
 public class ReflectUtils {
 

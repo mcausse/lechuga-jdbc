@@ -49,8 +49,7 @@ public class Accessor {
                 return pd;
             }
         }
-        throw new RuntimeException(
-                "describing " + beanClass.getName() + ": property not found: '" + propertyName + "'");
+        throw new RuntimeException(beanClass.getName() + ": property not found: '" + propertyName + "'");
     }
 
     public Object get(Object bean) {

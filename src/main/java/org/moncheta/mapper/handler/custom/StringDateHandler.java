@@ -1,4 +1,4 @@
-package org.moncheta.mapper.handler;
+package org.moncheta.mapper.handler.custom;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.moncheta.jdbc.exception.BaseException;
+import org.moncheta.mapper.handler.Handler;
+import org.moncheta.mapper.handler.Handlers;
 
 public class StringDateHandler implements Handler {
 

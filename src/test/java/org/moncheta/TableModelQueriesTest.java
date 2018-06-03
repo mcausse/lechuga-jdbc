@@ -5,13 +5,13 @@ import org.moncheta.AccessorTest.EStatus;
 import org.moncheta.AccessorTest.Exp;
 import org.moncheta.AccessorTest.ExpId;
 import org.moncheta.mapper.Accessor;
-import org.moncheta.mapper.Moncheta2019.Column;
-import org.moncheta.mapper.Moncheta2019.TableModel;
+import org.moncheta.mapper.Column;
 import org.moncheta.mapper.Order;
+import org.moncheta.mapper.TableModel;
 import org.moncheta.mapper.handler.EnumeratedHandler;
 import org.moncheta.mapper.handler.Handlers;
 
-public class Moncheta2019Test {
+public class TableModelQueriesTest {
 
     @Test
     public void testName() throws Exception {
@@ -27,10 +27,15 @@ public class Moncheta2019Test {
         Exp e = new Exp(id, "alo", EStatus.ACTIVE);
 
         System.out.println(p.queryForLoadById(id));
-        System.out.println(p.queryForLoadAll(new Order[] { Order.asc("desc") }));
+        System.out.println(p.queryForLoadAll(new Order[] { Order.asc("id.anyExp"), Order.asc("desc") }));
         System.out.println(p.queryForInsert(e));
         System.out.println(p.queryForUpdate(e));
         System.out.println(p.queryForDelete(e));
         System.out.println(p.queryForDeleteById(id));
+
+        System.out.println(p.queryForLoadByProp("id.numExp", 123L, new Order[] {}));
+        System.out.println(p.queryForLoadByProp("status", EStatus.INACTIVE, new Order[] {}));
+
+        System.out.println(p.queryForUpdate(e, new String[] { "status" }));
     }
 }

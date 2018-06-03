@@ -10,8 +10,6 @@ import org.moncheta.jdbc.exception.EmptyResultException;
 import org.moncheta.jdbc.exception.TooManyResultsException;
 import org.moncheta.jdbc.exception.UnexpectedResultException;
 import org.moncheta.jdbc.queryobject.QueryObject;
-import org.moncheta.mapper.Moncheta2019.Column;
-import org.moncheta.mapper.Moncheta2019.TableModel;
 
 public class EntityManager<E, ID> {
 
@@ -217,16 +215,15 @@ public class EntityManager<E, ID> {
         }
     }
 
-    // public void update(E entity, String... properties) {
-    // QueryObject q = model.queryForUpdate(entity, properties);
-    // int affectedResults = facade.update(q);
-    //
-    // if (affectedResults != 1) {
-    // throw new BaseException("UPDATE: " + q.toString() + ": expected
-    // affectedRows=1, but affected: "
-    // + affectedResults);
-    // }
-    // }
+    public void update(E entity, String... properties) {
+        QueryObject q = model.queryForUpdate(entity, properties);
+        int affectedResults = facade.update(q);
+
+        if (affectedResults != 1) {
+            throw new BaseException(
+                    "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+        }
+    }
 
     public void insert(E entity) {
 

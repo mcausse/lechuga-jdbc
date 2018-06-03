@@ -3,6 +3,7 @@ package org.moncheta;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
@@ -14,6 +15,9 @@ import org.moncheta.ents.IdDog;
 import org.moncheta.ents.Pizza;
 import org.moncheta.jdbc.DataAccesFacade;
 import org.moncheta.jdbc.JdbcDataAccesFacade;
+import org.moncheta.jdbc.extractor.MapResultSetExtractor;
+import org.moncheta.jdbc.extractor.Pager;
+import org.moncheta.jdbc.queryobject.InmutableQuery;
 import org.moncheta.jdbc.util.SqlScriptExecutor;
 import org.moncheta.mapper.Accessor;
 import org.moncheta.mapper.Column;
@@ -23,6 +27,7 @@ import org.moncheta.mapper.autogen.HsqldbIdentity;
 import org.moncheta.mapper.autogen.HsqldbSequence;
 import org.moncheta.mapper.handler.EnumeratedHandler;
 import org.moncheta.mapper.handler.Handlers;
+import org.moncheta.mapper.query.Executor;
 import org.moncheta.mapper.query.QueryBuilder;
 
 public class EntityManagerTest {
@@ -145,11 +150,11 @@ public class EntityManagerTest {
 
             //
 
-            QueryBuilder<Dog> q = em.buildQuery();
+            QueryBuilder<Dog> q = em.createQuery();
             q.addEm("d", em);
             q.append("select {d.*} from {d} where ");
             q.append("{d.age>?} and {d.age<?} ", 1L, 99L);
-            q.append("and {d.sex=?}", ESex.FEMALE);
+            q.append("and {d.sex in (?,?)}", ESex.FEMALE, ESex.MALE);
             List<Dog> dd = q.getExecutor().load();
             assertEquals(
                     "[Dog [id=IdDog [idDog=100, name=chucho], age=9, sex=FEMALE, dead=false], Dog [id=IdDog [idDog=101, name=faria], age=11, sex=FEMALE, dead=true]]",
@@ -167,6 +172,62 @@ public class EntityManagerTest {
             throw e;
         }
 
+        facade.begin();
+        try {
+
+            assertEquals("[]", em.loadAll().toString());
+
+            for (int i = 0; i < 9; i++) {
+                Dog d = new Dog(new IdDog(null, "chucho" + i), 9 + i, ESex.MALE, false);
+                em.store(d);
+            }
+
+            QueryBuilder<Dog> q = em.createQuery();
+            q.addEm("d", em);
+            q.append("select {d.*} from {d} order by {d.id.name} asc");
+            Executor<Dog> ex = q.getExecutor();
+
+            Pager<Dog> p1 = ex.loadPage(5, 0);
+            Pager<Dog> p2 = ex.loadPage(5, 1);
+            Pager<Dog> p3 = ex.loadPage(5, 2);
+
+            assertEquals(
+                    "Pager [pageSize=5, numPage=0, totalRows=9, totalPages=2, page=[Dog [id=IdDog [idDog=102, name=chucho0], age=9, sex=MALE, dead=false], Dog [id=IdDog [idDog=103, name=chucho1], age=10, sex=MALE, dead=false], Dog [id=IdDog [idDog=104, name=chucho2], age=11, sex=MALE, dead=false], Dog [id=IdDog [idDog=105, name=chucho3], age=12, sex=MALE, dead=false], Dog [id=IdDog [idDog=106, name=chucho4], age=13, sex=MALE, dead=false]]]",
+                    p1.toString());
+            assertEquals(
+                    "Pager [pageSize=5, numPage=1, totalRows=9, totalPages=2, page=[Dog [id=IdDog [idDog=107, name=chucho5], age=14, sex=MALE, dead=false], Dog [id=IdDog [idDog=108, name=chucho6], age=15, sex=MALE, dead=false], Dog [id=IdDog [idDog=109, name=chucho7], age=16, sex=MALE, dead=false], Dog [id=IdDog [idDog=110, name=chucho8], age=17, sex=MALE, dead=false]]]",
+                    p2.toString());
+            assertEquals("Pager [pageSize=5, numPage=2, totalRows=9, totalPages=2, page=[]]", p3.toString());
+
+            facade.commit();
+        } catch (Throwable e) {
+            facade.rollback();
+            throw e;
+        }
+
+        facade.begin();
+        try {
+
+            facade.update(new InmutableQuery("delete from " + p.getTableName()));
+
+            assertEquals("[]", em.loadAll().toString());
+
+            Dog d = new Dog(new IdDog(null, "chucho"), 9, ESex.MALE, false);
+            em.store(d);
+
+            QueryBuilder<Dog> q = em.createQuery();
+            q.addEm("d", em);
+            q.append("select {d.*} from {d} order by {d.id.name} asc");
+            Executor<Dog> ex = q.getExecutor();
+
+            List<Map<String, Object>> r = ex.extract(new MapResultSetExtractor());
+            assertEquals("[{ID_DOG=111, NAME=chucho, AGE=9, SEX=MALE, DEAD=false}]", r.toString());
+
+            facade.commit();
+        } catch (Throwable e) {
+            facade.rollback();
+            throw e;
+        }
     }
 
     @Test

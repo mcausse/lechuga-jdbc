@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.moncheta.jdbc.DataAccesFacade;
 import org.moncheta.jdbc.RowMapper;
+import org.moncheta.jdbc.extractor.Pager;
+import org.moncheta.jdbc.extractor.ResultSetExtractor;
+import org.moncheta.jdbc.extractor.ResultSetPagedExtractor;
 import org.moncheta.jdbc.queryobject.QueryObject;
 
 public class Executor<E> {
@@ -31,8 +34,11 @@ public class Executor<E> {
         return facade.load(qo, rowMapper);
     }
 
-    // TODO
-    // public void loadPage(Pager<E> pager) {
-    // facade.loadPage(qo, rowMapper, pager);
-    // }
+    public Pager<E> loadPage(int pageSize, int numPage) {
+        return facade.extract(qo, new ResultSetPagedExtractor<E>(rowMapper, pageSize, numPage));
+    }
+
+    public <T> T extract(ResultSetExtractor<T> extractor) {
+        return facade.extract(qo, extractor);
+    }
 }

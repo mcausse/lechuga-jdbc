@@ -35,29 +35,9 @@ public class EntityManager<E, ID> {
         return facade;
     }
 
-    public QueryBuilder<E> buildQuery() {
+    public QueryBuilder<E> createQuery() {
         return new QueryBuilder<>(facade, model);
     }
-
-    // public QueryBuilder<E> createQuery() {
-    // return new QueryBuilder<E>(facade, model);
-    // }
-    //
-    // // TODO shortcut for ?
-    // /**
-    // * <pre>
-    // * moviesEm.executeQuery("select {*} from {#} where {id=?}",
-    // m.getId()).loadUnique()
-    // *
-    // * @param query
-    // * @param params
-    // * @return
-    // */
-    // public Executor<E> executeQuery(String query, Object... params) {
-    // QueryBuilder<E> q = new QueryBuilder<E>(facade, model);
-    // q.append(query, params);
-    // return q.getExecutor();
-    // }
 
     public E loadById(ID idValue) throws EmptyResultException {
         QueryObject q = model.queryForLoadById(idValue);

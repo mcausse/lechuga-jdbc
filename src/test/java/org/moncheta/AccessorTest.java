@@ -3,6 +3,8 @@ package org.moncheta;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.moncheta.ents.EStatus;
+import org.moncheta.ents.Exp;
 import org.moncheta.mapper.Accessor;
 
 public class AccessorTest {
@@ -29,92 +31,4 @@ public class AccessorTest {
         assertEquals(EStatus.ACTIVE, status.get(e));
     }
 
-    public static class ExpId {
-        Integer anyExp;
-        Long numExp;
-
-        public ExpId() {
-            super();
-        }
-
-        public ExpId(Integer anyExp, Long numExp) {
-            super();
-            this.anyExp = anyExp;
-            this.numExp = numExp;
-        }
-
-        public Integer getAnyExp() {
-            return anyExp;
-        }
-
-        public void setAnyExp(Integer anyExp) {
-            this.anyExp = anyExp;
-        }
-
-        public Long getNumExp() {
-            return numExp;
-        }
-
-        public void setNumExp(Long numExp) {
-            this.numExp = numExp;
-        }
-
-        @Override
-        public String toString() {
-            return "IdExp [anyExp=" + anyExp + ", numExp=" + numExp + "]";
-        }
-
-    }
-
-    public static enum EStatus {
-        ACTIVE, INACTIVE;
-    }
-
-    public static class Exp {
-
-        ExpId id;
-        String desc;
-        EStatus status;
-
-        public Exp() {
-            super();
-        }
-
-        public Exp(ExpId id, String desc, EStatus status) {
-            super();
-            this.id = id;
-            this.desc = desc;
-            this.status = status;
-        }
-
-        public EStatus getStatus() {
-            return status;
-        }
-
-        public void setStatus(EStatus status) {
-            this.status = status;
-        }
-
-        public String getDesc() {
-            return desc;
-        }
-
-        public void setDesc(String desc) {
-            this.desc = desc;
-        }
-
-        public ExpId getId() {
-            return id;
-        }
-
-        public void setId(ExpId id) {
-            this.id = id;
-        }
-
-        @Override
-        public String toString() {
-            return "Exp [id=" + id + ", desc=" + desc + ", status=" + status + "]";
-        }
-
-    }
 }

@@ -1,9 +1,9 @@
 package org.moncheta;
 
 import org.junit.Test;
-import org.moncheta.AccessorTest.EStatus;
-import org.moncheta.AccessorTest.Exp;
-import org.moncheta.AccessorTest.ExpId;
+import org.moncheta.ents.EStatus;
+import org.moncheta.ents.Exp;
+import org.moncheta.ents.ExpId;
 import org.moncheta.mapper.Accessor;
 import org.moncheta.mapper.Column;
 import org.moncheta.mapper.Order;

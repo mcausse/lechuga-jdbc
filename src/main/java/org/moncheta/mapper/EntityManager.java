@@ -131,8 +131,6 @@ public class EntityManager<E, ID> {
      *         fisi
      * fisi
      * </pre>
-     *
-     * @throws OptimisticLockException
      */
     public void store(final E entity) {
 
@@ -189,7 +187,6 @@ public class EntityManager<E, ID> {
             } else {
                 insert(entity);
             }
-
         }
     }
 

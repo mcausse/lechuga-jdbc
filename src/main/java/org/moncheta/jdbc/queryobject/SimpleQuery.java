@@ -1,6 +1,7 @@
 package org.moncheta.jdbc.queryobject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class SimpleQuery implements QueryObject {
@@ -35,7 +36,7 @@ public class SimpleQuery implements QueryObject {
         }
     }
 
-    public void addArgsList(final List<?> params) {
+    public void addArgsList(final Collection<?> params) {
         this.args.addAll(params);
     }
 
@@ -49,6 +50,11 @@ public class SimpleQuery implements QueryObject {
     @Override
     public Object[] getArgs() {
         return args.toArray();
+    }
+
+    @Override
+    public Collection<Object> getArgsList() {
+        return args;
     }
 
     @Override

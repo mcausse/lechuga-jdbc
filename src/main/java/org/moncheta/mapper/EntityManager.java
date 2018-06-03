@@ -10,6 +10,7 @@ import org.moncheta.jdbc.exception.EmptyResultException;
 import org.moncheta.jdbc.exception.TooManyResultsException;
 import org.moncheta.jdbc.exception.UnexpectedResultException;
 import org.moncheta.jdbc.queryobject.QueryObject;
+import org.moncheta.mapper.query.QueryBuilder;
 
 public class EntityManager<E, ID> {
 
@@ -32,6 +33,10 @@ public class EntityManager<E, ID> {
 
     public DataAccesFacade getDataAccesFacade() {
         return facade;
+    }
+
+    public QueryBuilder<E> buildQuery() {
+        return new QueryBuilder<>(facade, model);
     }
 
     // public QueryBuilder<E> createQuery() {

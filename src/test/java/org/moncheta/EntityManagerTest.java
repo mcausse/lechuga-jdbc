@@ -2,6 +2,8 @@ package org.moncheta;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +23,7 @@ import org.moncheta.mapper.autogen.HsqldbIdentity;
 import org.moncheta.mapper.autogen.HsqldbSequence;
 import org.moncheta.mapper.handler.EnumeratedHandler;
 import org.moncheta.mapper.handler.Handlers;
+import org.moncheta.mapper.query.QueryBuilder;
 
 public class EntityManagerTest {
 
@@ -139,6 +142,18 @@ public class EntityManagerTest {
                     em.loadByProp("id.name", "chucho").toString());
             assertEquals("Dog [id=IdDog [idDog=100, name=chucho], age=9, sex=FEMALE, dead=false]",
                     em.loadUniqueByProp("id.name", "chucho").toString());
+
+            //
+
+            QueryBuilder<Dog> q = em.buildQuery();
+            q.addEm("d", em);
+            q.append("select {d.*} from {d} where ");
+            q.append("{d.age>?} and {d.age<?} ", 1L, 99L);
+            q.append("and {d.sex=?}", ESex.FEMALE);
+            List<Dog> dd = q.getExecutor().load();
+            assertEquals(
+                    "[Dog [id=IdDog [idDog=100, name=chucho], age=9, sex=FEMALE, dead=false], Dog [id=IdDog [idDog=101, name=faria], age=11, sex=FEMALE, dead=true]]",
+                    dd.toString());
 
             //
 

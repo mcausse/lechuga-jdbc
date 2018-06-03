@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.moncheta.annotated.anno.CustomHandler;
 import org.moncheta.jdbc.ResultSetUtils;
 import org.moncheta.jdbc.exception.BaseException;
 

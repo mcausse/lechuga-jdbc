@@ -1,5 +1,8 @@
 package org.moncheta.jdbc.queryobject;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 public class InmutableQuery implements QueryObject {
 
     final String sql;
@@ -19,6 +22,11 @@ public class InmutableQuery implements QueryObject {
     @Override
     public Object[] getArgs() {
         return args;
+    }
+
+    @Override
+    public Collection<Object> getArgsList() {
+        return Arrays.asList(args);
     }
 
     @Override

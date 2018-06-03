@@ -38,6 +38,10 @@ public class Column {
         return handler.getJdbcValue(javaValue);
     }
 
+    public Object convertValueForJdbc(Object javaValue) {
+        return handler.getJdbcValue(javaValue);
+    }
+
     public void loadValue(Object entity, ResultSet rs) {
         try {
             Object value = handler.readValue(rs, columnName);

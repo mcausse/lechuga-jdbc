@@ -315,4 +315,12 @@ public class TableModel<E> {
         p.accessor.set(entity, value);
     }
 
+    public Collection<String> getColumnNames() {
+        List<String> r = new ArrayList<>();
+        for (Column c : allColumns) {
+            r.add(c.getColumnName());
+        }
+        return r;
+    }
+
 }

@@ -2,11 +2,11 @@ package org.frijoles.anno;
 
 import static org.junit.Assert.assertEquals;
 
-import org.fijoles.annotated.EntityManagerFactory;
-import org.fijoles.jdbc.DataAccesFacade;
-import org.fijoles.jdbc.JdbcDataAccesFacade;
-import org.fijoles.jdbc.util.SqlScriptExecutor;
-import org.fijoles.mapper.EntityManager;
+import org.frijoles.annotated.EntityManagerFactory;
+import org.frijoles.jdbc.DataAccesFacade;
+import org.frijoles.jdbc.JdbcDataAccesFacade;
+import org.frijoles.jdbc.util.SqlScriptExecutor;
+import org.frijoles.mapper.EntityManager;
 import org.frijoles.mapper.ents.ESex;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;

@@ -1,14 +1,10 @@
 package org.frijoles.mapper;
 
-import org.fijoles.mapper.Accessor;
-import org.fijoles.mapper.Column;
-import org.fijoles.mapper.Order;
-import org.fijoles.mapper.TableModel;
-import org.fijoles.mapper.handler.EnumeratedHandler;
-import org.fijoles.mapper.handler.Handlers;
 import org.frijoles.mapper.ents.EStatus;
 import org.frijoles.mapper.ents.Exp;
 import org.frijoles.mapper.ents.ExpId;
+import org.frijoles.mapper.handler.EnumeratedHandler;
+import org.frijoles.mapper.handler.Handlers;
 import org.junit.Test;
 
 public class TableModelQueriesTest {

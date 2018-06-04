@@ -1,8 +1,8 @@
 package org.frijoles.anno;
 
-import org.fijoles.annotated.anno.Generated;
-import org.fijoles.annotated.anno.Id;
-import org.fijoles.mapper.autogen.HsqldbSequence;
+import org.frijoles.annotated.anno.Generated;
+import org.frijoles.annotated.anno.Id;
+import org.frijoles.mapper.autogen.HsqldbSequence;
 
 public class ExpId {
 

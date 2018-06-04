@@ -2,7 +2,6 @@ package org.frijoles.mapper;
 
 import static org.junit.Assert.assertEquals;
 
-import org.fijoles.mapper.Accessor;
 import org.frijoles.mapper.ents.EStatus;
 import org.frijoles.mapper.ents.Exp;
 import org.junit.Test;

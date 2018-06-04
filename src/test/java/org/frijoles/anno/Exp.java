@@ -1,11 +1,11 @@
 package org.frijoles.anno;
 
-import org.fijoles.annotated.anno.Column;
-import org.fijoles.annotated.anno.CustomHandler;
-import org.fijoles.annotated.anno.EnumHandler;
-import org.fijoles.annotated.anno.Table;
-import org.fijoles.mapper.handler.custom.StringDateHandler;
+import org.frijoles.annotated.anno.Column;
+import org.frijoles.annotated.anno.CustomHandler;
+import org.frijoles.annotated.anno.EnumHandler;
+import org.frijoles.annotated.anno.Table;
 import org.frijoles.mapper.ents.ESex;
+import org.frijoles.mapper.handler.custom.StringDateHandler;
 
 @Table("exps")
 public class Exp {

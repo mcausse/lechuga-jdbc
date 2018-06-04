@@ -6,8 +6,8 @@
 // import java.util.Map;
 // import java.util.Map.Entry;
 //
-// import org.fijoles.mapper.Column;
-// import org.fijoles.mapper.TableModel;
+// import org.frijoles.mapper.Column;
+// import org.frijoles.mapper.TableModel;
 //
 //
 // public class HsqldbDDLGenerator {

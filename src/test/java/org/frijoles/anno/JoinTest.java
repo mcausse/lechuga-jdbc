@@ -1,6 +1,6 @@
 package org.frijoles.anno;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.frijoles.annotated.EntityManagerFactory;
-import org.frijoles.annotated.anno.Generated;
-import org.frijoles.annotated.anno.Id;
-import org.frijoles.annotated.anno.Table;
+import org.frijoles.annotated.util.Pair;
 import org.frijoles.jdbc.DataAccesFacade;
 import org.frijoles.jdbc.JdbcDataAccesFacade;
 import org.frijoles.jdbc.ResultSetUtils;
@@ -18,9 +16,7 @@ import org.frijoles.jdbc.RowMapper;
 import org.frijoles.jdbc.extractor.MapResultSetExtractor;
 import org.frijoles.jdbc.util.SqlScriptExecutor;
 import org.frijoles.mapper.EntityManager;
-import org.frijoles.mapper.autogen.HsqldbSequence;
 import org.frijoles.mapper.query.QueryBuilder;
-import org.frijoles.mapper.util.Pair;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +46,35 @@ public class JoinTest {
         }
     }
 
+    // @Test
+    // public void testTODO() throws Exception {
+    //
+    // /**
+    // * <pre>
+    // * TODO TODO TODO TODO TODO
+    // *
+    // * <exp> ::= PREFIX ".*"
+    // * <exp> ::= PREFIX "." PROP {"." PROP} REST
+    // * <exp> ::= <className> " " PREFIX
+    // * <className> ::= PROP {"." PROP}
+    // * <className> ::= "this"
+    // *
+    // * select {t.*} from {this t} where {t.id=?}
+    // *
+    // *
+    // * select {p.name} as {this.key}, sum({i.price}) as {this.value}
+    // * from {org.frijoles.anno.Pizza p} join {org.frijoles.anno.Ingredient i}
+    // * on {p.id}={i.idPizza}
+    // * group by {p.name}
+    // *
+    // * TODO TODO TODO TODO TODO
+    // * </pre>
+    // */
+    //
+    // EntityManagerFactory emf = new EntityManagerFactory(facade);
+    // EntityManager<Pair, Long> pem = emf.build(Pair.class, Long.class);
+    // }
+
     @Test
     public void testName() throws Exception {
 
@@ -69,45 +94,53 @@ public class JoinTest {
             pem.store(margarita);
             iem.store(new Ingredient(null, "base", 7.0, margarita.getId()));
 
-            QueryBuilder<Pizza> q = pem.createQuery("p");
-            q.addEm("i", iem);
-            q.append("select {p.name}, sum({i.price}) as price ");
-            q.append("from {p} join {i} ");
-            q.append("on {p.id}={i.idPizza} ");
-            q.append("group by {p.name} ");
+            {
 
-            assertEquals(
-                    "select p.name, sum(i.price) as price from pizzas p join ingredients i on p.id=i.id_pizza group by p.name  -- []",
-                    q.toString());
+                QueryBuilder<Pizza> q = pem.createQuery("p");
+                q.addEm("i", iem);
+                q.append("select {p.name}, sum({i.price}) as price ");
+                q.append("from {p} join {i} ");
+                q.append("on {p.id}={i.idPizza} ");
+                q.append("group by {p.name} ");
+
+                assertEquals(
+                        "select p.name, sum(i.price) as price from pizzas p join ingredients i on p.id=i.id_pizza group by p.name  -- []",
+                        q.toString());
+
+                {
+                    List<Map<String, Object>> r = q.getExecutor().extract(new MapResultSetExtractor());
+                    assertEquals("[{NAME=romana, PRICE=9.0}, {NAME=margarita, PRICE=7.0}]", r.toString());
+                }
+                {
+                    List<Pair<String, Double>> r = q.getExecutor().load(new RowMapper<Pair<String, Double>>() {
+
+                        @Override
+                        public Pair<String, Double> mapRow(ResultSet rs) throws SQLException {
+                            Pair<String, Double> r = new Pair<>();
+                            r.setKey(ResultSetUtils.getString(rs, "name"));
+                            r.setValue(ResultSetUtils.getDouble(rs, "price"));
+                            return r;
+                        }
+
+                    });
+
+                    assertEquals("[[romana,9.0], [margarita,7.0]]", r.toString());
+                }
+                {
+                    List<Pair<String, Double>> lp = q.getExecutor().load( //
+                            rs -> new Pair<String, Double>( //
+                                    ResultSetUtils.getString(rs, "name"), //
+                                    ResultSetUtils.getDouble(rs, "price") //
+                            ));
+
+                    assertEquals("[[romana,9.0], [margarita,7.0]]", lp.toString());
+                }
+            }
 
             {
-                List<Map<String, Object>> r = q.getExecutor().extract(new MapResultSetExtractor());
-                assertEquals("[{NAME=romana, PRICE=9.0}, {NAME=margarita, PRICE=7.0}]", r.toString());
+
             }
-            {
-                List<Pair<String, Double>> r = q.getExecutor().load(new RowMapper<Pair<String, Double>>() {
 
-                    @Override
-                    public Pair<String, Double> mapRow(ResultSet rs) throws SQLException {
-                        Pair<String, Double> r = new Pair<>();
-                        r.setKey(ResultSetUtils.getString(rs, "name"));
-                        r.setValue(ResultSetUtils.getDouble(rs, "price"));
-                        return r;
-                    }
-
-                });
-
-                assertEquals("[[romana,9.0], [margarita,7.0]]", r.toString());
-            }
-            {
-                List<Pair<String, Double>> lp = q.getExecutor().load( //
-                        rs -> new Pair<String, Double>( //
-                                ResultSetUtils.getString(rs, "name"), //
-                                ResultSetUtils.getDouble(rs, "price") //
-                        ));
-
-                assertEquals("[[romana,9.0], [margarita,7.0]]", lp.toString());
-            }
             facade.commit();
         } catch (Throwable e) {
             facade.rollback();
@@ -115,109 +148,4 @@ public class JoinTest {
         }
     }
 
-    @Table("pizzas")
-    public static class Pizza {
-
-        @Id
-        @Generated(value = HsqldbSequence.class, args = "seq_pizza")
-        Long id;
-
-        String name;
-
-        public Pizza() {
-            super();
-        }
-
-        public Pizza(Long id, String name) {
-            super();
-            this.id = id;
-            this.name = name;
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return "Pizza [id=" + id + ", name=" + name + "]";
-        }
-
-    }
-
-    @Table("ingredients")
-    public static class Ingredient {
-
-        @Id
-        @Generated(value = HsqldbSequence.class, args = "seq_ingredients")
-        Integer id;
-
-        String name;
-
-        Double price;
-
-        long idPizza;
-
-        public Ingredient() {
-            super();
-        }
-
-        public Ingredient(Integer id, String name, Double price, long idPizza) {
-            super();
-            this.id = id;
-            this.name = name;
-            this.price = price;
-            this.idPizza = idPizza;
-        }
-
-        public Integer getId() {
-            return id;
-        }
-
-        public void setId(Integer id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public Double getPrice() {
-            return price;
-        }
-
-        public void setPrice(Double price) {
-            this.price = price;
-        }
-
-        public long getIdPizza() {
-            return idPizza;
-        }
-
-        public void setIdPizza(long idPizza) {
-            this.idPizza = idPizza;
-        }
-
-        @Override
-        public String toString() {
-            return "Ingredient [id=" + id + ", name=" + name + ", price=" + price + ", idPizza=" + idPizza + "]";
-        }
-
-    }
 }

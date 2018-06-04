@@ -99,6 +99,15 @@ public class JoinTest {
 
                 assertEquals("[[romana,9.0], [margarita,7.0]]", r.toString());
             }
+            {
+                List<Pair<String, Double>> lp = q.getExecutor().load( //
+                        rs -> new Pair<String, Double>( //
+                                ResultSetUtils.getString(rs, "name"), //
+                                ResultSetUtils.getDouble(rs, "price") //
+                        ));
+
+                assertEquals("[[romana,9.0], [margarita,7.0]]", lp.toString());
+            }
             facade.commit();
         } catch (Throwable e) {
             facade.rollback();

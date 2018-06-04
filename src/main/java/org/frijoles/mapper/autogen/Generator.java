@@ -5,7 +5,7 @@ import org.frijoles.jdbc.RowMapper;
 import org.frijoles.jdbc.ScalarMappers;
 import org.frijoles.jdbc.exception.BaseException;
 import org.frijoles.jdbc.exception.UnexpectedResultException;
-import org.frijoles.jdbc.queryobject.InmutableQuery;
+import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.queryobject.QueryObject;
 
 public abstract class Generator {
@@ -14,7 +14,7 @@ public abstract class Generator {
 
     public Generator(String query) {
         super();
-        this.q = new InmutableQuery(query);
+        this.q = Query.immutable(query);
     }
 
     public Object generate(DataAccesFacade facade, Class<?> columnClass) {

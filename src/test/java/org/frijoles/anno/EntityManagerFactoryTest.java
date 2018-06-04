@@ -2,6 +2,9 @@ package org.frijoles.anno;
 
 import static org.junit.Assert.assertEquals;
 
+import org.frijoles.anno.ents.Exp;
+import org.frijoles.anno.ents.ExpId;
+import org.frijoles.anno.ents.Fase;
 import org.frijoles.annotated.EntityManagerFactory;
 import org.frijoles.jdbc.DataAccesFacade;
 import org.frijoles.jdbc.JdbcDataAccesFacade;
@@ -45,12 +48,14 @@ public class EntityManagerFactoryTest {
 
         facade.begin();
         try {
-            Exp e = new Exp(new ExpId(1982, null), "desc", "22/05/1982", ESex.FEMALE, new Fase(100, "FASE_INI"));
-            em.store(e);
 
-            Exp e2 = em.loadById(e.getId());
+            {
+                Exp e = new Exp(new ExpId(1982, null), "desc", "22/05/1982", ESex.FEMALE, new Fase(100, "FASE_INI"));
+                em.store(e);
 
-            assertEquals(e.toString(), e2.toString());
+                Exp e2 = em.loadById(e.getId());
+                assertEquals(e.toString(), e2.toString());
+            }
 
             facade.commit();
         } catch (Throwable e) {

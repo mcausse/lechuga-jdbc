@@ -4,15 +4,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class SimpleQuery implements QueryObject {
+public class Query implements QueryObject {
 
     final StringBuilder query;
     final List<Object> args;
 
-    public SimpleQuery() {
+    public Query() {
         super();
         this.query = new StringBuilder();
         this.args = new ArrayList<Object>();
+    }
+
+    public static QueryObject immutable(String query, Object... args) {
+        Query q = new Query();
+        q.append(query);
+        q.addArgs(args);
+        return q;
     }
 
     // ---------------------------------------------------

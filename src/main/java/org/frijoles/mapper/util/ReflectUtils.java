@@ -4,15 +4,6 @@ import java.lang.reflect.Constructor;
 
 public class ReflectUtils {
 
-    @SuppressWarnings("unchecked")
-    public static <T> Class<T> classFor(final String beanClassName) throws RuntimeException {
-        try {
-            return (Class<T>) Class.forName(beanClassName);
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static <T> T newInstance(final Class<T> beanClass) throws RuntimeException {
         T entity;
         try {

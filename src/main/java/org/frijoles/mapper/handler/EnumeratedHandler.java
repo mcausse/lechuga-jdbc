@@ -4,17 +4,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.frijoles.jdbc.exception.BaseException;
-import org.frijoles.mapper.util.ReflectUtils;
 
 public class EnumeratedHandler implements Handler {
 
     final Handler strHandler = Handlers.STRING;
 
     final Class<?> enumClass;
-
-    public EnumeratedHandler(String enumClassName) {
-        this(ReflectUtils.classFor(enumClassName));
-    }
 
     public EnumeratedHandler(Class<?> enumClass) {
         super();

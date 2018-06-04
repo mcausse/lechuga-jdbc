@@ -1,3 +1,4 @@
+drop table ingredients if exists;
 drop table pizzas if exists;
 
 create table pizzas (
@@ -9,7 +10,7 @@ drop sequence seq_pizza if exists;
 create sequence seq_pizza start with 100;
 
 
-drop table ingredients if exists;
+
 create table ingredients (
     id smallint,
     name varchar(20),

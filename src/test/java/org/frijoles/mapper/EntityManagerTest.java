@@ -1,15 +1,18 @@
 package org.frijoles.mapper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
 
 import org.frijoles.jdbc.DataAccesFacade;
 import org.frijoles.jdbc.JdbcDataAccesFacade;
+import org.frijoles.jdbc.ScalarMappers;
 import org.frijoles.jdbc.extractor.MapResultSetExtractor;
 import org.frijoles.jdbc.extractor.Pager;
-import org.frijoles.jdbc.queryobject.InmutableQuery;
+import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.util.SqlScriptExecutor;
 import org.frijoles.mapper.autogen.HsqldbIdentity;
 import org.frijoles.mapper.autogen.HsqldbSequence;
@@ -88,6 +91,11 @@ public class EntityManagerTest {
             assertEquals("Pizza [id=101, name=napolitana, price=9.5]", em.loadUniqueByProp("price", "9.5").toString());
 
             //
+
+            assertTrue(em.exists(romana));
+            assertTrue(em.existsById(romana.getId()));
+            assertFalse(em.exists(new Pizza(616L, null, 0.0)));
+            assertFalse(em.existsById(616L));
 
             em.delete(romana);
             em.deleteById(napolitana.getId());
@@ -202,7 +210,7 @@ public class EntityManagerTest {
         facade.begin();
         try {
 
-            facade.update(new InmutableQuery("delete from " + p.getTableName()));
+            facade.update(Query.immutable("delete from " + p.getTableName()));
 
             assertEquals("[]", em.loadAll().toString());
 
@@ -215,6 +223,38 @@ public class EntityManagerTest {
 
             List<Map<String, Object>> r = ex.extract(new MapResultSetExtractor());
             assertEquals("[{ID_DOG=111, NAME=chucho, AGE=9, SEX=MALE, DEAD=false}]", r.toString());
+
+            facade.commit();
+        } catch (Throwable e) {
+            facade.rollback();
+            throw e;
+        }
+
+        facade.begin();
+        try {
+
+            {
+                QueryBuilder<Dog> q = em.createQuery("t");
+                q.append("delete from {t} where {t.id.idDog is not null}");
+                int r = q.getExecutor().update();
+                assertEquals(1, r);
+            }
+            {
+                QueryBuilder<Dog> q = em.createQuery("t");
+                q.append("select count(*) from {t}");
+                long count = q.getExecutor().loadUnique(ScalarMappers.LONG);
+                assertEquals(0, count);
+            }
+            {
+                Dog d = new Dog(new IdDog(null, "chucho"), 9, ESex.MALE, false);
+                em.store(d);
+            }
+            {
+                QueryBuilder<Dog> q = em.createQuery("t");
+                q.append("select count(*) from {t}");
+                long count = q.getExecutor().loadUnique(ScalarMappers.LONG);
+                assertEquals(1, count);
+            }
 
             facade.commit();
         } catch (Throwable e) {

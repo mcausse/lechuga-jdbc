@@ -1,4 +1,4 @@
-package org.frijoles.anno;
+package org.frijoles.anno.ents;
 
 public class Fase {
 

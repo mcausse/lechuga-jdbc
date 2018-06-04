@@ -39,6 +39,9 @@ public class EntityManager<E, ID> {
         return new QueryBuilder<>(facade, model, tableAlias);
     }
 
+    // public List<E> loadBy(Criterion criterion) throws EmptyResultException {
+    // }
+
     public E loadById(ID idValue) throws EmptyResultException {
         QueryObject q = model.queryForLoadById(idValue);
         try {
@@ -166,7 +169,7 @@ public class EntityManager<E, ID> {
                 }
             }
 
-            boolean update = exist(entity);
+            boolean update = exists(entity);
             if (update) {
                 update(entity);
             } else {
@@ -175,8 +178,8 @@ public class EntityManager<E, ID> {
         }
     }
 
-    public boolean exist(final E entity) {
-        QueryObject q = model.queryForExists(entity);
+    public boolean exists(final E entity) {
+        QueryObject q = model.queryExists(entity);
         try {
             long count = facade.loadUnique(q, ScalarMappers.LONG);
             return count > 0L;
@@ -186,6 +189,20 @@ public class EntityManager<E, ID> {
             throw new BaseException("duplicated entity found with the same PK?", e);
         }
     }
+
+    public boolean existsById(final ID id) {
+        QueryObject q = model.queryExistsById(id);
+        try {
+            long count = facade.loadUnique(q, ScalarMappers.LONG);
+            return count > 0L;
+        } catch (EmptyResultException e) {
+            throw new BaseException("EXISTS: " + q.toString(), e);
+        } catch (TooManyResultsException e) {
+            throw new BaseException("duplicated entity found with the same PK?", e);
+        }
+    }
+
+    // https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html
 
     public void update(E entity) {
         QueryObject q = model.queryForUpdate(entity);
@@ -216,5 +233,51 @@ public class EntityManager<E, ID> {
 
         model.generateAfterInsert(facade, entity);
     }
+
+    public void store(Iterable<E> entities) {
+        for (E e : entities) {
+            store(e);
+        }
+    }
+
+    public void insert(Iterable<E> entities) {
+        for (E e : entities) {
+            insert(e);
+        }
+    }
+
+    public void update(Iterable<E> entities) {
+        for (E e : entities) {
+            update(e);
+        }
+    }
+
+    public void delete(Iterable<E> entities) {
+        for (E e : entities) {
+            delete(e);
+        }
+    }
+
+    // // TODO
+    // public <E2> List<E2> loadOneToMany(E self, EntityManager<E2, ?> otherEm,
+    // String... otherFkPropertyNames) {
+    //
+    // QueryBuilder<E2> q = otherEm.createQuery("o");
+    // q.append("select {o.*} from {o} where ");
+    //
+    // StringJoiner j = new StringJoiner(" and ");
+    // for (String o : otherFkPropertyNames) {
+    // Column c = otherEm.getModel().findColumnByName(o);
+    // }
+    // q.append(j.toString());
+    // return null;
+    // }
+    //
+    // public <E2> E2 loadManyToOne(E self, String selfFkPropertyName,
+    // EntityManager<E2, Object> otherEm) {
+    // Column thisFk = model.findColumnByName(selfFkPropertyName);
+    // Object thisFkValue = thisFk.accessor.get(self);
+    // return otherEm.loadById(thisFkValue);
+    // }
 
 }

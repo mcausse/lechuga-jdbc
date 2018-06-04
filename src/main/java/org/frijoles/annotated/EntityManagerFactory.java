@@ -67,7 +67,6 @@ public class EntityManagerFactory {
         LOG.info(entityClass.getName() + ": " + r);
 
         Map<String, Field> fs = AnnoReflectUtils.getFields(entityClass);
-
         {
             for (Entry<String, Field> f : fs.entrySet()) {
 

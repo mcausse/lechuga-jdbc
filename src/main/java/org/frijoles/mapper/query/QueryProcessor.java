@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.queryobject.QueryObject;
-import org.frijoles.jdbc.queryobject.SimpleQuery;
 import org.frijoles.mapper.Column;
 import org.frijoles.mapper.TableModel;
 
@@ -18,7 +18,7 @@ public class QueryProcessor {
 
     public QueryObject process(final Map<String, TableModel<?>> models, final String input, final Object[] params) {
 
-        final SimpleQuery r = new SimpleQuery();
+        final Query r = new Query();
         int currParamIndex = 0;
 
         final Matcher m = Pattern.compile("\\{([^}]*)\\}").matcher(input);
@@ -32,7 +32,7 @@ public class QueryProcessor {
         }
         m.appendTail(sb);
 
-        final SimpleQuery q = new SimpleQuery();
+        final Query q = new Query();
         q.append(sb.toString());
         q.addArgsList(r.getArgsList());
         return q;
@@ -92,7 +92,7 @@ public class QueryProcessor {
             /*
              * evalua
              */
-            final SimpleQuery q = new SimpleQuery();
+            final Query q = new Query();
 
             if (!models.containsKey(tableAlias.toString())) {
                 throw new RuntimeException("model not found for alias: '" + tableAlias + "'");

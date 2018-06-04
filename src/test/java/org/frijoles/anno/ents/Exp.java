@@ -1,4 +1,4 @@
-package org.frijoles.anno;
+package org.frijoles.anno.ents;
 
 import org.frijoles.annotated.anno.Column;
 import org.frijoles.annotated.anno.CustomHandler;

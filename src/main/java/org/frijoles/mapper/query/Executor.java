@@ -42,11 +42,12 @@ public class Executor<E> {
         return facade.load(qo, rowMapper);
     }
 
+    public <T> T extract(ResultSetExtractor<T> extractor) {
+        return facade.extract(qo, extractor);
+    }
+
     public Pager<E> loadPage(int pageSize, int numPage) {
         return facade.extract(qo, new ResultSetPagedExtractor<E>(rowMapper, pageSize, numPage));
     }
 
-    public <T> T extract(ResultSetExtractor<T> extractor) {
-        return facade.extract(qo, extractor);
-    }
 }

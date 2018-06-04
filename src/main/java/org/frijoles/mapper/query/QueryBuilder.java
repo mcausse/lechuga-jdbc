@@ -5,8 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.frijoles.jdbc.DataAccesFacade;
+import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.queryobject.QueryObject;
-import org.frijoles.jdbc.queryobject.SimpleQuery;
 import org.frijoles.mapper.EntityManager;
 import org.frijoles.mapper.TableModel;
 
@@ -41,7 +41,7 @@ public class QueryBuilder<E> implements QueryObject {
     final TableModel<E> resultEntityModel;
     final String tableAlias;
 
-    final SimpleQuery q;
+    final Query q;
     final Map<String, TableModel<?>> models;
     final QueryProcessor replacer;
 
@@ -50,7 +50,7 @@ public class QueryBuilder<E> implements QueryObject {
         this.facade = facade;
         this.resultEntityModel = resultEntityModel;
         this.tableAlias = tableAlias;
-        this.q = new SimpleQuery();
+        this.q = new Query();
         this.models = new LinkedHashMap<String, TableModel<?>>();
         this.replacer = new QueryProcessor();
 

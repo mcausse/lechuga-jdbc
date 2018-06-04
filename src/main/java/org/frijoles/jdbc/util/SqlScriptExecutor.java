@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.frijoles.jdbc.DataAccesFacade;
-import org.frijoles.jdbc.queryobject.InmutableQuery;
+import org.frijoles.jdbc.queryobject.Query;
 
 public class SqlScriptExecutor {
 
@@ -30,7 +30,7 @@ public class SqlScriptExecutor {
 
     public void execute(final List<String> stms) {
         for (final String stm : stms) {
-            facade.update(new InmutableQuery(stm));
+            facade.update(Query.immutable(stm));
         }
     }
 

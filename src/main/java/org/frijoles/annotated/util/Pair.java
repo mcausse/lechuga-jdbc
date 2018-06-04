@@ -1,9 +1,9 @@
-package org.frijoles.mapper.util;
+package org.frijoles.annotated.util;
 
 public class Pair<K, V> {
 
-    K key;
-    V value;
+    protected K key;
+    protected V value;
 
     public Pair() {
         super();

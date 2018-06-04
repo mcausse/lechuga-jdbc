@@ -13,8 +13,8 @@ import java.util.StringJoiner;
 
 import org.frijoles.jdbc.DataAccesFacade;
 import org.frijoles.jdbc.RowMapper;
+import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.queryobject.QueryObject;
-import org.frijoles.jdbc.queryobject.SimpleQuery;
 import org.frijoles.mapper.autogen.Generator;
 import org.frijoles.mapper.util.ReflectUtils;
 
@@ -69,6 +69,10 @@ public class TableModel<E> {
         return rowMapper;
     }
 
+    /**
+     * TODO si retornés List<Column>, es podria utilitzar objectes compostos en
+     * queries, loadByProp, etc, igual que es fa en loadById.
+     */
     public Column findColumnByName(String name) {
         if (!this.propsMap.containsKey(name)) {
             throw new RuntimeException("property not found: " + name + "; in entity " + entityClass);
@@ -86,7 +90,7 @@ public class TableModel<E> {
     }
 
     public QueryObject queryForLoadById(Object id) {
-        SimpleQuery q = new SimpleQuery();
+        Query q = new Query();
         q.append("select ");
         {
             StringJoiner j = new StringJoiner(",");
@@ -110,7 +114,7 @@ public class TableModel<E> {
     }
 
     public QueryObject queryForLoadAll(Order[] orders) {
-        SimpleQuery q = new SimpleQuery();
+        Query q = new Query();
         q.append("select ");
         {
             StringJoiner j = new StringJoiner(",");
@@ -128,7 +132,7 @@ public class TableModel<E> {
     }
 
     public QueryObject queryForInsert(E entity) {
-        SimpleQuery q = new SimpleQuery();
+        Query q = new Query();
         q.append("insert into ");
         q.append(tableName);
         q.append(" (");
@@ -153,7 +157,7 @@ public class TableModel<E> {
     }
 
     public QueryObject queryForUpdate(E entity) {
-        SimpleQuery q = new SimpleQuery();
+        Query q = new Query();
         q.append("update ");
         q.append(tableName);
         q.append(" set ");
@@ -179,7 +183,7 @@ public class TableModel<E> {
     }
 
     public QueryObject queryForUpdate(E entity, String... propertyNames) {
-        SimpleQuery q = new SimpleQuery();
+        Query q = new Query();
         q.append("update ");
         q.append(tableName);
         q.append(" set ");
@@ -206,7 +210,7 @@ public class TableModel<E> {
     }
 
     public QueryObject queryForDeleteById(Object id) {
-        SimpleQuery q = new SimpleQuery();
+        Query q = new Query();
         q.append("delete from ");
         q.append(tableName);
         q.append(" where ");
@@ -222,7 +226,7 @@ public class TableModel<E> {
     }
 
     public QueryObject queryForDelete(E entity) {
-        SimpleQuery q = new SimpleQuery();
+        Query q = new Query();
         q.append("delete from ");
         q.append(tableName);
         q.append(" where ");
@@ -238,7 +242,7 @@ public class TableModel<E> {
     }
 
     public QueryObject queryForLoadByProp(String propertyName, Object value, Order[] orders) {
-        SimpleQuery q = new SimpleQuery();
+        Query q = new Query();
         q.append("select ");
         {
             StringJoiner j = new StringJoiner(",");
@@ -263,8 +267,8 @@ public class TableModel<E> {
         return q;
     }
 
-    public QueryObject queryForExists(E entity) {
-        SimpleQuery q = new SimpleQuery();
+    public QueryObject queryExists(E entity) {
+        Query q = new Query();
         q.append("select count(*) from ");
         q.append(tableName);
         q.append(" where ");
@@ -273,6 +277,22 @@ public class TableModel<E> {
         for (Column id : idColumns) {
             j.add(id.getColumnName() + "=?");
             Object value = id.getValueForJdbc(entity);
+            q.addArg(value);
+        }
+        q.append(j.toString());
+        return q;
+    }
+
+    public QueryObject queryExistsById(Object id) {
+        Query q = new Query();
+        q.append("select count(*) from ");
+        q.append(tableName);
+        q.append(" where ");
+
+        StringJoiner j = new StringJoiner(" and ");
+        for (Column i : idColumns) {
+            j.add(i.getColumnName() + "=?");
+            Object value = i.getValueForJdbc(id, 1);
             q.addArg(value);
         }
         q.append(j.toString());

@@ -35,8 +35,8 @@ public class EntityManager<E, ID> {
         return facade;
     }
 
-    public QueryBuilder<E> createQuery() {
-        return new QueryBuilder<>(facade, model);
+    public QueryBuilder<E> createQuery(String tableAlias) {
+        return new QueryBuilder<>(facade, model, tableAlias);
     }
 
     public E loadById(ID idValue) throws EmptyResultException {

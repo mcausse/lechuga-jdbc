@@ -71,4 +71,10 @@ public class Column {
         return generator;
     }
 
+    @Override
+    public String toString() {
+        return "Column [id=" + id + ", columnName=" + columnName + ", accessor=" + accessor + ", handler=" + handler
+                + ", generator=" + generator + "]";
+    }
+
 }

@@ -150,8 +150,7 @@ public class EntityManagerTest {
 
             //
 
-            QueryBuilder<Dog> q = em.createQuery();
-            q.addEm("d", em);
+            QueryBuilder<Dog> q = em.createQuery("d");
             q.append("select {d.*} from {d} where ");
             q.append("{d.age>?} and {d.age<?} ", 1L, 99L);
             q.append("and {d.sex in (?,?)}", ESex.FEMALE, ESex.MALE);
@@ -182,8 +181,7 @@ public class EntityManagerTest {
                 em.store(d);
             }
 
-            QueryBuilder<Dog> q = em.createQuery();
-            q.addEm("d", em);
+            QueryBuilder<Dog> q = em.createQuery("d");
             q.append("select {d.*} from {d} order by {d.id.name} asc");
             Executor<Dog> ex = q.getExecutor();
 
@@ -215,8 +213,7 @@ public class EntityManagerTest {
             Dog d = new Dog(new IdDog(null, "chucho"), 9, ESex.MALE, false);
             em.store(d);
 
-            QueryBuilder<Dog> q = em.createQuery();
-            q.addEm("d", em);
+            QueryBuilder<Dog> q = em.createQuery("d");
             q.append("select {d.*} from {d} order by {d.id.name} asc");
             Executor<Dog> ex = q.getExecutor();
 

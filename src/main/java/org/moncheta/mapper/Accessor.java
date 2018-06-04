@@ -105,4 +105,9 @@ public class Accessor {
         return propertyPath.get(propertyPath.size() - 1).getPropertyType();
     }
 
+    @Override
+    public String toString() {
+        return beanClass + "#" + propertyName;
+    }
+
 }

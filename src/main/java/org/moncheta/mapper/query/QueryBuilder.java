@@ -39,18 +39,24 @@ public class QueryBuilder<E> implements QueryObject {
 
     final DataAccesFacade facade;
     final TableModel<E> resultEntityModel;
+    final String tableAlias;
 
     final SimpleQuery q;
     final Map<String, TableModel<?>> models;
     final QueryProcessor replacer;
 
-    public QueryBuilder(DataAccesFacade facade, TableModel<E> resultEntityModel) {
+    public QueryBuilder(DataAccesFacade facade, TableModel<E> resultEntityModel, String tableAlias) {
         super();
         this.facade = facade;
         this.resultEntityModel = resultEntityModel;
+        this.tableAlias = tableAlias;
         this.q = new SimpleQuery();
         this.models = new LinkedHashMap<String, TableModel<?>>();
         this.replacer = new QueryProcessor();
+
+        if (tableAlias != null) {
+            this.models.put(tableAlias, resultEntityModel);
+        }
     }
 
     public void addEm(final String alias, final TableModel<?> em) {
@@ -64,10 +70,10 @@ public class QueryBuilder<E> implements QueryObject {
     // public void addEm(final String alias, final LentejaDao<?, ?> em) {
     // this.models.put(alias, em.getEntityManager().getTableModel());
     // }
-
-    public TableModel<E> getResultEntityManager() {
-        return resultEntityModel;
-    }
+    //
+    // public TableModel<E> getResultEntityManager() {
+    // return resultEntityModel;
+    // }
 
     /**
      * <pre>

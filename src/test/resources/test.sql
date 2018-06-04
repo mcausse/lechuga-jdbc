@@ -29,3 +29,18 @@ create table apoyo (
 	key varchar(20) primary key,
 	value varchar(20)
 );
+
+
+drop table exps if exists;
+create table exps (
+    any_exp smallint,
+    num_exp integer,
+    text varchar(50) not null,
+    data_ini timestamp not null,
+    sex varchar(10) not null,
+    id_fase smallint not null,
+    codi_fase varchar(20) not null
+);
+alter table exps add constraint pk_expsid primary key (any_exp, num_exp);
+drop sequence seq_exp if exists;
+create sequence seq_exp start with 100;

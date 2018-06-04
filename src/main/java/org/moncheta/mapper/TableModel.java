@@ -323,4 +323,9 @@ public class TableModel<E> {
         return r;
     }
 
+    @Override
+    public String toString() {
+        return "TableModel [entityClass=" + entityClass.getName() + ", tableName=" + tableName + "]";
+    }
+
 }

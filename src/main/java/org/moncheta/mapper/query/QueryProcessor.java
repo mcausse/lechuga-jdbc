@@ -52,7 +52,7 @@ public class QueryProcessor {
      *
      * </pre>
      */
-    QueryObject evaluateExpression(final Map<String, TableModel<?>> models, final String expression,
+    protected QueryObject evaluateExpression(final Map<String, TableModel<?>> models, final String expression,
             final Object[] params, final int currParamIndex) {
 
         try {

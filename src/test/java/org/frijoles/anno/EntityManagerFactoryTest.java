@@ -1,4 +1,4 @@
-package org.frijoles.annotated;
+package org.frijoles.anno;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,16 +7,16 @@ import org.fijoles.jdbc.DataAccesFacade;
 import org.fijoles.jdbc.JdbcDataAccesFacade;
 import org.fijoles.jdbc.util.SqlScriptExecutor;
 import org.fijoles.mapper.EntityManager;
-import org.frijoles.ents.ESex;
+import org.frijoles.mapper.ents.ESex;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
 
-public class A {
+public class EntityManagerFactoryTest {
 
     DataAccesFacade facade;
 
-    public A() {
+    public EntityManagerFactoryTest() {
         final JDBCDataSource ds = new JDBCDataSource();
         ds.setUrl("jdbc:hsqldb:mem:a");
         ds.setUser("sa");

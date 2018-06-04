@@ -1,4 +1,4 @@
-package org.frijoles.annotated;
+package org.frijoles.anno;
 
 public class Fase {
 

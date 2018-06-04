@@ -1,4 +1,4 @@
-package org.frijoles.ents;
+package org.frijoles.mapper.ents;
 
 public class Dog {
 

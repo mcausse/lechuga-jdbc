@@ -1,4 +1,4 @@
-package org.frijoles;
+package org.frijoles.mapper;
 // TODO
 // package org.moncheta;
 //

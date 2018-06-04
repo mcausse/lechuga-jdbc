@@ -1,4 +1,4 @@
-package org.frijoles;
+package org.frijoles.mapper;
 
 import static org.junit.Assert.assertEquals;
 
@@ -21,11 +21,11 @@ import org.fijoles.mapper.handler.EnumeratedHandler;
 import org.fijoles.mapper.handler.Handlers;
 import org.fijoles.mapper.query.Executor;
 import org.fijoles.mapper.query.QueryBuilder;
-import org.frijoles.ents.Apoyo;
-import org.frijoles.ents.Dog;
-import org.frijoles.ents.ESex;
-import org.frijoles.ents.IdDog;
-import org.frijoles.ents.Pizza;
+import org.frijoles.mapper.ents.Apoyo;
+import org.frijoles.mapper.ents.Dog;
+import org.frijoles.mapper.ents.ESex;
+import org.frijoles.mapper.ents.IdDog;
+import org.frijoles.mapper.ents.Pizza;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;

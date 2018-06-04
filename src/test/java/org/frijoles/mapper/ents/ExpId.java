@@ -1,16 +1,8 @@
-package org.frijoles.annotated;
-
-import org.fijoles.annotated.anno.Generated;
-import org.fijoles.annotated.anno.Id;
-import org.fijoles.mapper.autogen.HsqldbSequence;
+package org.frijoles.mapper.ents;
 
 public class ExpId {
 
-    @Id
     Integer anyExp;
-
-    @Id
-    @Generated(value = HsqldbSequence.class, args = "seq_exp")
     Long numExp;
 
     public ExpId() {
@@ -41,7 +33,7 @@ public class ExpId {
 
     @Override
     public String toString() {
-        return "ExpId [anyExp=" + anyExp + ", numExp=" + numExp + "]";
+        return "IdExp [anyExp=" + anyExp + ", numExp=" + numExp + "]";
     }
 
 }

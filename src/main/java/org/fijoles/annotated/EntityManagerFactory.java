@@ -13,6 +13,7 @@ import org.fijoles.annotated.anno.Table;
 import org.fijoles.annotated.anno.Transient;
 import org.fijoles.annotated.convention.Conventions;
 import org.fijoles.annotated.convention.DefaultConventions;
+import org.fijoles.annotated.util.AnnoReflectUtils;
 import org.fijoles.jdbc.DataAccesFacade;
 import org.fijoles.jdbc.exception.BaseException;
 import org.fijoles.mapper.Accessor;
@@ -65,7 +66,7 @@ public class EntityManagerFactory {
         TableModel<E> r = new TableModel<>(entityClass, tableName);
         LOG.info(entityClass.getName() + ": " + r);
 
-        Map<String, Field> fs = ReflectUtils.getFields(entityClass);
+        Map<String, Field> fs = AnnoReflectUtils.getFields(entityClass);
 
         {
             for (Entry<String, Field> f : fs.entrySet()) {

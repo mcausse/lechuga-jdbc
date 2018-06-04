@@ -40,11 +40,6 @@ public class EntityManagerFactoryTest {
     @Test
     public void testName() throws Exception {
 
-        // Map<String, Field> fs = ReflectUtils.getFields(Exp.class);
-        // for (Entry<String, Field> f : fs.entrySet()) {
-        // System.out.println(f.getKey() + " => " + f.getValue());
-        // }
-
         EntityManagerFactory emf = new EntityManagerFactory(facade);
         EntityManager<Exp, ExpId> em = emf.build(Exp.class, ExpId.class);
 

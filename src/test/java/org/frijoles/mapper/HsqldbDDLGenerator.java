@@ -1,6 +1,4 @@
-package org.frijoles.mapper;
-// TODO
-// package org.moncheta;
+// package org.frijoles.mapper;
 //
 // import java.math.BigDecimal;
 // import java.util.Date;
@@ -8,23 +6,17 @@ package org.frijoles.mapper;
 // import java.util.Map;
 // import java.util.Map.Entry;
 //
-// import org.lenteja.CocEntityManagerFactory;
-// import org.lenteja.IEntityManagerFactory;
-// import org.lenteja.exception.LentejaConfigurationException;
-// import org.lenteja.model.CompositeProperty;
-// import org.lenteja.model.EntityModel;
-// import org.lenteja.model.Property;
-// import org.lenteja.model.ScalarProperty;
-// import org.lenteja.model.generator.HsqldbIdentity;
-// import org.lenteja.model.generator.HsqldbSequence;
+// import org.fijoles.mapper.Column;
+// import org.fijoles.mapper.TableModel;
+//
 //
 // public class HsqldbDDLGenerator {
 //
-// final EntityModel em;
-// final Map<String, ScalarProperty> properties;
-// final Map<String, ScalarProperty> idproperties;
+// final TableModel<?> em;
+// final Map<String, Column> properties;
+// final Map<String, Column> idproperties;
 //
-// HsqldbDDLGenerator(EntityModel em) {
+// HsqldbDDLGenerator(TableModel<?> em) {
 // super();
 // this.em = em;
 // this.properties = new LinkedHashMap<>();
@@ -179,7 +171,9 @@ package org.frijoles.mapper;
 // // return "INTEGER";
 // // }
 // // if (type.equals(Float.class) || type.equals(Double.class) ||
-// type.equals(BigDecimal.class)) {
+// type.equals(BigDecimal.class))
+//
+// {
 // // return "DECIMAL";
 // // }
 // // } else if (Date.class.isAssignableFrom(type)) {

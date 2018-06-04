@@ -1,3 +1,7 @@
+drop table ingredients if exists;
+
+
+
 drop table dogs if exists;
 create table dogs (
 	id_dog integer, 

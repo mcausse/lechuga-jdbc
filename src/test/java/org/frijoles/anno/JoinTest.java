@@ -2,6 +2,8 @@ package org.frijoles.anno;
 
 import static org.junit.Assert.assertEquals;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -11,11 +13,14 @@ import org.fijoles.annotated.anno.Id;
 import org.fijoles.annotated.anno.Table;
 import org.fijoles.jdbc.DataAccesFacade;
 import org.fijoles.jdbc.JdbcDataAccesFacade;
+import org.fijoles.jdbc.ResultSetUtils;
+import org.fijoles.jdbc.RowMapper;
 import org.fijoles.jdbc.extractor.MapResultSetExtractor;
 import org.fijoles.jdbc.util.SqlScriptExecutor;
 import org.fijoles.mapper.EntityManager;
 import org.fijoles.mapper.autogen.HsqldbSequence;
 import org.fijoles.mapper.query.QueryBuilder;
+import org.fijoles.mapper.util.Pair;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,9 +80,25 @@ public class JoinTest {
                     "select p.name, sum(i.price) as price from pizzas p join ingredients i on p.id=i.id_pizza group by p.name  -- []",
                     q.toString());
 
-            List<Map<String, Object>> r = q.getExecutor().extract(new MapResultSetExtractor());
-            assertEquals("[{NAME=romana, PRICE=9.0}, {NAME=margarita, PRICE=7.0}]", r.toString());
+            {
+                List<Map<String, Object>> r = q.getExecutor().extract(new MapResultSetExtractor());
+                assertEquals("[{NAME=romana, PRICE=9.0}, {NAME=margarita, PRICE=7.0}]", r.toString());
+            }
+            {
+                List<Pair<String, Double>> r = q.getExecutor().load(new RowMapper<Pair<String, Double>>() {
 
+                    @Override
+                    public Pair<String, Double> mapRow(ResultSet rs) throws SQLException {
+                        Pair<String, Double> r = new Pair<>();
+                        r.setKey(ResultSetUtils.getString(rs, "name"));
+                        r.setValue(ResultSetUtils.getDouble(rs, "price"));
+                        return r;
+                    }
+
+                });
+
+                assertEquals("[[romana,9.0], [margarita,7.0]]", r.toString());
+            }
             facade.commit();
         } catch (Throwable e) {
             facade.rollback();

@@ -34,6 +34,14 @@ public class Executor<E> {
         return facade.load(qo, rowMapper);
     }
 
+    public <T> T loadUnique(RowMapper<T> rowMapper) {
+        return facade.loadUnique(qo, rowMapper);
+    }
+
+    public <T> List<T> load(RowMapper<T> rowMapper) {
+        return facade.load(qo, rowMapper);
+    }
+
     public Pager<E> loadPage(int pageSize, int numPage) {
         return facade.extract(qo, new ResultSetPagedExtractor<E>(rowMapper, pageSize, numPage));
     }

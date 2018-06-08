@@ -12,8 +12,6 @@ public class Opcio {
     String titol;
     String descripcio;
 
-    String hashVotacio;
-
     public Opcio() {
         super();
     }

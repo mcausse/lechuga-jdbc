@@ -76,7 +76,7 @@ public class TableModel<E> {
      */
     public Column findColumnByName(String name) {
         if (!this.propsMap.containsKey(name)) {
-            throw new RuntimeException("property not found: " + name + "; in entity " + entityClass);
+            throw new RuntimeException("property not found: " + entityClass.getName() + "#" + name);
         }
         return this.propsMap.get(name);
     }

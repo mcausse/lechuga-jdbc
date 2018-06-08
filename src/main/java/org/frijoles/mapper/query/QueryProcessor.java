@@ -9,7 +9,6 @@ import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.queryobject.QueryObject;
 import org.frijoles.mapper.Column;
 import org.frijoles.mapper.TableModel;
-import org.frijoles.mapper.util.Pair;
 
 public class QueryProcessor {
 
@@ -25,9 +24,8 @@ public class QueryProcessor {
         final Matcher m = Pattern.compile("\\{([^}]*)\\}").matcher(input);
         final StringBuffer sb = new StringBuffer();
         while (m.find()) {
-            Pair<QueryObject, Integer> p = evaluateExpression(models, m.group(1), params, currParamIndex);
-            final QueryObject value = p.getKey();
-            currParamIndex += p.getValue();
+            final QueryObject value = evaluateExpression(models, m.group(1), params, currParamIndex);
+            currParamIndex += value.getArgs().length;
 
             m.appendReplacement(sb, value.getSql());
             r.addArgsList(value.getArgsList());
@@ -54,11 +52,8 @@ public class QueryProcessor {
      *
      * </pre>
      */
-    /**
-     * @return la query generada i el # de paràmetres consumits
-     */
-    protected Pair<QueryObject, Integer> evaluateExpression(final Map<String, TableModel<?>> models,
-            final String expression, final Object[] params, final int currParamIndex) {
+    protected QueryObject evaluateExpression(final Map<String, TableModel<?>> models, final String expression,
+            final Object[] params, final int currParamIndex) {
 
         try {
 
@@ -99,40 +94,32 @@ public class QueryProcessor {
              */
             final Query q = new Query();
 
-            if (tableAlias.toString().isEmpty()) {
-                // Object qo = params[paramIndex];
-                // paramIndex++;
-                return new Pair<QueryObject, Integer>((QueryObject) params[currParamIndex], 1);
+            if (!models.containsKey(tableAlias.toString())) {
+                throw new RuntimeException("model not found for alias: '" + tableAlias + "'");
+            }
+            final TableModel<?> model = models.get(tableAlias.toString());
+
+            if (property == null) {
+                q.append(model.getTableName() + " " + tableAlias.toString());
+            } else if (property.toString().equals("*")) {
+                q.append(join(tableAlias.toString(), model.getColumnNames()));
             } else {
-
-                if (!models.containsKey(tableAlias.toString())) {
-                    throw new RuntimeException("model not found for alias: '" + tableAlias + "'");
-                }
-                final TableModel<?> model = models.get(tableAlias.toString());
-
-                int paramIndex = currParamIndex;
-
-                if (property == null) {
-                    q.append(model.getTableName() + " " + tableAlias.toString());
-                } else if (property.toString().equals("*")) {
-                    q.append(join(tableAlias.toString(), model.getColumnNames()));
+                final Column p = model.findColumnByName(property.toString());
+                if (op == null) {
+                    q.append(tableAlias + "." + p.getColumnName());
                 } else {
-                    final Column p = model.findColumnByName(property.toString());
-                    if (op == null) {
-                        q.append(tableAlias + "." + p.getColumnName());
-                    } else {
-                        q.append(tableAlias + "." + p.getColumnName() + op);
-                        for (int j = 0; j < op.length(); j++) {
-                            if (op.charAt(j) == '?') {
-                                q.addArg(p.convertValueForJdbc(params[paramIndex]));
-                                paramIndex++;
-                            }
+                    q.append(tableAlias + "." + p.getColumnName() + op);
+                    int paramIndex = currParamIndex;
+                    for (int j = 0; j < op.length(); j++) {
+                        if (op.charAt(j) == '?') {
+                            q.addArg(p.convertValueForJdbc(params[paramIndex]));
+                            paramIndex++;
                         }
                     }
                 }
-
-                return new Pair<QueryObject, Integer>(q, paramIndex - currParamIndex);
             }
+
+            return q;
 
         } catch (final RuntimeException e) {
             throw new RuntimeException("error in expression: '" + expression + "'", e);

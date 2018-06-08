@@ -30,6 +30,10 @@ public class Restrictions {
         return alias + "." + columnName;
     }
 
+    public Criterion nativeSql(String nativeSql, Object... args) {
+        return new CriterionImpl(nativeSql, args);
+    }
+
     public Criterion star() {
         if (alias == null) {
             return new CriterionImpl(em.getTableName() + ".*");

@@ -67,14 +67,17 @@ public class Restrictions {
         Column c = em.findColumnByName(propertyName);
         CriterionImpl q = new CriterionImpl();
         q.append(aliaseColumn(c.getColumnName()) + op + "?");
-        q.addArg(c.getValueForJdbc(value));
+        q.addArg(c.convertValueForJdbc(value));
         return q;
     }
 
     Criterion binaryOperator(String propertyName1, String op, Restrictions rs2, String propertyName2) {
+        CriterionImpl c = new CriterionImpl();
         Column c1 = em.findColumnByName(propertyName1);
-        Column c2 = em.findColumnByName(propertyName2);
-        return new CriterionImpl(aliaseColumn(c1.getColumnName()) + op + aliaseColumn(c2.getColumnName()));
+        c.append(aliaseColumn(c1.getColumnName()));
+        c.append(op);
+        c.append(rs2.column(propertyName2));
+        return c;
     }
 
     public Criterion isNull(String propertyName) {

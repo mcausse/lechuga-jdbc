@@ -11,6 +11,7 @@ import org.frijoles.jdbc.exception.TooManyResultsException;
 import org.frijoles.jdbc.exception.UnexpectedResultException;
 import org.frijoles.jdbc.queryobject.QueryObject;
 import org.frijoles.mapper.query.QueryBuilder;
+import org.frijoles.mapper.query.criteria.CriteriaBuilder;
 import org.frijoles.mapper.query.criteria.Restrictions;
 
 public class EntityManager<E, ID> {
@@ -40,6 +41,16 @@ public class EntityManager<E, ID> {
         return new QueryBuilder<>(facade, model, tableAlias);
     }
 
+    // ==============================================
+    //
+    // CRITERIA BEGIN
+    //
+    // ==============================================
+
+    public CriteriaBuilder createCriteria() {
+        return new CriteriaBuilder(facade); // FIXME
+    }
+
     public Restrictions getRestrictions() {
         return new Restrictions(model);
     }
@@ -47,6 +58,12 @@ public class EntityManager<E, ID> {
     public Restrictions getRestrictions(String alias) {
         return new Restrictions(model, alias);
     }
+
+    // ==============================================
+    //
+    // CRITERIA END
+    //
+    // ==============================================
 
     // public List<E> loadBy(Criterion criterion) throws EmptyResultException {
     // }

@@ -18,6 +18,8 @@ import org.frijoles.jdbc.extractor.MapResultSetExtractor;
 import org.frijoles.jdbc.util.SqlScriptExecutor;
 import org.frijoles.mapper.EntityManager;
 import org.frijoles.mapper.query.QueryBuilder;
+import org.frijoles.mapper.query.criteria.CriteriaBuilder;
+import org.frijoles.mapper.query.criteria.Restrictions;
 import org.frijoles.mapper.util.Pair;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
@@ -43,6 +45,89 @@ public class JoinTest {
             sql.runFromClasspath("pizzas.sql");
             facade.commit();
         } catch (Exception e) {
+            facade.rollback();
+            throw e;
+        }
+    }
+
+    @Test
+    public void testCriteria() throws Exception {
+
+        EntityManagerFactory emf = new EntityManagerFactory(facade);
+        EntityManager<Pizza, Long> pem = emf.build(Pizza.class, Long.class);
+        EntityManager<Ingredient, Integer> iem = emf.build(Ingredient.class, Integer.class);
+
+        facade.begin();
+        try {
+
+            Pizza romana = new Pizza(null, "romana");
+            pem.store(romana);
+            iem.store(new Ingredient(null, "base", 7.0, romana.getId()));
+            iem.store(new Ingredient(null, "olivanchoa", 2.0, romana.getId()));
+
+            Pizza margarita = new Pizza(null, "margarita");
+            pem.store(margarita);
+            iem.store(new Ingredient(null, "base", 7.0, margarita.getId()));
+
+            {
+
+                // QueryBuilder<Pizza> q = pem.createQuery("p");
+                // q.addEm("i", iem);
+                // q.append("select {p.name}, sum({i.price}) as price ");
+                // q.append("from {p} join {i} ");
+                // q.append("on {p.id}={i.idPizza} ");
+                // q.append("group by {p.name} ");
+
+                Restrictions pr = pem.getRestrictions("p");
+                Restrictions ir = iem.getRestrictions("i");
+
+                CriteriaBuilder c = pem.createCriteria();
+                c.append("select {}, sum({}) as price ", pr.column("name"), ir.column("price"));
+                c.append("from {} join {} ", pr.table(), ir.table());
+                c.append("on {} ", pr.eq("id", ir, "idPizza"));
+                c.append("where {} ", ir.gt("price", 0.0));
+                c.append("group by {} ", pr.column("name"));
+
+                assertEquals( //
+                        "select p.name, sum(i.price) as price " + //
+                                "from pizzas p join ingredients i on p.id=i.id_pizza " + //
+                                "where i.price>? group by p.name  -- [0.0(Double)]", //
+                        c.toString());
+
+                {
+                    List<Map<String, Object>> r = c.extract(new MapResultSetExtractor());
+                    assertEquals("[{NAME=romana, PRICE=9.0}, {NAME=margarita, PRICE=7.0}]", r.toString());
+                }
+                {
+                    RowMapper<Pair<String, Double>> rm = new RowMapper<Pair<String, Double>>() {
+
+                        @Override
+                        public Pair<String, Double> mapRow(ResultSet rs) throws SQLException {
+                            Pair<String, Double> r = new Pair<>();
+                            r.setKey(ResultSetUtils.getString(rs, "name"));
+                            r.setValue(ResultSetUtils.getDouble(rs, "price"));
+                            return r;
+                        }
+
+                    };
+                    List<Pair<String, Double>> r = c.getExecutor(rm).load();
+
+                    assertEquals("[[romana,9.0], [margarita,7.0]]", r.toString());
+                }
+                {
+
+                    RowMapper<Pair<String, Double>> rm = rs -> new Pair<String, Double>( //
+                            ResultSetUtils.getString(rs, "name"), //
+                            ResultSetUtils.getDouble(rs, "price") //
+                    );
+                    List<Pair<String, Double>> lp = c.getExecutor(rm).load();
+
+                    assertEquals("[[romana,9.0], [margarita,7.0]]", lp.toString());
+                }
+            }
+
+            facade.commit();
+        } catch (Throwable e) {
             facade.rollback();
             throw e;
         }

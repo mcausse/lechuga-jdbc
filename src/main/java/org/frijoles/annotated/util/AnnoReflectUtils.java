@@ -56,7 +56,8 @@ public class AnnoReflectUtils {
             }
 
             Class<?> t = field.getType();
-            if (t.isPrimitive() || t.isEnum() || t.getPackage().getName().startsWith("java.lang")) {
+            if (t.isPrimitive() || t.isEnum() || t.getPackage().getName().startsWith("java.lang")
+                    || t.getPackage().getName().startsWith("java.util")) {
                 r.put(prefix2, field);
             } else {
                 r.putAll(getFields(prefix2, t));

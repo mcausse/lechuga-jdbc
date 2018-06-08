@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -78,6 +79,54 @@ public class TableModel<E> {
             throw new RuntimeException("property not found: " + name + "; in entity " + entityClass);
         }
         return this.propsMap.get(name);
+    }
+
+    // TODO experimental
+    public Q findColumnKKKByName(String prefix) {
+        List<Column> cs = new ArrayList<>();
+        int offset;
+
+        if (propsMap.containsKey(prefix)) {
+            cs.add(propsMap.get(prefix));
+            offset = -1;
+        } else {
+            offset = 1;
+            for (int i = 0; i < prefix.length(); i++) {
+                if (prefix.charAt(i) == '.') {
+                    offset++;
+                }
+            }
+
+            for (Entry<String, Column> c : propsMap.entrySet()) {
+                if (c.getKey().startsWith(prefix + ".")) {
+                    cs.add(c.getValue());
+                }
+            }
+        }
+
+        return new Q(offset, cs);
+    }
+
+    // TODO experimental
+    public static class Q {
+
+        final int offset;
+        final List<Column> cs;
+
+        public Q(int offset, List<Column> cs) {
+            super();
+            this.offset = offset;
+            this.cs = cs;
+        }
+
+        public int getOffset() {
+            return offset;
+        }
+
+        public List<Column> getCs() {
+            return cs;
+        }
+
     }
 
     protected String orderBy(Order[] orders) {
@@ -341,6 +390,10 @@ public class TableModel<E> {
             r.add(c.getColumnName());
         }
         return r;
+    }
+
+    public Map<String, Column> getPropsMap() {
+        return propsMap;
     }
 
     @Override

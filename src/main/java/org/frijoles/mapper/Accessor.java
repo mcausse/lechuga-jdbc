@@ -49,6 +49,7 @@ public class Accessor {
                 return pd;
             }
         }
+        // TODO i suportar que les properties no tinguin getter/setters?
         throw new RuntimeException(beanClass.getName() + ": property not found: '" + propertyName + "'");
     }
 

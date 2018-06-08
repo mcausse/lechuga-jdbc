@@ -145,10 +145,6 @@ public class JoinTest {
                 }
             }
 
-            {
-
-            }
-
             facade.commit();
         } catch (Throwable e) {
             facade.rollback();

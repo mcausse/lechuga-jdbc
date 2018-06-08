@@ -1,4 +1,4 @@
-package org.frijoles.mapper.query.criteria;
+package org.frijoles.mapper.criteria;
 
 import java.util.Arrays;
 import java.util.List;
@@ -140,7 +140,7 @@ public class Restrictions {
 
     // ////
 
-    Criterion composition(String op, List<Criterion> qs) {
+    static Criterion composition(String op, List<Criterion> qs) {
         CriterionImpl r = new CriterionImpl();
         for (int i = 0; i < qs.size(); i++) {
             if (i > 0) {
@@ -151,23 +151,23 @@ public class Restrictions {
         return r;
     }
 
-    public Criterion and(List<Criterion> qs) {
+    public static Criterion and(List<Criterion> qs) {
         return composition(" and ", qs);
     }
 
-    public Criterion or(List<Criterion> qs) {
+    public static Criterion or(List<Criterion> qs) {
         return composition(" or ", qs);
     }
 
-    public Criterion and(Criterion... qs) {
+    public static Criterion and(Criterion... qs) {
         return and(Arrays.asList(qs));
     }
 
-    public Criterion or(Criterion... qs) {
+    public static Criterion or(Criterion... qs) {
         return or(Arrays.asList(qs));
     }
 
-    public Criterion not(Criterion q) {
+    public static Criterion not(Criterion q) {
         CriterionImpl r = new CriterionImpl();
         r.append("not(");
         r.append(q);
@@ -187,7 +187,7 @@ public class Restrictions {
                 r.append(",");
             }
             r.append("?");
-            r.addArg(c.getValueForJdbc(values.get(i)));
+            r.addArg(c.convertValueForJdbc(values.get(i)));
         }
         r.append(")");
         return r;
@@ -210,8 +210,8 @@ public class Restrictions {
         CriterionImpl r = new CriterionImpl();
         r.append(c.getColumnName());
         r.append(" between ? and ?");
-        r.addArg(c.getValueForJdbc(value1));
-        r.addArg(c.getValueForJdbc(value2));
+        r.addArg(c.convertValueForJdbc(value1));
+        r.addArg(c.convertValueForJdbc(value2));
         return r;
     }
 
@@ -240,8 +240,8 @@ public class Restrictions {
             }
             c++;
 
-            Column p = em.findColumnByName(o.getProperty());
-            r.append(p.getColumnName() + o.getOrder());
+            Column column = em.findColumnByName(o.getProperty());
+            r.append(aliaseColumn(column.getColumnName()) + o.getOrder());
         }
         return r;
     }

@@ -10,9 +10,9 @@ import org.frijoles.jdbc.exception.EmptyResultException;
 import org.frijoles.jdbc.exception.TooManyResultsException;
 import org.frijoles.jdbc.exception.UnexpectedResultException;
 import org.frijoles.jdbc.queryobject.QueryObject;
+import org.frijoles.mapper.criteria.CriteriaBuilder;
+import org.frijoles.mapper.criteria.Restrictions;
 import org.frijoles.mapper.query.QueryBuilder;
-import org.frijoles.mapper.query.criteria.CriteriaBuilder;
-import org.frijoles.mapper.query.criteria.Restrictions;
 
 public class EntityManager<E, ID> {
 

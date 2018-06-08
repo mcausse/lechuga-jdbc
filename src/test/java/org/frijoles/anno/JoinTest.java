@@ -17,9 +17,10 @@ import org.frijoles.jdbc.RowMapper;
 import org.frijoles.jdbc.extractor.MapResultSetExtractor;
 import org.frijoles.jdbc.util.SqlScriptExecutor;
 import org.frijoles.mapper.EntityManager;
+import org.frijoles.mapper.criteria.CriteriaBuilder;
+import org.frijoles.mapper.criteria.ELike;
+import org.frijoles.mapper.criteria.Restrictions;
 import org.frijoles.mapper.query.QueryBuilder;
-import org.frijoles.mapper.query.criteria.CriteriaBuilder;
-import org.frijoles.mapper.query.criteria.Restrictions;
 import org.frijoles.mapper.util.Pair;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
@@ -124,6 +125,26 @@ public class JoinTest {
 
                     assertEquals("[[romana,9.0], [margarita,7.0]]", lp.toString());
                 }
+            }
+
+            {
+                Restrictions pr = pem.getRestrictions("p");
+
+                CriteriaBuilder c = pem.createCriteria();
+                c.append("select {} ", pr.all());
+                c.append("from {} ", pr.table());
+                c.append("where {} ", //
+                        Restrictions.and( //
+                                pr.ilike("name", ELike.CONTAINS, "man"), //
+                                pr.between("id", 100L, 200L), pr.in("id", 100L, 101L, 102L)//
+                        ) //
+                );
+
+                assertEquals( //
+                        "select p.id,p.name from pizzas p where upper(name) like upper(?) and id between ? and ? and id in (?,?,?)  -- [%man%(String), 100(Long), 200(Long), 100(Long), 101(Long), 102(Long)]", //
+                        c.toString());
+
+                c.getExecutor(pem).load();
             }
 
             facade.commit();

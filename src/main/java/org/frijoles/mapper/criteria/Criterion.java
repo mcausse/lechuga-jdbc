@@ -1,4 +1,4 @@
-package org.frijoles.mapper.query.criteria;
+package org.frijoles.mapper.criteria;
 
 import org.frijoles.jdbc.queryobject.QueryObject;
 

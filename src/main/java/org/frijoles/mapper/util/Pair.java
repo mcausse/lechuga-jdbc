@@ -1,4 +1,4 @@
-package org.frijoles.annotated.util;
+package org.frijoles.mapper.util;
 
 public class Pair<K, V> {
 

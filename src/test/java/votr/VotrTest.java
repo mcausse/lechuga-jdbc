@@ -10,11 +10,13 @@ import org.frijoles.jdbc.DataAccesFacade;
 import org.frijoles.jdbc.JdbcDataAccesFacade;
 import org.frijoles.jdbc.txproxy.TransactionalServiceProxyfier;
 import org.frijoles.jdbc.util.SqlScriptExecutor;
+import org.frijoles.mapper.HsqldbDDLGenerator;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
 
 import votr.VotrService.VotacioDto;
+import votr.ent.Msg;
 import votr.ent.Opcio;
 import votr.ent.Usr;
 import votr.ent.Votacio;
@@ -42,6 +44,12 @@ public class VotrTest {
             facade.rollback();
             throw e;
         }
+    }
+
+    @Test
+    public void testGenerateSqlScript() throws Exception {
+        String sql = HsqldbDDLGenerator.generateScript(Votacio.class, Opcio.class, Usr.class, Msg.class);
+        System.err.println(sql);
     }
 
     @Test

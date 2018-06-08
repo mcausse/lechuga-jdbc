@@ -36,4 +36,3 @@ create table msgs (
 alter table msgs add constraint pk_msgs primary key (id);
 drop sequence seq_msg if exists;
 create sequence seq_msg start with 100;
-

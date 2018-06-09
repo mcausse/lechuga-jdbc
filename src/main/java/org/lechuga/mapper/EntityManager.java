@@ -6,7 +6,7 @@ import java.util.List;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.ScalarMappers;
 import org.lechuga.jdbc.exception.EmptyResultException;
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.jdbc.exception.TooManyResultsException;
 import org.lechuga.jdbc.exception.UnexpectedResultException;
 import org.lechuga.jdbc.queryobject.QueryObject;
@@ -96,7 +96,7 @@ public class EntityManager<E, ID> {
         try {
             return facade.loadUnique(q, model.getRowMapper());
         } catch (TooManyResultsException e) {
-            throw new FrijolesException("unique result expected, but obtained many: " + q.toString(), e);
+            throw new LechugaException("unique result expected, but obtained many: " + q.toString(), e);
         }
     }
 
@@ -137,7 +137,7 @@ public class EntityManager<E, ID> {
         QueryObject q = model.queryForDeleteById(idValue);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new FrijolesException(
+            throw new LechugaException(
                     "DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
@@ -146,7 +146,7 @@ public class EntityManager<E, ID> {
         QueryObject q = model.queryForDelete(entity);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new FrijolesException(
+            throw new LechugaException(
                     "DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
@@ -181,7 +181,7 @@ public class EntityManager<E, ID> {
              * en comptes d'store().
              */
             if (p.getPropertyType().isPrimitive()) {
-                throw new FrijolesException(
+                throw new LechugaException(
                         "@Id-annotated field is of primitive type: use insert()/update() instead of store(): "
                                 + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
             }
@@ -193,7 +193,7 @@ public class EntityManager<E, ID> {
             for (Column p : model.getIdColumns()) {
                 if (p.getGenerator() == null) {
                     if (p.getValueForJdbc(entity) == null) {
-                        throw new FrijolesException("una propietat PK no-autogenerada té valor null en store(): "
+                        throw new LechugaException("una propietat PK no-autogenerada té valor null en store(): "
                                 + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
                     }
                 } else {
@@ -213,7 +213,7 @@ public class EntityManager<E, ID> {
 
             for (Column p : model.getIdColumns()) {
                 if (p.getValueForJdbc(entity) == null) {
-                    throw new FrijolesException("una propietat PK no-autogenerada té valor null en store(): "
+                    throw new LechugaException("una propietat PK no-autogenerada té valor null en store(): "
                             + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
                 }
             }
@@ -233,9 +233,9 @@ public class EntityManager<E, ID> {
             long count = facade.loadUnique(q, ScalarMappers.LONG);
             return count > 0L;
         } catch (EmptyResultException e) {
-            throw new FrijolesException("EXISTS: " + q.toString(), e);
+            throw new LechugaException("EXISTS: " + q.toString(), e);
         } catch (TooManyResultsException e) {
-            throw new FrijolesException("duplicated entity found with the same PK? " + entity + " => " + q, e);
+            throw new LechugaException("duplicated entity found with the same PK? " + entity + " => " + q, e);
         }
     }
 
@@ -245,9 +245,9 @@ public class EntityManager<E, ID> {
             long count = facade.loadUnique(q, ScalarMappers.LONG);
             return count > 0L;
         } catch (EmptyResultException e) {
-            throw new FrijolesException("EXISTS: " + q.toString(), e);
+            throw new LechugaException("EXISTS: " + q.toString(), e);
         } catch (TooManyResultsException e) {
-            throw new FrijolesException("duplicated entity found with the same PK? " + id + " => " + q, e);
+            throw new LechugaException("duplicated entity found with the same PK? " + id + " => " + q, e);
         }
     }
 
@@ -258,7 +258,7 @@ public class EntityManager<E, ID> {
         int affectedResults = facade.update(q);
 
         if (affectedResults != 1) {
-            throw new FrijolesException(
+            throw new LechugaException(
                     "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
@@ -268,7 +268,7 @@ public class EntityManager<E, ID> {
         int affectedResults = facade.update(q);
 
         if (affectedResults != 1) {
-            throw new FrijolesException(
+            throw new LechugaException(
                     "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }

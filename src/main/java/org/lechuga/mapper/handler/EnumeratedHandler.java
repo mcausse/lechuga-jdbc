@@ -3,7 +3,7 @@ package org.lechuga.mapper.handler;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 
 public class EnumeratedHandler implements Handler {
 
@@ -16,7 +16,7 @@ public class EnumeratedHandler implements Handler {
         this.enumClass = enumClass;
 
         if (!enumClass.isEnum()) {
-            throw new FrijolesException("required an Enum type: " + enumClass.getName());
+            throw new LechugaException("required an Enum type: " + enumClass.getName());
         }
     }
 

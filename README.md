@@ -1,4 +1,4 @@
-# Frijoles JDBC
+# Lechuga JDBC
 
 ```java
 	@Table("departments")

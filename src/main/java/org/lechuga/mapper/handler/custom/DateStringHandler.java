@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.mapper.handler.Handler;
 import org.lechuga.mapper.handler.Handlers;
 
@@ -38,7 +38,7 @@ public class DateStringHandler implements Handler {
         try {
             return sdf.parseObject(v);
         } catch (ParseException e) {
-            throw new FrijolesException("formatting " + v + " => " + dateFormat, e);
+            throw new LechugaException("formatting " + v + " => " + dateFormat, e);
         }
     }
 

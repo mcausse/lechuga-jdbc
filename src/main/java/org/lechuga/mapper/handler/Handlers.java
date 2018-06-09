@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.lechuga.annotated.anno.CustomHandler;
 import org.lechuga.jdbc.ResultSetUtils;
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 
 public class Handlers {
 
@@ -63,7 +63,7 @@ public class Handlers {
      */
     public static Handler getHandlerFor(Class<?> type) {
         if (!HANDLERS.containsKey(type)) {
-            throw new FrijolesException("unsupported column type: " + type.getName() + ": please specify a concrete "
+            throw new LechugaException("unsupported column type: " + type.getName() + ": please specify a concrete "
                     + Handler.class.getName());
         }
         return HANDLERS.get(type);

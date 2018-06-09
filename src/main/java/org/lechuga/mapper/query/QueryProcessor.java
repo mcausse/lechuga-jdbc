@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.jdbc.queryobject.Query;
 import org.lechuga.jdbc.queryobject.QueryObject;
 import org.lechuga.mapper.Column;
@@ -73,7 +73,7 @@ public class QueryProcessor {
 
             if (i < expression.length()) {
                 if (expression.charAt(i) != '.') {
-                    throw new FrijolesException("expected '.' but readed '" + expression.charAt(i) + "'");
+                    throw new LechugaException("expected '.' but readed '" + expression.charAt(i) + "'");
                 }
                 i++; // chupa .
 
@@ -96,7 +96,7 @@ public class QueryProcessor {
             final Query q = new Query();
 
             if (!models.containsKey(tableAlias.toString())) {
-                throw new FrijolesException("model not found for alias: '" + tableAlias + "'");
+                throw new LechugaException("model not found for alias: '" + tableAlias + "'");
             }
             final TableModel<?> model = models.get(tableAlias.toString());
 
@@ -123,7 +123,7 @@ public class QueryProcessor {
             return q;
 
         } catch (final RuntimeException e) {
-            throw new FrijolesException("error in expression: '" + expression + "'", e);
+            throw new LechugaException("error in expression: '" + expression + "'", e);
         }
 
     }

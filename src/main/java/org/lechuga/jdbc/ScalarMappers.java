@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 
 public class ScalarMappers {
 
@@ -57,7 +57,7 @@ public class ScalarMappers {
     @SuppressWarnings("unchecked")
     public static <T> RowMapper<T> getScalarMapperFor(Class<?> columnClass) {
         if (!scalarMappers.containsKey(columnClass)) {
-            throw new FrijolesException("no scalar mapper defined for: " + columnClass.getName());
+            throw new LechugaException("no scalar mapper defined for: " + columnClass.getName());
         }
         return (RowMapper<T>) scalarMappers.get(columnClass);
     }

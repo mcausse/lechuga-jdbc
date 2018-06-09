@@ -7,7 +7,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 
 import org.lechuga.jdbc.ResultSetUtils;
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.mapper.handler.Handler;
 
 public class FormattedNumberHandler implements Handler {
@@ -41,7 +41,7 @@ public class FormattedNumberHandler implements Handler {
         try {
             return formatter.parse((String) v);
         } catch (final ParseException e) {
-            throw new FrijolesException(numericFormat + ": " + v, e);
+            throw new LechugaException(numericFormat + ": " + v, e);
         }
     }
 
@@ -54,7 +54,7 @@ public class FormattedNumberHandler implements Handler {
         try {
             return formatter.format(((Number) v).doubleValue());
         } catch (final ArithmeticException e) {
-            throw new FrijolesException(numericFormat + ": " + v, e);
+            throw new LechugaException(numericFormat + ": " + v, e);
         }
     }
 

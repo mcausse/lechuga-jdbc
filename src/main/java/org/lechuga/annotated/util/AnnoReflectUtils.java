@@ -8,7 +8,7 @@ import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 
 public class AnnoReflectUtils {
 
@@ -26,7 +26,7 @@ public class AnnoReflectUtils {
             }
             o = o.getSuperclass();
         }
-        throw new FrijolesException("field not found " + beanClass.getName() + "#" + name);
+        throw new LechugaException("field not found " + beanClass.getName() + "#" + name);
     }
 
     protected static Map<String, Field> getFields(String prefix, Class<?> beanClass) {
@@ -36,7 +36,7 @@ public class AnnoReflectUtils {
         try {
             info = Introspector.getBeanInfo(beanClass);
         } catch (IntrospectionException e) {
-            throw new FrijolesException("describing " + beanClass.getName(), e);
+            throw new LechugaException("describing " + beanClass.getName(), e);
         }
 
         PropertyDescriptor[] pds = info.getPropertyDescriptors();

@@ -6,7 +6,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.mapper.handler.Handler;
 import org.lechuga.mapper.handler.Handlers;
 
@@ -29,7 +29,7 @@ public class StringDateHandler implements Handler {
         try {
             return strHandler.getJdbcValue(sdf.parse((String) value));
         } catch (ParseException e) {
-            throw new FrijolesException("parsing " + value + " => " + dateFormat, e);
+            throw new LechugaException("parsing " + value + " => " + dateFormat, e);
         }
     }
 

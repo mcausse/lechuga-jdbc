@@ -15,7 +15,7 @@ import org.lechuga.annotated.convention.Conventions;
 import org.lechuga.annotated.convention.DefaultConventions;
 import org.lechuga.annotated.util.AnnoReflectUtils;
 import org.lechuga.jdbc.DataAccesFacade;
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.mapper.Accessor;
 import org.lechuga.mapper.Column;
 import org.lechuga.mapper.EntityManager;
@@ -93,7 +93,7 @@ public class EntityManagerFactory {
                 try {
                     generator = ReflectUtils.newInstance(annoGenerated.value(), annoGenerated.args());
                 } catch (Exception e) {
-                    throw new FrijolesException("instancing " + annoGenerated.value().getClass().getSimpleName() + "("
+                    throw new LechugaException("instancing " + annoGenerated.value().getClass().getSimpleName() + "("
                             + Arrays.toString(annoGenerated.args()) + ")", e);
                 }
             }
@@ -115,7 +115,7 @@ public class EntityManagerFactory {
             EnumHandler enumHandler = p.getAnnotation(EnumHandler.class);
             if (enumHandler != null) {
                 if (!Enum.class.isAssignableFrom(p.getType())) {
-                    throw new FrijolesException("property '" + entityClass.getSimpleName() + "#" + p.getName()
+                    throw new LechugaException("property '" + entityClass.getSimpleName() + "#" + p.getName()
                             + "' is not of Enum type: " + p.getType().getName());
                 }
                 handler = new EnumeratedHandler(p.getType());
@@ -127,7 +127,7 @@ public class EntityManagerFactory {
                     try {
                         handler = ReflectUtils.newInstance(annoCustomHandler.value(), annoCustomHandler.args());
                     } catch (Exception e) {
-                        throw new FrijolesException("instancing " + annoCustomHandler.value().getClass().getSimpleName()
+                        throw new LechugaException("instancing " + annoCustomHandler.value().getClass().getSimpleName()
                                 + "(" + Arrays.toString(annoCustomHandler.args()) + ")", e);
                     }
                 }

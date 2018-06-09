@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.RowMapper;
-import org.lechuga.jdbc.exception.FrijolesException;
+import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.jdbc.queryobject.Query;
 import org.lechuga.jdbc.queryobject.QueryObject;
 import org.lechuga.mapper.autogen.Generator;
@@ -72,7 +72,7 @@ public class TableModel<E> {
 
     public Column findColumnByName(String name) {
         if (!this.propsMap.containsKey(name)) {
-            throw new FrijolesException("property not found: " + entityClass.getName() + "#" + name);
+            throw new LechugaException("property not found: " + entityClass.getName() + "#" + name);
         }
         return this.propsMap.get(name);
     }

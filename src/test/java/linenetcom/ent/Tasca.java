@@ -1,6 +1,6 @@
 package linenetcom.ent;
 
-import org.frijoles.annotated.anno.Table;
+import org.lechuga.annotated.anno.Table;
 
 @Table("tasques")
 public class Tasca {

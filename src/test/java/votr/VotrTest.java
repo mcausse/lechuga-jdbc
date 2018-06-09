@@ -6,14 +6,14 @@ import static org.junit.Assert.assertNull;
 import java.util.Arrays;
 import java.util.List;
 
-import org.frijoles.jdbc.DataAccesFacade;
-import org.frijoles.jdbc.JdbcDataAccesFacade;
-import org.frijoles.jdbc.txproxy.TransactionalServiceProxyfier;
-import org.frijoles.jdbc.util.SqlScriptExecutor;
-import org.frijoles.mapper.HsqldbDDLGenerator;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
+import org.lechuga.jdbc.DataAccesFacade;
+import org.lechuga.jdbc.JdbcDataAccesFacade;
+import org.lechuga.jdbc.txproxy.TransactionalServiceProxyfier;
+import org.lechuga.jdbc.util.SqlScriptExecutor;
+import org.lechuga.mapper.HsqldbDDLGenerator;
 
 import votr.VotrService.VotacioDto;
 import votr.ent.Msg;

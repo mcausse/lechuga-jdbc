@@ -2,12 +2,12 @@ package linenetcom;
 
 import java.util.List;
 
-import org.frijoles.annotated.EntityManagerFactory;
-import org.frijoles.jdbc.DataAccesFacade;
-import org.frijoles.jdbc.ScalarMappers;
-import org.frijoles.jdbc.util.SqlScriptExecutor;
-import org.frijoles.mapper.EntityManager;
-import org.frijoles.mapper.query.QueryBuilder;
+import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.jdbc.DataAccesFacade;
+import org.lechuga.jdbc.ScalarMappers;
+import org.lechuga.jdbc.util.SqlScriptExecutor;
+import org.lechuga.mapper.EntityManager;
+import org.lechuga.mapper.query.QueryBuilder;
 
 import linenetcom.ent.Imputacio;
 import linenetcom.ent.ImputacioId;

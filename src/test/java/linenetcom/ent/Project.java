@@ -1,9 +1,9 @@
 package linenetcom.ent;
 
-import org.frijoles.annotated.anno.Generated;
-import org.frijoles.annotated.anno.Id;
-import org.frijoles.annotated.anno.Table;
-import org.frijoles.mapper.autogen.HsqldbSequence;
+import org.lechuga.annotated.anno.Generated;
+import org.lechuga.annotated.anno.Id;
+import org.lechuga.annotated.anno.Table;
+import org.lechuga.mapper.autogen.HsqldbSequence;
 
 @Table("projects")
 public class Project {

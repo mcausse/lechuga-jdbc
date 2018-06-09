@@ -1,8 +1,8 @@
 package linenetcom.ent;
 
-import org.frijoles.annotated.anno.CustomHandler;
-import org.frijoles.annotated.anno.Id;
-import org.frijoles.mapper.handler.custom.StringDateHandler;
+import org.lechuga.annotated.anno.CustomHandler;
+import org.lechuga.annotated.anno.Id;
+import org.lechuga.mapper.handler.custom.StringDateHandler;
 
 public class ImputacioId {
 

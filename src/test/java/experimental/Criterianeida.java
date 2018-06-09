@@ -4,15 +4,15 @@
 //
 // import java.util.StringJoiner;
 //
-// import org.frijoles.anno.ents.Exp;
-// import org.frijoles.anno.ents.ExpId;
-// import org.frijoles.anno.ents.Fase;
-// import org.frijoles.annotated.EntityManagerFactory;
-// import org.frijoles.jdbc.queryobject.Query;
-// import org.frijoles.mapper.Column;
-// import org.frijoles.mapper.EntityManager;
-// import org.frijoles.mapper.TableModel;
-// import org.frijoles.mapper.TableModel.Q;
+// import org.lechuga.anno.ents.Exp;
+// import org.lechuga.anno.ents.ExpId;
+// import org.lechuga.anno.ents.Fase;
+// import org.lechuga.annotated.EntityManagerFactory;
+// import org.lechuga.jdbc.queryobject.Query;
+// import org.lechuga.mapper.Column;
+// import org.lechuga.mapper.EntityManager;
+// import org.lechuga.mapper.TableModel;
+// import org.lechuga.mapper.TableModel.Q;
 // import org.junit.Test;
 //
 /// **

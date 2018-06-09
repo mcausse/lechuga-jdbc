@@ -4,28 +4,28 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.frijoles.annotated.EntityManagerFactory;
-import org.frijoles.annotated.anno.Column;
-import org.frijoles.annotated.anno.CustomHandler;
-import org.frijoles.annotated.anno.EnumHandler;
-import org.frijoles.annotated.anno.Generated;
-import org.frijoles.annotated.anno.Id;
-import org.frijoles.annotated.anno.Table;
-import org.frijoles.jdbc.DataAccesFacade;
-import org.frijoles.jdbc.JdbcDataAccesFacade;
-import org.frijoles.jdbc.util.SqlScriptExecutor;
-import org.frijoles.mapper.EntityManager;
-import org.frijoles.mapper.HsqldbDDLGenerator;
-import org.frijoles.mapper.Order;
-import org.frijoles.mapper.autogen.HsqldbSequence;
-import org.frijoles.mapper.criteria.CriteriaBuilder;
-import org.frijoles.mapper.criteria.ELike;
-import org.frijoles.mapper.criteria.Restrictions;
-import org.frijoles.mapper.handler.custom.StringDateHandler;
-import org.frijoles.mapper.query.QueryBuilder;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
+import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.anno.Column;
+import org.lechuga.annotated.anno.CustomHandler;
+import org.lechuga.annotated.anno.EnumHandler;
+import org.lechuga.annotated.anno.Generated;
+import org.lechuga.annotated.anno.Id;
+import org.lechuga.annotated.anno.Table;
+import org.lechuga.jdbc.DataAccesFacade;
+import org.lechuga.jdbc.JdbcDataAccesFacade;
+import org.lechuga.jdbc.util.SqlScriptExecutor;
+import org.lechuga.mapper.EntityManager;
+import org.lechuga.mapper.HsqldbDDLGenerator;
+import org.lechuga.mapper.Order;
+import org.lechuga.mapper.autogen.HsqldbSequence;
+import org.lechuga.mapper.criteria.CriteriaBuilder;
+import org.lechuga.mapper.criteria.ELike;
+import org.lechuga.mapper.criteria.Restrictions;
+import org.lechuga.mapper.handler.custom.StringDateHandler;
+import org.lechuga.mapper.query.QueryBuilder;
 
 public class Example {
 

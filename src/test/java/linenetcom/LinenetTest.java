@@ -2,11 +2,11 @@ package linenetcom;
 
 import static org.junit.Assert.assertEquals;
 
-import org.frijoles.jdbc.DataAccesFacade;
-import org.frijoles.jdbc.JdbcDataAccesFacade;
-import org.frijoles.mapper.HsqldbDDLGenerator;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Test;
+import org.lechuga.jdbc.DataAccesFacade;
+import org.lechuga.jdbc.JdbcDataAccesFacade;
+import org.lechuga.mapper.HsqldbDDLGenerator;
 
 import linenetcom.ent.Imputacio;
 import linenetcom.ent.Project;

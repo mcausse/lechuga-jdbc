@@ -1,6 +1,6 @@
 package votr.ent;
 
-import org.frijoles.annotated.anno.Id;
+import org.lechuga.annotated.anno.Id;
 
 public class OpcioId {
 

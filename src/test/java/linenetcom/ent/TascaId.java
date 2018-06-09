@@ -1,6 +1,6 @@
 package linenetcom.ent;
 
-import org.frijoles.annotated.anno.Id;
+import org.lechuga.annotated.anno.Id;
 
 public class TascaId {
     @Id

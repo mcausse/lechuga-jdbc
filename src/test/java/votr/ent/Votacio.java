@@ -2,8 +2,8 @@ package votr.ent;
 
 import java.util.Date;
 
-import org.frijoles.annotated.anno.Id;
-import org.frijoles.annotated.anno.Table;
+import org.lechuga.annotated.anno.Id;
+import org.lechuga.annotated.anno.Table;
 
 @Table("votacions")
 public class Votacio {

@@ -1,7 +1,7 @@
 package votr.ent;
 
-import org.frijoles.annotated.anno.Id;
-import org.frijoles.annotated.anno.Table;
+import org.lechuga.annotated.anno.Id;
+import org.lechuga.annotated.anno.Table;
 
 @Table("opcions")
 public class Opcio {

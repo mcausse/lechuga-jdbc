@@ -3,11 +3,11 @@ package votr;
 import java.util.Date;
 import java.util.List;
 
-import org.frijoles.annotated.EntityManagerFactory;
-import org.frijoles.jdbc.DataAccesFacade;
-import org.frijoles.jdbc.txproxy.TransactionalMethod;
-import org.frijoles.mapper.EntityManager;
-import org.frijoles.mapper.Order;
+import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.jdbc.DataAccesFacade;
+import org.lechuga.jdbc.txproxy.TransactionalMethod;
+import org.lechuga.mapper.EntityManager;
+import org.lechuga.mapper.Order;
 
 import votr.ent.Msg;
 import votr.ent.Opcio;

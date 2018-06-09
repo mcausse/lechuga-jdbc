@@ -184,7 +184,7 @@ public class Restrictions {
     public Criterion in(String propertyName, List<Object> values) {
         Column c = em.findColumnByName(propertyName);
         CriterionImpl r = new CriterionImpl();
-        r.append(c.getColumnName());
+        r.append(aliaseColumn(c.getColumnName()));
         r.append(" in (");
         for (int i = 0; i < values.size(); i++) {
             if (i > 0) {
@@ -212,7 +212,7 @@ public class Restrictions {
     public Criterion between(String propertyName, Object value1, Object value2) {
         Column c = em.findColumnByName(propertyName);
         CriterionImpl r = new CriterionImpl();
-        r.append(c.getColumnName());
+        r.append(aliaseColumn(c.getColumnName()));
         r.append(" between ? and ?");
         r.addArg(c.convertValueForJdbc(value1));
         r.addArg(c.convertValueForJdbc(value2));
@@ -222,7 +222,7 @@ public class Restrictions {
     public Criterion like(String propertyName, ELike like, String value) {
         Column c = em.findColumnByName(propertyName);
         CriterionImpl r = new CriterionImpl();
-        r.append(c.getColumnName() + " like ?");
+        r.append(aliaseColumn(c.getColumnName()) + " like ?");
         r.addArg(like.process(value));
         return r;
     }
@@ -230,7 +230,7 @@ public class Restrictions {
     public Criterion ilike(String propertyName, ELike like, String value) {
         Column c = em.findColumnByName(propertyName);
         CriterionImpl r = new CriterionImpl();
-        r.append("upper(" + c.getColumnName() + ") like upper(?)");
+        r.append("upper(" + aliaseColumn(c.getColumnName()) + ") like upper(?)");
         r.addArg(like.process(value));
         return r;
     }

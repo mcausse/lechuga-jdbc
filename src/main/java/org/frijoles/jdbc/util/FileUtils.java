@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 
+import org.frijoles.jdbc.exception.FrijolesException;
+
 public class FileUtils {
 
     public static String loadFileFromClasspath(final String fileName, final String charSetName) {
@@ -15,7 +17,7 @@ public class FileUtils {
         try {
             reader = new InputStreamReader(is, charSetName);
         } catch (final UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new FrijolesException(e);
         }
         return readFromReader(reader);
     }
@@ -23,7 +25,7 @@ public class FileUtils {
     public static InputStream loadFileFromClasspath(final String fileName) {
         final InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
         if (is == null) {
-            throw new RuntimeException("could not open file: " + fileName);
+            throw new FrijolesException("could not open file: " + fileName);
         }
         return is;
     }
@@ -41,7 +43,7 @@ public class FileUtils {
             }
             reader.close();
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new FrijolesException(e);
         }
         return strb.toString();
     }

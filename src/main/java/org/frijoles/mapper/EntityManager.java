@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.frijoles.jdbc.DataAccesFacade;
 import org.frijoles.jdbc.ScalarMappers;
-import org.frijoles.jdbc.exception.BaseException;
 import org.frijoles.jdbc.exception.EmptyResultException;
+import org.frijoles.jdbc.exception.FrijolesException;
 import org.frijoles.jdbc.exception.TooManyResultsException;
 import org.frijoles.jdbc.exception.UnexpectedResultException;
 import org.frijoles.jdbc.queryobject.QueryObject;
@@ -96,7 +96,7 @@ public class EntityManager<E, ID> {
         try {
             return facade.loadUnique(q, model.getRowMapper());
         } catch (TooManyResultsException e) {
-            throw new BaseException("unique result expected, but obtained many: " + q.toString(), e);
+            throw new FrijolesException("unique result expected, but obtained many: " + q.toString(), e);
         }
     }
 
@@ -137,7 +137,7 @@ public class EntityManager<E, ID> {
         QueryObject q = model.queryForDeleteById(idValue);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new RuntimeException(
+            throw new FrijolesException(
                     "DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
@@ -146,7 +146,7 @@ public class EntityManager<E, ID> {
         QueryObject q = model.queryForDelete(entity);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new RuntimeException(
+            throw new FrijolesException(
                     "DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
@@ -181,7 +181,7 @@ public class EntityManager<E, ID> {
              * en comptes d'store().
              */
             if (p.getPropertyType().isPrimitive()) {
-                throw new RuntimeException(
+                throw new FrijolesException(
                         "@Id-annotated field is of primitive type: use insert()/update() instead of store(): "
                                 + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
             }
@@ -193,7 +193,7 @@ public class EntityManager<E, ID> {
             for (Column p : model.getIdColumns()) {
                 if (p.getGenerator() == null) {
                     if (p.getValueForJdbc(entity) == null) {
-                        throw new RuntimeException("una propietat PK no-autogenerada té valor null en store(): "
+                        throw new FrijolesException("una propietat PK no-autogenerada té valor null en store(): "
                                 + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
                     }
                 } else {
@@ -213,7 +213,7 @@ public class EntityManager<E, ID> {
 
             for (Column p : model.getIdColumns()) {
                 if (p.getValueForJdbc(entity) == null) {
-                    throw new RuntimeException("una propietat PK no-autogenerada té valor null en store(): "
+                    throw new FrijolesException("una propietat PK no-autogenerada té valor null en store(): "
                             + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
                 }
             }
@@ -233,9 +233,9 @@ public class EntityManager<E, ID> {
             long count = facade.loadUnique(q, ScalarMappers.LONG);
             return count > 0L;
         } catch (EmptyResultException e) {
-            throw new BaseException("EXISTS: " + q.toString(), e);
+            throw new FrijolesException("EXISTS: " + q.toString(), e);
         } catch (TooManyResultsException e) {
-            throw new BaseException("duplicated entity found with the same PK?", e);
+            throw new FrijolesException("duplicated entity found with the same PK? " + entity + " => " + q, e);
         }
     }
 
@@ -245,9 +245,9 @@ public class EntityManager<E, ID> {
             long count = facade.loadUnique(q, ScalarMappers.LONG);
             return count > 0L;
         } catch (EmptyResultException e) {
-            throw new BaseException("EXISTS: " + q.toString(), e);
+            throw new FrijolesException("EXISTS: " + q.toString(), e);
         } catch (TooManyResultsException e) {
-            throw new BaseException("duplicated entity found with the same PK?", e);
+            throw new FrijolesException("duplicated entity found with the same PK? " + id + " => " + q, e);
         }
     }
 
@@ -258,7 +258,7 @@ public class EntityManager<E, ID> {
         int affectedResults = facade.update(q);
 
         if (affectedResults != 1) {
-            throw new BaseException(
+            throw new FrijolesException(
                     "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
@@ -268,7 +268,7 @@ public class EntityManager<E, ID> {
         int affectedResults = facade.update(q);
 
         if (affectedResults != 1) {
-            throw new BaseException(
+            throw new FrijolesException(
                     "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }

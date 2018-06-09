@@ -3,7 +3,7 @@ package org.frijoles.mapper.handler;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.frijoles.jdbc.exception.BaseException;
+import org.frijoles.jdbc.exception.FrijolesException;
 
 public class EnumeratedHandler implements Handler {
 
@@ -16,7 +16,7 @@ public class EnumeratedHandler implements Handler {
         this.enumClass = enumClass;
 
         if (!enumClass.isEnum()) {
-            throw new BaseException("required an Enum type: " + enumClass.getName());
+            throw new FrijolesException("required an Enum type: " + enumClass.getName());
         }
     }
 

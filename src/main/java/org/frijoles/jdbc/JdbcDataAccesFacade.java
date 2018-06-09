@@ -9,8 +9,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.frijoles.jdbc.exception.BaseException;
 import org.frijoles.jdbc.exception.EmptyResultException;
+import org.frijoles.jdbc.exception.FrijolesException;
 import org.frijoles.jdbc.exception.TooManyResultsException;
 import org.frijoles.jdbc.extractor.ResultSetExtractor;
 import org.frijoles.jdbc.queryobject.QueryObject;
@@ -45,7 +45,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
                 c.setAutoCommit(false);
                 c.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             } catch (final SQLException e) {
-                throw new BaseException(e);
+                throw new FrijolesException(e);
             }
         }
 
@@ -85,12 +85,12 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
 
     protected void createConnection() {
         if (isValidTransaction()) {
-            throw new BaseException("transaction is yet active", threadton.get().getOpened());
+            throw new FrijolesException("transaction is yet active", threadton.get().getOpened());
         }
         try {
             threadton.set(new Tx(ds.getConnection()));
         } catch (final SQLException e) {
-            throw new BaseException(e);
+            throw new FrijolesException(e);
         }
     }
 
@@ -98,11 +98,11 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
         try {
             Tx tx = threadton.get();
             if (tx == null || !tx.isValid()) {
-                throw new BaseException("not in a valid transaction");
+                throw new FrijolesException("not in a valid transaction");
             }
             return tx.c;
         } catch (final SQLException e) {
-            throw new BaseException(e);
+            throw new FrijolesException(e);
         }
     }
 
@@ -111,7 +111,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
         try {
             return threadton.get() != null && threadton.get().isValid();
         } catch (SQLException e) {
-            throw new BaseException(e);
+            throw new FrijolesException(e);
         }
     }
 
@@ -123,7 +123,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
             c.close();
             LOG.debug("<= commit");
         } catch (final Exception e) {
-            throw new BaseException(e);
+            throw new FrijolesException(e);
         }
     }
 
@@ -135,7 +135,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
             c.close();
             LOG.debug("<= rollback");
         } catch (final Exception e) {
-            throw new BaseException(e);
+            throw new FrijolesException(e);
         }
     }
 
@@ -145,7 +145,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
             c.close();
             threadton.remove();
         } catch (final Exception e) {
-            throw new BaseException(e);
+            throw new FrijolesException(e);
         } finally {
             threadton.remove();
         }
@@ -170,14 +170,14 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
             try {
                 rs.close();
             } catch (final SQLException e) {
-                throw new BaseException(e);
+                throw new FrijolesException(e);
             }
         }
         if (ps != null) {
             try {
                 ps.close();
             } catch (final SQLException e) {
-                throw new BaseException(e);
+                throw new FrijolesException(e);
             }
         }
     }
@@ -205,7 +205,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
         } catch (final EmptyResultException e) {
             throw e;
         } catch (final SQLException e) {
-            throw new BaseException(q.toString(), e);
+            throw new FrijolesException(q.toString(), e);
         } finally {
             closeResources(rs, ps);
         }
@@ -227,7 +227,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
             }
             return r;
         } catch (final SQLException e) {
-            throw new BaseException(q.toString(), e);
+            throw new FrijolesException(q.toString(), e);
         } finally {
             closeResources(rs, ps);
         }
@@ -243,7 +243,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
             ps = prepareStatement(c, q);
             return ps.executeUpdate();
         } catch (final SQLException e) {
-            throw new BaseException(q.toString(), e);
+            throw new FrijolesException(q.toString(), e);
         } finally {
             closeResources(null, ps);
         }
@@ -267,7 +267,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
             return extractor.extract(rs);
 
         } catch (final SQLException e) {
-            throw new BaseException(q.toString(), e);
+            throw new FrijolesException(q.toString(), e);
         } finally {
             closeResources(rs, ps);
         }

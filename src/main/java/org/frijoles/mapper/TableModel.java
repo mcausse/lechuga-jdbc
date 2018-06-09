@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 
 import org.frijoles.jdbc.DataAccesFacade;
 import org.frijoles.jdbc.RowMapper;
+import org.frijoles.jdbc.exception.FrijolesException;
 import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.queryobject.QueryObject;
 import org.frijoles.mapper.autogen.Generator;
@@ -71,7 +72,7 @@ public class TableModel<E> {
 
     public Column findColumnByName(String name) {
         if (!this.propsMap.containsKey(name)) {
-            throw new RuntimeException("property not found: " + entityClass.getName() + "#" + name);
+            throw new FrijolesException("property not found: " + entityClass.getName() + "#" + name);
         }
         return this.propsMap.get(name);
     }

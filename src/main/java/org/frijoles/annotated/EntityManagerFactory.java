@@ -15,7 +15,7 @@ import org.frijoles.annotated.convention.Conventions;
 import org.frijoles.annotated.convention.DefaultConventions;
 import org.frijoles.annotated.util.AnnoReflectUtils;
 import org.frijoles.jdbc.DataAccesFacade;
-import org.frijoles.jdbc.exception.BaseException;
+import org.frijoles.jdbc.exception.FrijolesException;
 import org.frijoles.mapper.Accessor;
 import org.frijoles.mapper.Column;
 import org.frijoles.mapper.EntityManager;
@@ -93,7 +93,7 @@ public class EntityManagerFactory {
                 try {
                     generator = ReflectUtils.newInstance(annoGenerated.value(), annoGenerated.args());
                 } catch (Exception e) {
-                    throw new BaseException("instancing " + annoGenerated.value().getClass().getSimpleName() + "("
+                    throw new FrijolesException("instancing " + annoGenerated.value().getClass().getSimpleName() + "("
                             + Arrays.toString(annoGenerated.args()) + ")", e);
                 }
             }
@@ -119,7 +119,7 @@ public class EntityManagerFactory {
             EnumHandler enumHandler = p.getAnnotation(EnumHandler.class);
             if (enumHandler != null) {
                 if (!Enum.class.isAssignableFrom(p.getType())) {
-                    throw new BaseException("property '" + entityClass.getSimpleName() + "#" + p.getName()
+                    throw new FrijolesException("property '" + entityClass.getSimpleName() + "#" + p.getName()
                             + "' is not of Enum type: " + p.getType().getName());
                 }
                 handler = new EnumeratedHandler(p.getType());
@@ -131,7 +131,7 @@ public class EntityManagerFactory {
                     try {
                         handler = ReflectUtils.newInstance(annoCustomHandler.value(), annoCustomHandler.args());
                     } catch (Exception e) {
-                        throw new BaseException("instancing " + annoCustomHandler.value().getClass().getSimpleName()
+                        throw new FrijolesException("instancing " + annoCustomHandler.value().getClass().getSimpleName()
                                 + "(" + Arrays.toString(annoCustomHandler.args()) + ")", e);
                     }
                 }

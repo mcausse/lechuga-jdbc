@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import org.frijoles.jdbc.exception.BaseException;
+import org.frijoles.jdbc.exception.FrijolesException;
 import org.frijoles.mapper.handler.Handler;
 import org.frijoles.mapper.handler.Handlers;
 
@@ -38,7 +38,7 @@ public class DateStringHandler implements Handler {
         try {
             return sdf.parseObject(v);
         } catch (ParseException e) {
-            throw new BaseException("formatting " + v + " => " + dateFormat, e);
+            throw new FrijolesException("formatting " + v + " => " + dateFormat, e);
         }
     }
 

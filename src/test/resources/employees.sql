@@ -1,10 +1,10 @@
-drop table departments if exists;
 drop table employees if exists;
+drop table departments if exists;
 
 
 create table departments (
  id integer	/* id */ ,
- name varchar(100)	/* name */ 
+ dept_name varchar(100)	/* name */ 
 );
 alter table departments add constraint pk_departments primary key (id);
 drop sequence seq_department if exists;
@@ -18,4 +18,4 @@ create table employees (
  sex varchar(20)	/* sex */ 
 );
 alter table employees add constraint pk_employees primary key (id_department,dni);
-
+alter table employees add foreign key (id_department) references departments(id);

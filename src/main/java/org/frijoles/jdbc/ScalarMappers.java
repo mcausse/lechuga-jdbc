@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.frijoles.jdbc.exception.BaseException;
+import org.frijoles.jdbc.exception.FrijolesException;
 
 public class ScalarMappers {
 
@@ -21,6 +21,13 @@ public class ScalarMappers {
     public static final RowMapper<Float> FLOAT = (rs) -> ResultSetUtils.getFloat(rs);
     public static final RowMapper<Double> DOUBLE = (rs) -> ResultSetUtils.getDouble(rs);
     public static final RowMapper<BigDecimal> BIG_DECIMAL = (rs) -> ResultSetUtils.getBigDecimal(rs);
+
+    public static final RowMapper<Byte> PBYTE = (rs) -> rs.getByte(1);
+    public static final RowMapper<Short> PSHORT = (rs) -> rs.getShort(1);
+    public static final RowMapper<Integer> PINTEGER = (rs) -> rs.getInt(1);
+    public static final RowMapper<Long> PLONG = (rs) -> rs.getLong(1);
+    public static final RowMapper<Float> PFLOAT = (rs) -> rs.getFloat(1);
+    public static final RowMapper<Double> PDOUBLE = (rs) -> rs.getDouble(1);
 
     static final Map<Class<?>, RowMapper<?>> scalarMappers = new LinkedHashMap<>();
 
@@ -38,19 +45,19 @@ public class ScalarMappers {
         scalarMappers.put(Float.class, FLOAT);
         scalarMappers.put(Double.class, DOUBLE);
 
-        scalarMappers.put(boolean.class, BOOLEAN);
-        scalarMappers.put(byte.class, BYTE);
-        scalarMappers.put(short.class, SHORT);
-        scalarMappers.put(int.class, INTEGER);
-        scalarMappers.put(long.class, LONG);
-        scalarMappers.put(float.class, FLOAT);
-        scalarMappers.put(double.class, DOUBLE);
+        // scalarMappers.put(boolean.class, PBOOLEAN);
+        scalarMappers.put(byte.class, PBYTE);
+        scalarMappers.put(short.class, PSHORT);
+        scalarMappers.put(int.class, PINTEGER);
+        scalarMappers.put(long.class, PLONG);
+        scalarMappers.put(float.class, PFLOAT);
+        scalarMappers.put(double.class, PDOUBLE);
     }
 
     @SuppressWarnings("unchecked")
     public static <T> RowMapper<T> getScalarMapperFor(Class<?> columnClass) {
         if (!scalarMappers.containsKey(columnClass)) {
-            throw new BaseException("no scalar mapper defined for: " + columnClass.getName());
+            throw new FrijolesException("no scalar mapper defined for: " + columnClass.getName());
         }
         return (RowMapper<T>) scalarMappers.get(columnClass);
     }

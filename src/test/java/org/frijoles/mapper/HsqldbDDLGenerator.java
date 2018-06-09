@@ -35,7 +35,8 @@ public class HsqldbDDLGenerator {
 
         StringBuilder r = new StringBuilder();
 
-        for (Class<?> c : classes) {
+        for (int i = classes.length - 1; i >= 0; i--) {
+            Class<?> c = classes[i];
             EntityManagerFactory emf = new EntityManagerFactory(null);
             TableModel<?> ec = emf.build(c, Object.class).getModel();
             HsqldbDDLGenerator gen = new HsqldbDDLGenerator(ec);

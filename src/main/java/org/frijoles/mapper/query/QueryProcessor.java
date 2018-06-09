@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.frijoles.jdbc.exception.FrijolesException;
 import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.queryobject.QueryObject;
 import org.frijoles.mapper.Column;
@@ -72,7 +73,7 @@ public class QueryProcessor {
 
             if (i < expression.length()) {
                 if (expression.charAt(i) != '.') {
-                    throw new RuntimeException("expected '.' but readed '" + expression.charAt(i) + "'");
+                    throw new FrijolesException("expected '.' but readed '" + expression.charAt(i) + "'");
                 }
                 i++; // chupa .
 
@@ -95,7 +96,7 @@ public class QueryProcessor {
             final Query q = new Query();
 
             if (!models.containsKey(tableAlias.toString())) {
-                throw new RuntimeException("model not found for alias: '" + tableAlias + "'");
+                throw new FrijolesException("model not found for alias: '" + tableAlias + "'");
             }
             final TableModel<?> model = models.get(tableAlias.toString());
 
@@ -122,7 +123,7 @@ public class QueryProcessor {
             return q;
 
         } catch (final RuntimeException e) {
-            throw new RuntimeException("error in expression: '" + expression + "'", e);
+            throw new FrijolesException("error in expression: '" + expression + "'", e);
         }
 
     }

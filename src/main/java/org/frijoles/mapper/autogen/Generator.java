@@ -3,7 +3,7 @@ package org.frijoles.mapper.autogen;
 import org.frijoles.jdbc.DataAccesFacade;
 import org.frijoles.jdbc.RowMapper;
 import org.frijoles.jdbc.ScalarMappers;
-import org.frijoles.jdbc.exception.BaseException;
+import org.frijoles.jdbc.exception.FrijolesException;
 import org.frijoles.jdbc.exception.UnexpectedResultException;
 import org.frijoles.jdbc.queryobject.Query;
 import org.frijoles.jdbc.queryobject.QueryObject;
@@ -22,7 +22,7 @@ public abstract class Generator {
         try {
             return facade.loadUnique(q, rowMapper);
         } catch (UnexpectedResultException e) {
-            throw new BaseException("error running incrementer: " + toString(), e);
+            throw new FrijolesException("error running incrementer: " + toString(), e);
         }
     }
 

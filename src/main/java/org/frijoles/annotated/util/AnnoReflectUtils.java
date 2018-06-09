@@ -8,6 +8,8 @@ import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.frijoles.jdbc.exception.FrijolesException;
+
 public class AnnoReflectUtils {
 
     public static Map<String, Field> getFields(Class<?> beanClass) {
@@ -24,7 +26,7 @@ public class AnnoReflectUtils {
             }
             o = o.getSuperclass();
         }
-        throw new RuntimeException("field not readable? " + beanClass.getName() + "#" + name);
+        throw new FrijolesException("field not found " + beanClass.getName() + "#" + name);
     }
 
     protected static Map<String, Field> getFields(String prefix, Class<?> beanClass) {
@@ -34,7 +36,7 @@ public class AnnoReflectUtils {
         try {
             info = Introspector.getBeanInfo(beanClass);
         } catch (IntrospectionException e) {
-            throw new RuntimeException("describing " + beanClass.getName(), e);
+            throw new FrijolesException("describing " + beanClass.getName(), e);
         }
 
         PropertyDescriptor[] pds = info.getPropertyDescriptors();

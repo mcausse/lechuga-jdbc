@@ -141,7 +141,7 @@ public class JoinTest {
                 );
 
                 assertEquals( //
-                        "select p.id,p.name from pizzas p where upper(name) like upper(?) and id between ? and ? and id in (?,?,?)  -- [%man%(String), 100(Long), 200(Long), 100(Long), 101(Long), 102(Long)]", //
+                        "select p.id,p.name from pizzas p where upper(p.name) like upper(?) and p.id between ? and ? and p.id in (?,?,?)  -- [%man%(String), 100(Long), 200(Long), 100(Long), 101(Long), 102(Long)]", //
                         c.toString());
 
                 c.getExecutor(pem).load();

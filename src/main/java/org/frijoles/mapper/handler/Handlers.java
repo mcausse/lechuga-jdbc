@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.frijoles.annotated.anno.CustomHandler;
 import org.frijoles.jdbc.ResultSetUtils;
-import org.frijoles.jdbc.exception.BaseException;
+import org.frijoles.jdbc.exception.FrijolesException;
 
 public class Handlers {
 
@@ -63,7 +63,7 @@ public class Handlers {
      */
     public static Handler getHandlerFor(Class<?> type) {
         if (!HANDLERS.containsKey(type)) {
-            throw new BaseException("unsupported column type: " + type.getName() + ": please specify a concrete "
+            throw new FrijolesException("unsupported column type: " + type.getName() + ": please specify a concrete "
                     + Handler.class.getName());
         }
         return HANDLERS.get(type);

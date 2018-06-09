@@ -51,7 +51,7 @@ public class TransactionalServiceProxyfier implements InvocationHandler {
         } else if (anno.propagation() == EPropagation.NEW) {
             return executeInTransaction(method, args, anno.readOnly());
         } else {
-            throw new RuntimeException(anno.propagation().name());
+            throw new UnsupportedOperationException(anno.propagation().name());
         }
 
     }

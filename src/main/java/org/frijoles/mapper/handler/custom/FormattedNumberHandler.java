@@ -7,6 +7,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 
 import org.frijoles.jdbc.ResultSetUtils;
+import org.frijoles.jdbc.exception.FrijolesException;
 import org.frijoles.mapper.handler.Handler;
 
 public class FormattedNumberHandler implements Handler {
@@ -40,7 +41,7 @@ public class FormattedNumberHandler implements Handler {
         try {
             return formatter.parse((String) v);
         } catch (final ParseException e) {
-            throw new RuntimeException(numericFormat + ": " + v, e);
+            throw new FrijolesException(numericFormat + ": " + v, e);
         }
     }
 
@@ -53,7 +54,7 @@ public class FormattedNumberHandler implements Handler {
         try {
             return formatter.format(((Number) v).doubleValue());
         } catch (final ArithmeticException e) {
-            throw new RuntimeException(numericFormat + ": " + v, e);
+            throw new FrijolesException(numericFormat + ": " + v, e);
         }
     }
 

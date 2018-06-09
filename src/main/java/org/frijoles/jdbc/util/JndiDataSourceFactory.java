@@ -8,7 +8,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.frijoles.jdbc.exception.BaseException;
+import org.frijoles.jdbc.exception.FrijolesException;
 
 /** @author Clinton Begin */
 public class JndiDataSourceFactory {
@@ -35,7 +35,7 @@ public class JndiDataSourceFactory {
                 dataSource = (DataSource) initCtx.lookup(properties.getProperty(DATA_SOURCE));
             }
         } catch (NamingException e) {
-            throw new BaseException(e);
+            throw new FrijolesException(e);
         }
     }
 

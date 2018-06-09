@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import org.frijoles.annotated.EntityManagerFactory;
+import org.frijoles.annotated.anno.Column;
 import org.frijoles.annotated.anno.CustomHandler;
 import org.frijoles.annotated.anno.EnumHandler;
 import org.frijoles.annotated.anno.Generated;
@@ -34,9 +35,12 @@ public class Example {
 
     @Table("departments")
     public static class Department {
+
         @Id
         @Generated(value = HsqldbSequence.class, args = "seq_department")
         Long id;
+
+        @Column("dept_name")
         String name;
 
         public Long getId() {
@@ -63,8 +67,10 @@ public class Example {
     }
 
     public static class EmployeeId {
+
         @Id
         Long idDepartment;
+
         @Id
         String dni;
 
@@ -93,11 +99,16 @@ public class Example {
 
     @Table("employees")
     public static class Employee {
+
         EmployeeId id;
+
         String name;
+
         Double salary;
+
         @CustomHandler(value = StringDateHandler.class, args = "dd/MM/yyyy")
         String birthDate;
+
         @EnumHandler
         ESex sex;
 
@@ -149,7 +160,7 @@ public class Example {
 
     }
 
-    DataAccesFacade facade;
+    final DataAccesFacade facade;
 
     public Example() {
         final JDBCDataSource ds = new JDBCDataSource();
@@ -267,7 +278,7 @@ public class Example {
                 c.append("and {} ", re.in("sex", ESex.FEMALE, ESex.MALE));
 
                 assertEquals(
-                        "select e.birth_date,e.dni,e.id_department,e.name,e.salary,e.sex from employees e join departments d on e.id_department=d.id where d.id>=? and d.id<? and upper(name) like upper(?) and sex in (?,?)  -- [100(Integer), 999(Integer), %b%(String), FEMALE(String), MALE(String)]",
+                        "select e.birth_date,e.dni,e.id_department,e.name,e.salary,e.sex from employees e join departments d on e.id_department=d.id where d.id>=? and d.id<? and upper(e.name) like upper(?) and e.sex in (?,?)  -- [100(Integer), 999(Integer), %b%(String), FEMALE(String), MALE(String)]",
                         c.toString());
 
                 List<Employee> r = c.getExecutor(empMan).load();

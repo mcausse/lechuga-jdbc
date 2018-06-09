@@ -3,17 +3,22 @@
 ```java
 	@Table("departments")
 	public class Department {
+	
 		@Id
 		@Generated(value = HsqldbSequence.class, args = "seq_department")
 		Long id;
+		
+		@Column("dept_name")
 		String name;
 		...
 	}    
 ```
 ```java
 	public class EmployeeId {
+	
 		@Id
 		Long idDepartment;
+		
 		@Id
 		String dni;
 		...
@@ -23,11 +28,16 @@
 	
 	@Table("employees")
 	public class Employee {
+	
 		EmployeeId id;
+		
 		String name;
+		
 		Double salary;
+		
 		@CustomHandler(value = StringDateHandler.class, args = "dd/MM/yyyy")
 		String birthDate;
+		
 		@EnumHandler
 		ESex sex;
 		...
@@ -58,8 +68,7 @@
 	call next value for seq_department -- []
 	insert into departments (id,name) values (?,?) -- [100(Long), Java dept.(String)]
 	insert into employees (birth_date,dni,id_department,name,salary,sex) values (?,?,?,?,?,?) 
-	-- [Mon May 22 00:00:00 CET 1837(Date), 8P(String), 100(Long), jbm(String), 
-	38000.0(Double), MALE(String)]
+	-- [Mon May 22 00:00:00 CET 1837(Date), 8P(String), 100(Long), jbm(String), 38000.0(Double), MALE(String)]
 ```
 
 ```java
@@ -79,8 +88,7 @@
 ```sql
 	update employees set birth_date=?,name=?,salary=?,sex=? 
 	where dni=? and id_department=? 
-	-- [Mon May 22 00:00:00 CET 1837(Date), jbm(String), 38000.0(Double), 
-	MALE(String), 8P(String), 100(Long)]
+	-- [Mon May 22 00:00:00 CET 1837(Date), jbm(String), 38000.0(Double), MALE(String), 8P(String), 100(Long)]
 	update employees set salary=? where dni=? and id_department=? 
 	-- [38000.0(Double), 8P(String), 100(Long)]
 ```
@@ -148,7 +156,7 @@
 ```sql
 	select e.birth_date,e.dni,e.id_department,e.name,e.salary,e.sex 
 	from employees e join departments d on e.id_department=d.id 
-	where d.id>=? and d.id<? and upper(name) like upper(?) and sex in (?,?) 
+	where d.id>=? and d.id<? and upper(e.name) like upper(?) and e.sex in (?,?) 
 	 -- [100(Integer), 999(Integer), %b%(String), FEMALE(String), MALE(String)]
 ```
-	
+

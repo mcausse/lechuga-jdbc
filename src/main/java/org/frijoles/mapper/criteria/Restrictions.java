@@ -236,7 +236,7 @@ public class Restrictions {
     }
 
     public Criterion orderBy(Order... orders) {
-        CriterionImpl r = new CriterionImpl("order by ");
+        CriterionImpl r = new CriterionImpl();
         int c = 0;
         for (Order o : orders) {
             if (c > 0) {

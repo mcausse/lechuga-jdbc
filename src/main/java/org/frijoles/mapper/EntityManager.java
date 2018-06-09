@@ -11,6 +11,7 @@ import org.frijoles.jdbc.exception.TooManyResultsException;
 import org.frijoles.jdbc.exception.UnexpectedResultException;
 import org.frijoles.jdbc.queryobject.QueryObject;
 import org.frijoles.mapper.criteria.CriteriaBuilder;
+import org.frijoles.mapper.criteria.Criterion;
 import org.frijoles.mapper.criteria.Restrictions;
 import org.frijoles.mapper.query.QueryBuilder;
 
@@ -48,7 +49,7 @@ public class EntityManager<E, ID> {
     // ==============================================
 
     public CriteriaBuilder createCriteria() {
-        return new CriteriaBuilder(facade); // FIXME
+        return new CriteriaBuilder(facade);
     }
 
     public Restrictions getRestrictions() {
@@ -57,6 +58,28 @@ public class EntityManager<E, ID> {
 
     public Restrictions getRestrictions(String alias) {
         return new Restrictions(model, alias);
+    }
+
+    public List<E> loadBy(Criterion c, Order... orders) {
+        CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
+        return criteria.getExecutor(this).load();
+    }
+
+    public E loadUniqueBy(Criterion c, Order... orders) {
+        CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
+        return criteria.getExecutor(this).loadUnique();
+    }
+
+    protected CriteriaBuilder createCriteriaTemplate(Criterion c, Order... orders) {
+        CriteriaBuilder criteria = createCriteria();
+        Restrictions r = getRestrictions();
+        criteria.append("select {} ", r.all());
+        criteria.append("from {} ", r.table());
+        criteria.append("where {} ", c);
+        if (orders.length > 0) {
+            criteria.append("order by {} ", r.orderBy(orders));
+        }
+        return criteria;
     }
 
     // ==============================================

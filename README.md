@@ -45,7 +45,70 @@
 	EntityManager<Department, Long> deptMan = emf.build(Department.class, Long.class);
 ```
 
+```java
+	Department d = new Department();
+	...
+	deptMan.store(d);
+	
+	Employee e = new Employee();
+	...
+	empMan.insert(e);
+```
+```sql
+	call next value for seq_department -- []
+	insert into departments (id,name) values (?,?) -- [100(Long), Java dept.(String)]
+	insert into employees (birth_date,dni,id_department,name,salary,sex) values (?,?,?,?,?,?) 
+	-- [Mon May 22 00:00:00 CET 1837(Date), 8P(String), 100(Long), jbm(String), 
+	38000.0(Double), MALE(String)]
+```
 
+```java
+	Employee es = empMan.loadById(e.getId());
+```
+```sql
+	select birth_date,dni,id_department,name,salary,sex 
+	from employees where dni=? and id_department=? 
+	-- [8P(String), 100(Long)]
+```
+
+```java
+	e.setSalary(38000.0);
+	empMan.update(e);
+	empMan.update(e, "salary");
+```
+```sql
+	update employees set birth_date=?,name=?,salary=?,sex=? 
+	where dni=? and id_department=? 
+	-- [Mon May 22 00:00:00 CET 1837(Date), jbm(String), 38000.0(Double), 
+	MALE(String), 8P(String), 100(Long)]
+	update employees set salary=? where dni=? and id_department=? 
+	-- [38000.0(Double), 8P(String), 100(Long)]
+```
+
+```java
+	List<Employee> es = empMan.loadByProp("sex", ESex.MALE, Order.asc("birthDate"));
+```
+```sql
+	select birth_date,dni,id_department,name,salary,sex from employees 
+	where sex=? order by birth_date asc -- [MALE(String)]
+```
+
+```java
+	Restrictions r = empMan.getRestrictions();
+	List<Employee> es = empMan.loadBy(
+        Restrictions.and(
+                r.isNotNull("name"),
+                r.between("birthDate", "01/01/1800", "01/01/1900")
+        ), 
+        Order.asc("salary"));
+```
+```sql
+	select birth_date,dni,id_department,name,salary,sex from employees 
+	where name is not null and birth_date between ? and ? order by salary asc  
+	-- [Wed Jan 01 00:00:00 CET 1800(Date), Mon Jan 01 00:00:00 CET 1900(Date)]
+```
+
+                
 ## QueryBuilder	
 
 ```java
@@ -60,11 +123,12 @@
 
 ```
 
-	=> select e.birth_date,e.dni,e.id_department,e.name,e.salary,e.sex 
+```sql
+	select e.birth_date,e.dni,e.id_department,e.name,e.salary,e.sex 
 	from employees e join departments d on e.id_department=d.id 
 	where d.id>=? and d.id<? and e.name like ? and e.sex in (?,?) 
 	 -- [100(Integer), 999(Integer), %b%(String), FEMALE(String), MALE(String)]
-
+```
 
 ## Criteria
 
@@ -81,9 +145,10 @@
 	c.append("and {} ", re.in("sex", ESex.FEMALE, ESex.MALE));
 ```
 
-	=> select e.birth_date,e.dni,e.id_department,e.name,e.salary,e.sex 
+```sql
+	select e.birth_date,e.dni,e.id_department,e.name,e.salary,e.sex 
 	from employees e join departments d on e.id_department=d.id 
 	where d.id>=? and d.id<? and upper(name) like upper(?) and sex in (?,?) 
 	 -- [100(Integer), 999(Integer), %b%(String), FEMALE(String), MALE(String)]
-	
+```
 	

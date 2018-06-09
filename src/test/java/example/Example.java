@@ -15,6 +15,7 @@ import org.frijoles.jdbc.JdbcDataAccesFacade;
 import org.frijoles.jdbc.util.SqlScriptExecutor;
 import org.frijoles.mapper.EntityManager;
 import org.frijoles.mapper.HsqldbDDLGenerator;
+import org.frijoles.mapper.Order;
 import org.frijoles.mapper.autogen.HsqldbSequence;
 import org.frijoles.mapper.criteria.CriteriaBuilder;
 import org.frijoles.mapper.criteria.ELike;
@@ -199,7 +200,39 @@ public class Example {
             e.setSalary(38000.0);
             e.setBirthDate("22/05/1837");
             e.setSex(ESex.MALE);
-            empMan.store(e);
+
+            empMan.insert(e);
+
+            {
+                Employee es = empMan.loadById(e.getId());
+                assertEquals(
+                        "Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]",
+                        es.toString());
+
+                e.setSalary(38000.0);
+                empMan.update(e);
+                empMan.update(e, "salary");
+            }
+
+            {
+                List<Employee> es = empMan.loadByProp("sex", ESex.MALE, Order.asc("birthDate"));
+                assertEquals(
+                        "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
+                        es.toString());
+            }
+            {
+                Restrictions r = empMan.getRestrictions();
+                List<Employee> es = empMan.loadBy( //
+                        Restrictions.and( //
+                                r.isNotNull("name"), //
+                                r.between("birthDate", "01/01/1800", "01/01/1900") //
+                        ) //
+                        , Order.asc("salary"));
+
+                assertEquals(
+                        "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
+                        es.toString());
+            }
 
             {
                 QueryBuilder<Employee> q = empMan.createQuery("e");
@@ -242,8 +275,11 @@ public class Example {
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
                         r.toString());
             }
-        } finally {
+
+            facade.commit();
+        } catch (Exception e) {
             facade.rollback();
+            throw e;
         }
     }
 }

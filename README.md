@@ -56,13 +56,22 @@
 ```
 
 ```java
-	Department d = new Department();
-	...
-	deptMan.store(d);
-	
-	Employee e = new Employee();
-	...
-	empMan.insert(e);
+	facade.begin();
+	try {
+
+		Department d = new Department();
+		...
+		deptMan.store(d);
+		
+		Employee e = new Employee();
+		...
+		empMan.insert(e);
+		
+		facade.commit();
+	} catch (Exception e) {
+		facade.rollback();
+		throw e;
+	}
 ```
 ```sql
 	call next value for seq_department -- []

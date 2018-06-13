@@ -1,7 +1,7 @@
 package org.lechuga.mapper.criteria;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.StringJoiner;
 
 import org.lechuga.mapper.Column;
@@ -144,22 +144,24 @@ public class Restrictions {
 
     // ////
 
-    static Criterion composition(String op, List<Criterion> qs) {
+    static Criterion composition(String op, Collection<Criterion> qs) {
         CriterionImpl r = new CriterionImpl();
-        for (int i = 0; i < qs.size(); i++) {
+        int i = 0;
+        for (Criterion q : qs) {
             if (i > 0) {
                 r.append(op);
             }
-            r.append(qs.get(i));
+            r.append(q);
+            i++;
         }
         return r;
     }
 
-    public static Criterion and(List<Criterion> qs) {
+    public static Criterion and(Collection<Criterion> qs) {
         return composition(" and ", qs);
     }
 
-    public static Criterion or(List<Criterion> qs) {
+    public static Criterion or(Collection<Criterion> qs) {
         return composition(" or ", qs);
     }
 
@@ -181,17 +183,19 @@ public class Restrictions {
 
     // ////
 
-    public Criterion in(String propertyName, List<Object> values) {
+    public Criterion in(String propertyName, Collection<Object> values) {
         Column c = em.findColumnByName(propertyName);
         CriterionImpl r = new CriterionImpl();
         r.append(aliaseColumn(c.getColumnName()));
         r.append(" in (");
-        for (int i = 0; i < values.size(); i++) {
+        int i = 0;
+        for (Object v : values) {
             if (i > 0) {
                 r.append(",");
             }
             r.append("?");
-            r.addArg(c.convertValueForJdbc(values.get(i)));
+            r.addArg(c.convertValueForJdbc(v));
+            i++;
         }
         r.append(")");
         return r;
@@ -201,7 +205,7 @@ public class Restrictions {
         return in(propertyName, Arrays.asList(values));
     }
 
-    public Criterion notIn(String propertyName, List<Object> values) {
+    public Criterion notIn(String propertyName, Collection<Object> values) {
         return not(in(propertyName, Arrays.asList(values)));
     }
 
@@ -235,7 +239,7 @@ public class Restrictions {
         return r;
     }
 
-    public Criterion orderBy(Order... orders) {
+    public Criterion orderBy(Collection<Order> orders) {
         CriterionImpl r = new CriterionImpl();
         int c = 0;
         for (Order o : orders) {
@@ -248,6 +252,10 @@ public class Restrictions {
             r.append(aliaseColumn(column.getColumnName()) + o.getOrder());
         }
         return r;
+    }
+
+    public Criterion orderBy(Order... orders) {
+        return orderBy(Arrays.asList(orders));
     }
 
 }

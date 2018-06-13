@@ -56,13 +56,26 @@
 ```
 
 ```java
-	Department d = new Department();
-	...
-	deptMan.store(d);
-	
-	Employee e = new Employee();
-	...
-	empMan.insert(e);
+	facade.begin();
+	try {
+
+		Department d = new Department();
+		d.setName("Java dept.");
+		deptMan.store(d);
+		
+		Employee e = new Employee();
+		e.setId(new EmployeeId(d.getId(), "8P"));
+		e.setName("jbm");
+		e.setSalary(38000.0);
+		e.setBirthDate("22/05/1837");
+		e.setSex(ESex.MALE);
+		empMan.insert(e);
+		
+		facade.commit();
+	} catch (Exception e) {
+		facade.rollback();
+		throw e;
+	}
 ```
 ```sql
 	call next value for seq_department -- []
@@ -160,3 +173,131 @@
 	 -- [100(Integer), 999(Integer), %b%(String), FEMALE(String), MALE(String)]
 ```
 
+
+## GenericDao<E, ID>
+
+```java
+
+    public static class DepartmentDao extends GenericDao<Department, Long> {
+
+        public DepartmentDao(DataAccesFacade facade) {
+            super(facade);
+        }
+
+        public Department findDepartment(String name) {
+            Restrictions r = getRestrictions();
+            CriteriaBuilder c = createCriteria();
+            c.append("select {} from {} ", r.all(), r.table());
+            c.append("where {}", r.ilike("name", ELike.CONTAINS, name));
+            return c.getExecutor(getEntityManager()).loadUnique();
+        }
+    }
+
+    public static class EmployeeDao extends GenericDao<Employee, EmployeeId> {
+
+        public EmployeeDao(DataAccesFacade facade) {
+            super(facade);
+        }
+
+        public List<Employee> loadEmployeesOf(Department dept) {
+            QueryBuilder<Employee> q = createQuery("e");
+            q.append("select {e.*} from {e} where {e.id.idDepartment=?} ", dept.getId());
+            q.append("order by {e.id.dni} asc");
+            return q.getExecutor().load();
+        }
+    }
+
+    public static class DeptEmpsDto {
+
+        final Department dept;
+        final List<Employee> emps;
+
+        public DeptEmpsDto(Department dept, List<Employee> emps) {
+            super();
+            this.dept = dept;
+            this.emps = emps;
+        }
+
+        public Department getDept() {
+            return dept;
+        }
+
+        public List<Employee> getEmps() {
+            return emps;
+        }
+
+        @Override
+        public String toString() {
+            return "DeptEmpsDto [dept=" + dept + ", emps=" + emps + "]";
+        }
+
+    }
+
+    public static class TestService {
+
+        final DataAccesFacade facade;
+        final DepartmentDao departmentDao;
+        final EmployeeDao employeeDao;
+
+        public TestService(DataAccesFacade facade) {
+            super();
+            this.facade = facade;
+            this.departmentDao = new DepartmentDao(facade);
+            this.employeeDao = new EmployeeDao(facade);
+        }
+
+        public void create(Department dept, Collection<Employee> employees) {
+            facade.begin();
+            try {
+
+                departmentDao.store(dept);
+                employees.forEach(e -> e.getId().setIdDepartment(dept.getId()));
+                employeeDao.store(employees);
+
+                facade.commit();
+            } catch (Exception e) {
+                facade.rollback();
+                throw new RuntimeException(e);
+            }
+        }
+
+        public DeptEmpsDto findDeptByName(String name) {
+            facade.begin();
+            try {
+                Department dept = departmentDao.findDepartment(name);
+                List<Employee> emps = employeeDao.loadEmployeesOf(dept);
+                return new DeptEmpsDto(dept, emps);
+            } finally {
+                facade.rollback();
+            }
+        }
+
+    }
+
+    @Test
+    public void testService() throws Exception {
+        TestService service = new TestService(facade);
+
+        {
+            Department d = new Department();
+            d.setName("Java dept.");
+
+            Employee e = new Employee();
+            e.setId(new EmployeeId());
+            e.getId().setIdDepartment(d.id);
+            e.getId().setDni("8P");
+            e.setName("jbm");
+            e.setSalary(38000.0);
+            e.setBirthDate("22/05/1837");
+            e.setSex(ESex.MALE);
+
+            service.create(d, Arrays.asList(e));
+        }
+
+        DeptEmpsDto r = service.findDeptByName("ava");
+
+        assertEquals("DeptEmpsDto [dept=Department [id=100, name=Java dept.], " + //
+                "emps=[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]]",
+                r.toString());
+    }
+```

@@ -2,11 +2,14 @@ package example;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
+import org.lechuga.GenericDao;
 import org.lechuga.annotated.EntityManagerFactory;
 import org.lechuga.annotated.anno.Column;
 import org.lechuga.annotated.anno.CustomHandler;
@@ -33,6 +36,12 @@ public class Example {
         MALE, FEMALE;
     }
 
+    // TODO experrimental
+    // @NamedQuery(name = "get-dept-employees", uniqueResult = false, //
+    // resultAlias = @NamedQueryAlias(alias = "e", entityClass = Employee.class), //
+    // aliases = { @NamedQueryAlias(alias = "d", entityClass = Department.class) },
+    // //
+    // query = "select {e.*} from {e} where {e.id.idDepartment}={d.id}")
     @Table("departments")
     public static class Department {
 
@@ -292,5 +301,104 @@ public class Example {
             facade.rollback();
             throw e;
         }
+
     }
+
+    @Test
+    public void testService() throws Exception {
+        TestService service = new TestService(facade);
+
+        {
+            Department d = new Department();
+            d.setName("Java dept.");
+
+            Employee e = new Employee();
+            e.setId(new EmployeeId());
+            e.getId().setIdDepartment(d.id);
+            e.getId().setDni("8P");
+            e.setName("jbm");
+            e.setSalary(38000.0);
+            e.setBirthDate("22/05/1837");
+            e.setSex(ESex.MALE);
+
+            service.create(d, Arrays.asList(e));
+        }
+
+        Department dept = service.findDepartment("ava");
+        assertEquals("Department [id=100, name=Java dept.]", dept.toString());
+
+        List<Employee> es = service.loadEmployeesOf(dept);
+        assertEquals(
+                "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
+                es.toString());
+    }
+
+    public static class DepartmentDao extends GenericDao<Department, Long> {
+
+        public DepartmentDao(DataAccesFacade facade) {
+            super(facade);
+        }
+    }
+
+    public static class EmployeeDao extends GenericDao<Employee, EmployeeId> {
+
+        public EmployeeDao(DataAccesFacade facade) {
+            super(facade);
+        }
+    }
+
+    public static class TestService {
+
+        final DataAccesFacade facade;
+        final DepartmentDao departmentDao;
+        final EmployeeDao employeeDao;
+
+        public TestService(DataAccesFacade facade) {
+            super();
+            this.facade = facade;
+            this.departmentDao = new DepartmentDao(facade);
+            this.employeeDao = new EmployeeDao(facade);
+        }
+
+        public void create(Department dept, Collection<Employee> employees) {
+            facade.begin();
+            try {
+
+                departmentDao.store(dept);
+                employees.forEach(e -> e.getId().setIdDepartment(dept.getId()));
+                employeeDao.store(employees);
+
+                facade.commit();
+            } catch (Exception e) {
+                facade.rollback();
+                throw new RuntimeException(e);
+            }
+        }
+
+        public Department findDepartment(String name) {
+            facade.begin();
+            try {
+                Restrictions r = departmentDao.getRestrictions();
+                CriteriaBuilder c = departmentDao.createCriteria();
+                c.append("select {} from {} ", r.all(), r.table());
+                c.append("where {}", r.ilike("name", ELike.CONTAINS, name));
+                return c.getExecutor(departmentDao.getEntityManager()).loadUnique();
+            } finally {
+                facade.rollback();
+            }
+        }
+
+        public List<Employee> loadEmployeesOf(Department dept) {
+            facade.begin();
+            try {
+                QueryBuilder<Employee> q = employeeDao.createQuery("e");
+                q.append("select {e.*} from {e} where {e.id.idDepartment=?} ", dept.getId());
+                q.append("order by {e.id.dni} asc");
+                return q.getExecutor().load();
+            } finally {
+                facade.rollback();
+            }
+        }
+    }
+    
 }

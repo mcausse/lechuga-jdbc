@@ -169,3 +169,76 @@
 	 -- [100(Integer), 999(Integer), %b%(String), FEMALE(String), MALE(String)]
 ```
 
+
+## GenericDao<E, ID>
+
+```java
+
+    public static class DepartmentDao extends GenericDao<Department, Long> {
+
+        public DepartmentDao(DataAccesFacade facade) {
+            super(facade);
+        }
+    }
+
+    public static class EmployeeDao extends GenericDao<Employee, EmployeeId> {
+
+        public EmployeeDao(DataAccesFacade facade) {
+            super(facade);
+        }
+    }
+
+    public static class TestService {
+
+        final DataAccesFacade facade;
+        final DepartmentDao departmentDao;
+        final EmployeeDao employeeDao;
+
+        public TestService(DataAccesFacade facade) {
+            super();
+            this.facade = facade;
+            this.departmentDao = new DepartmentDao(facade);
+            this.employeeDao = new EmployeeDao(facade);
+        }
+
+        public void create(Department dept, Collection<Employee> employees) {
+            facade.begin();
+            try {
+
+                departmentDao.store(dept);
+                employees.forEach(e -> e.getId().setIdDepartment(dept.getId()));
+                employeeDao.store(employees);
+
+                facade.commit();
+            } catch (Exception e) {
+                facade.rollback();
+                throw new RuntimeException(e);
+            }
+        }
+
+        public Department findDepartment(String name) {
+            facade.begin();
+            try {
+                Restrictions r = departmentDao.getRestrictions();
+                CriteriaBuilder c = departmentDao.createCriteria();
+                c.append("select {} from {} ", r.all(), r.table());
+                c.append("where {}", r.ilike("name", ELike.CONTAINS, name));
+                return c.getExecutor(departmentDao.getEntityManager()).loadUnique();
+            } finally {
+                facade.rollback();
+            }
+        }
+
+        public List<Employee> loadEmployeesOf(Department dept) {
+            facade.begin();
+            try {
+                QueryBuilder<Employee> q = employeeDao.createQuery("e");
+                q.append("select {e.*} from {e} where {e.id.idDepartment=?} ", dept.getId());
+                q.append("order by {e.id.dni} asc");
+                return q.getExecutor().load();
+            } finally {
+                facade.rollback();
+            }
+        }
+    }
+```

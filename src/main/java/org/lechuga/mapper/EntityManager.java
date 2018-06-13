@@ -307,21 +307,36 @@ public class EntityManager<E, ID> {
         }
     }
 
-    // // TODO
+    // public <O> List<O> getManyRefs(E entity, String entityAlias, EntityManager<O,
+    // ?> refEm, String refAlias,
+    // String where) {
+    //
+    // QueryBuilder<O> c = refEm.createQuery(refAlias);
+    // c.addEm(entityAlias, this);
+    // c.append("select {" + refAlias + ".*} from {" + refAlias + "} where ");
+    // c.append(where);
+    // return c.getExecutor().load();
+    // }
+
+    // // // TODO
     // public <E2> List<E2> loadOneToMany(E self, EntityManager<E2, ?> otherEm,
     // String... otherFkPropertyNames) {
     //
-    // QueryBuilder<E2> q = otherEm.createQuery("o");
-    // q.append("select {o.*} from {o} where ");
+    // Restrictions tr=getRestrictions("s");
+    // Restrictions or=otherEm.getRestrictions("o");
     //
-    // StringJoiner j = new StringJoiner(" and ");
-    // for (String o : otherFkPropertyNames) {
-    // Column c = otherEm.getModel().findColumnByName(o);
+    // for(String oc : otherFkPropertyNames) {
+    // or.
     // }
-    // q.append(j.toString());
+    //
+    //
+    // CriteriaBuilder c = otherEm.createCriteria();
+    // c.append("select {} from {} ", tr.all(), tr.table());
+    // c.append("join {} ",or.table());
+    //
     // return null;
     // }
-    //
+    // //
     // public <E2> E2 loadManyToOne(E self, String selfFkPropertyName,
     // EntityManager<E2, Object> otherEm) {
     // Column thisFk = model.findColumnByName(selfFkPropertyName);

@@ -17,6 +17,7 @@ import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.jdbc.queryobject.Query;
 import org.lechuga.jdbc.queryobject.QueryObject;
 import org.lechuga.mapper.autogen.Generator;
+import org.lechuga.mapper.criteria.Restrictions;
 import org.lechuga.mapper.util.ReflectUtils;
 
 public class TableModel<E> {
@@ -395,6 +396,10 @@ public class TableModel<E> {
 
     public Map<String, Column> getPropsMap() {
         return propsMap;
+    }
+
+    public Restrictions getRestrictions() {
+        return new Restrictions(this);
     }
 
     @Override

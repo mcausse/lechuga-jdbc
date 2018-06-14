@@ -53,7 +53,7 @@ public class EntityManager<E, ID> {
     }
 
     public Restrictions getRestrictions() {
-        return new Restrictions(model);
+        return model.getRestrictions();
     }
 
     public Restrictions getRestrictions(String alias) {

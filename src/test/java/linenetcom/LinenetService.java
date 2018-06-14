@@ -2,12 +2,11 @@ package linenetcom;
 
 import java.util.List;
 
-import org.lechuga.annotated.EntityManagerFactory;
-import org.lechuga.jdbc.DataAccesFacade;
+import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.query.QueryBuilder;
 import org.lechuga.jdbc.ScalarMappers;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
 import org.lechuga.mapper.EntityManager;
-import org.lechuga.mapper.query.QueryBuilder;
 
 import linenetcom.ent.Imputacio;
 import linenetcom.ent.ImputacioId;
@@ -18,33 +17,31 @@ import linenetcom.ent.User;
 
 public class LinenetService {
 
-    final DataAccesFacade facade;
+    final IEntityManagerFactory emf;
 
     final EntityManager<Project, Long> projectMan;
     final EntityManager<Tasca, TascaId> tascaMan;
     final EntityManager<User, Integer> userMan;
     final EntityManager<Imputacio, ImputacioId> imputacioMan;
 
-    public LinenetService(DataAccesFacade facade) {
+    public LinenetService(IEntityManagerFactory emf) {
         super();
-        this.facade = facade;
-
-        EntityManagerFactory emf = new EntityManagerFactory(facade);
-        this.projectMan = emf.build(Project.class, Long.class);
-        this.tascaMan = emf.build(Tasca.class, TascaId.class);
-        this.userMan = emf.build(User.class, Integer.class);
-        this.imputacioMan = emf.build(Imputacio.class, ImputacioId.class);
+        this.emf = emf;
+        this.projectMan = emf.buildEntityManager(Project.class);
+        this.tascaMan = emf.buildEntityManager(Tasca.class);
+        this.userMan = emf.buildEntityManager(User.class);
+        this.imputacioMan = emf.buildEntityManager(Imputacio.class);
     }
 
     public List<Imputacio> getUserImputations(String email) {
 
         List<Imputacio> r;
 
-        facade.begin();
+        emf.getFacade().begin();
         try {
 
-            QueryBuilder<Imputacio> q = imputacioMan.createQuery("i");
-            q.addEm("u", userMan);
+            QueryBuilder<Imputacio> q = emf.createQuery(Imputacio.class, "i");
+            q.addEm("u", User.class);
 
             q.append("select {i.*} from {i} ");
             q.append("join {u} on {i.id.idUser}={u.idUser} ");
@@ -53,9 +50,9 @@ public class LinenetService {
 
             r = q.getExecutor().load();
 
-            facade.commit();
+            emf.getFacade().commit();
         } catch (Exception e) {
-            facade.rollback();
+            emf.getFacade().rollback();
             throw e;
         }
         return r;
@@ -65,10 +62,10 @@ public class LinenetService {
 
         double r;
 
-        facade.begin();
+        emf.getFacade().begin();
         try {
 
-            QueryBuilder<Imputacio> q = imputacioMan.createQuery("i");
+            QueryBuilder<Imputacio> q = emf.createQuery(Imputacio.class, "i");
             q.append("select sum({i.hores}) from {i} ");
             q.append("where {i.id.idProject=?} ", idProject);
             if (nomTasca != null) {
@@ -80,26 +77,26 @@ public class LinenetService {
 
             r = q.getExecutor().loadUnique(ScalarMappers.PDOUBLE);
 
-            facade.commit();
+            emf.getFacade().commit();
         } catch (Exception e) {
-            facade.rollback();
+            emf.getFacade().rollback();
             throw e;
         }
         return r;
     }
 
     public void panic() {
-        facade.begin();
+        emf.getFacade().begin();
         try {
-            SqlScriptExecutor sql = new SqlScriptExecutor(facade);
+            SqlScriptExecutor sql = new SqlScriptExecutor(emf.getFacade());
             sql.runFromClasspath("linenet.sql");
-            facade.commit();
+            emf.getFacade().commit();
         } catch (Exception e) {
-            facade.rollback();
+            emf.getFacade().rollback();
             throw e;
         }
 
-        facade.begin();
+        emf.getFacade().begin();
         try {
 
             Project ringo = new Project(null, "Ringo");
@@ -124,9 +121,9 @@ public class LinenetService {
             imputacioMan.store(new Imputacio(
                     new ImputacioId(ringo.getIdProject(), eib.getIdUser(), "FASE1", "01/01/2014"), "ccc", 5.5));
 
-            facade.commit();
+            emf.getFacade().commit();
         } catch (Exception e) {
-            facade.rollback();
+            emf.getFacade().rollback();
             throw e;
         }
     }

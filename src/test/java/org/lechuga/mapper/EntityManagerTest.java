@@ -10,6 +10,8 @@ import java.util.Map;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
+import org.lechuga.annotated.query.Executor;
+import org.lechuga.annotated.query.QueryBuilder;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.ScalarMappers;
@@ -26,8 +28,6 @@ import org.lechuga.mapper.ents.IdDog;
 import org.lechuga.mapper.ents.Pizza;
 import org.lechuga.mapper.handler.EnumeratedHandler;
 import org.lechuga.mapper.handler.Handlers;
-import org.lechuga.mapper.query.Executor;
-import org.lechuga.mapper.query.QueryBuilder;
 
 public class EntityManagerTest {
 
@@ -63,7 +63,7 @@ public class EntityManagerTest {
         p.addColumn(new Column(false, "name", new Accessor(Pizza.class, "name"), Handlers.STRING, null));
         p.addColumn(new Column(false, "price", new Accessor(Pizza.class, "price"), Handlers.DOUBLE, null));
 
-        EntityManager<Pizza, Long> em = new EntityManager<>(facade, p);
+        EntityManager<Pizza, Long> em = new EntityManager<>(facade, null, p);
 
         facade.begin();
         try {
@@ -120,7 +120,7 @@ public class EntityManagerTest {
         p.addColumn(new Column(false, "sex", new Accessor(Dog.class, "sex"), new EnumeratedHandler(ESex.class), null));
         p.addColumn(new Column(false, "dead", new Accessor(Dog.class, "dead"), Handlers.BOOLEAN, null));
 
-        EntityManager<Dog, IdDog> em = new EntityManager<>(facade, p);
+        EntityManager<Dog, IdDog> em = new EntityManager<>(facade, null, p);
 
         facade.begin();
         try {
@@ -154,7 +154,7 @@ public class EntityManagerTest {
 
             //
 
-            QueryBuilder<Dog> q = em.createQuery("d");
+            QueryBuilder<Dog> q = new QueryBuilder<>(facade, null, p, "d");
             q.append("select {d.*} from {d} where ");
             q.append("{d.age>?} and {d.age<?} ", 1L, 99L);
             q.append("and {d.sex in (?,?)}", ESex.FEMALE, ESex.MALE);
@@ -185,7 +185,7 @@ public class EntityManagerTest {
                 em.store(d);
             }
 
-            QueryBuilder<Dog> q = em.createQuery("d");
+            QueryBuilder<Dog> q = new QueryBuilder<>(facade, null, p, "d");
             q.append("select {d.*} from {d} order by {d.id.name} asc");
             Executor<Dog> ex = q.getExecutor();
 
@@ -217,7 +217,7 @@ public class EntityManagerTest {
             Dog d = new Dog(new IdDog(null, "chucho"), 9, ESex.MALE, false);
             em.store(d);
 
-            QueryBuilder<Dog> q = em.createQuery("d");
+            QueryBuilder<Dog> q = new QueryBuilder<>(facade, null, p, "d");
             q.append("select {d.*} from {d} order by {d.id.name} asc");
             Executor<Dog> ex = q.getExecutor();
 
@@ -234,13 +234,13 @@ public class EntityManagerTest {
         try {
 
             {
-                QueryBuilder<Dog> q = em.createQuery("t");
+                QueryBuilder<Dog> q = new QueryBuilder<>(facade, null, p, "t");
                 q.append("delete from {t} where {t.id.idDog is not null}");
                 int r = q.getExecutor().update();
                 assertEquals(1, r);
             }
             {
-                QueryBuilder<Dog> q = em.createQuery("t");
+                QueryBuilder<Dog> q = new QueryBuilder<>(facade, null, p, "t");
                 q.append("select count(*) from {t}");
                 long count = q.getExecutor().loadUnique(ScalarMappers.LONG);
                 assertEquals(0, count);
@@ -250,7 +250,7 @@ public class EntityManagerTest {
                 em.store(d);
             }
             {
-                QueryBuilder<Dog> q = em.createQuery("t");
+                QueryBuilder<Dog> q = new QueryBuilder<>(facade, null, p, "t");
                 q.append("select count(*) from {t}");
                 long count = q.getExecutor().loadUnique(ScalarMappers.LONG);
                 assertEquals(1, count);
@@ -270,7 +270,7 @@ public class EntityManagerTest {
         p.addColumn(new Column(true, "key", new Accessor(Apoyo.class, "key"), Handlers.STRING, null));
         p.addColumn(new Column(false, "value", new Accessor(Apoyo.class, "value"), Handlers.STRING, null));
 
-        EntityManager<Apoyo, String> em = new EntityManager<>(facade, p);
+        EntityManager<Apoyo, String> em = new EntityManager<>(facade, null, p);
 
         facade.begin();
         try {

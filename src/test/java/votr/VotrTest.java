@@ -9,6 +9,7 @@ import java.util.List;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
+import org.lechuga.annotated.EntityManagerFactory;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.txproxy.TransactionalServiceProxyfier;
@@ -55,8 +56,9 @@ public class VotrTest {
     @Test
     public void test() throws Exception {
 
-        VotrService serv = TransactionalServiceProxyfier.proxyfy(facade, new VotrServiceImpl(facade),
-                VotrService.class);
+        EntityManagerFactory emf = new EntityManagerFactory(facade, Votacio.class, Opcio.class, Usr.class, Msg.class);
+
+        VotrService serv = TransactionalServiceProxyfier.proxyfy(facade, new VotrServiceImpl(emf), VotrService.class);
 
         Votacio v = new Votacio(null, "titol", "descripcio", null, null);
         List<Opcio> os = Arrays.asList( //

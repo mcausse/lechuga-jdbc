@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.mapper.autogen.HsqldbIdentity;
 import org.lechuga.mapper.autogen.HsqldbSequence;
 
@@ -37,15 +38,15 @@ public class HsqldbDDLGenerator {
 
         for (int i = classes.length - 1; i >= 0; i--) {
             Class<?> c = classes[i];
-            EntityManagerFactory emf = new EntityManagerFactory(null);
-            TableModel<?> ec = emf.build(c, Object.class).getModel();
+            IEntityManagerFactory emf = new EntityManagerFactory(null, c);
+            TableModel<?> ec = emf.getModel(c);
             HsqldbDDLGenerator gen = new HsqldbDDLGenerator(ec);
             r.append(gen.generateDrops());
         }
         r.append("\n\n");
         for (Class<?> c : classes) {
-            EntityManagerFactory emf = new EntityManagerFactory(null);
-            TableModel<?> ec = emf.build(c, Object.class).getModel();
+            IEntityManagerFactory emf = new EntityManagerFactory(null, c);
+            TableModel<?> ec = emf.getModel(c);
             HsqldbDDLGenerator gen = new HsqldbDDLGenerator(ec);
             r.append(gen.generateCreates());
         }

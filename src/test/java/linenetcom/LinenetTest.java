@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Test;
+import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.mapper.HsqldbDDLGenerator;
@@ -34,7 +36,10 @@ public class LinenetTest {
     @Test
     public void testName() throws Exception {
 
-        LinenetService s = new LinenetService(facade);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Project.class, Tasca.class, User.class,
+                Imputacio.class);
+
+        LinenetService s = new LinenetService(emf);
         s.panic();
 
         assertEquals(13.5, s.getHoresProjecte(100, null, null), 0.01);

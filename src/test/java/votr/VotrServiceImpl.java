@@ -3,8 +3,7 @@ package votr;
 import java.util.Date;
 import java.util.List;
 
-import org.lechuga.annotated.EntityManagerFactory;
-import org.lechuga.jdbc.DataAccesFacade;
+import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.jdbc.txproxy.TransactionalMethod;
 import org.lechuga.mapper.EntityManager;
 import org.lechuga.mapper.Order;
@@ -17,21 +16,21 @@ import votr.ent.Votacio;
 
 public class VotrServiceImpl implements VotrService {
 
-    final DataAccesFacade daf;
+    // final DataAccesFacade daf;
+    final IEntityManagerFactory emf;
 
     final EntityManager<Votacio, String> votacionsDao;
     final EntityManager<Opcio, OpcioId> opcionsDao;
     final EntityManager<Usr, String> usersDao;
     final EntityManager<Msg, Integer> msgsDao;
 
-    public VotrServiceImpl(DataAccesFacade daf) {
+    public VotrServiceImpl(IEntityManagerFactory emf) {
         super();
-        this.daf = daf;
-        EntityManagerFactory emf = new EntityManagerFactory(daf);
-        this.votacionsDao = emf.build(Votacio.class, String.class);
-        this.opcionsDao = emf.build(Opcio.class, OpcioId.class);
-        this.usersDao = emf.build(Usr.class, String.class);
-        this.msgsDao = emf.build(Msg.class, Integer.class);
+        this.emf = emf;
+        this.votacionsDao = emf.buildEntityManager(Votacio.class);
+        this.opcionsDao = emf.buildEntityManager(Opcio.class);
+        this.usersDao = emf.buildEntityManager(Usr.class);
+        this.msgsDao = emf.buildEntityManager(Msg.class);
     }
 
     protected String calcHash(Object... os) {

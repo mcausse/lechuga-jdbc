@@ -1,4 +1,4 @@
-package org.lechuga.mapper.query;
+package org.lechuga.annotated.query;
 
 import java.util.Collection;
 import java.util.Map;

@@ -31,12 +31,12 @@ public class Column {
 
     public Object getValueForJdbc(Object entity) {
         Object javaValue = accessor.get(entity);
-        return handler.getJdbcValue(javaValue);
+        return convertValueForJdbc(javaValue);
     }
 
     public Object getValueForJdbc(Object entity, int propertyPathIndex) {
         Object javaValue = accessor.get(entity, propertyPathIndex);
-        return handler.getJdbcValue(javaValue);
+        return convertValueForJdbc(javaValue);
     }
 
     public Object convertValueForJdbc(Object javaValue) {

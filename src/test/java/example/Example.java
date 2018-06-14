@@ -11,12 +11,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.lechuga.GenericDao;
 import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.annotated.anno.Column;
 import org.lechuga.annotated.anno.CustomHandler;
 import org.lechuga.annotated.anno.EnumHandler;
 import org.lechuga.annotated.anno.Generated;
 import org.lechuga.annotated.anno.Id;
 import org.lechuga.annotated.anno.Table;
+import org.lechuga.annotated.criteria.CriteriaBuilder;
+import org.lechuga.annotated.criteria.ELike;
+import org.lechuga.annotated.criteria.Restrictions;
+import org.lechuga.annotated.query.QueryBuilder;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
@@ -24,11 +29,7 @@ import org.lechuga.mapper.EntityManager;
 import org.lechuga.mapper.HsqldbDDLGenerator;
 import org.lechuga.mapper.Order;
 import org.lechuga.mapper.autogen.HsqldbSequence;
-import org.lechuga.mapper.criteria.CriteriaBuilder;
-import org.lechuga.mapper.criteria.ELike;
-import org.lechuga.mapper.criteria.Restrictions;
 import org.lechuga.mapper.handler.custom.StringDateHandler;
-import org.lechuga.mapper.query.QueryBuilder;
 
 public class Example {
 
@@ -211,9 +212,9 @@ public class Example {
     @Test
     public void testName() throws Exception {
 
-        EntityManagerFactory emf = new EntityManagerFactory(facade);
-        EntityManager<Employee, EmployeeId> empMan = emf.build(Employee.class, EmployeeId.class);
-        EntityManager<Department, Long> deptMan = emf.build(Department.class, Long.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department.class, Employee.class);
+        EntityManager<Employee, EmployeeId> empMan = emf.buildEntityManager(Employee.class);
+        EntityManager<Department, Long> deptMan = emf.buildEntityManager(Department.class);
 
         facade.begin();
         try {
@@ -249,7 +250,7 @@ public class Example {
                         es.toString());
             }
             {
-                Restrictions r = empMan.getRestrictions();
+                Restrictions r = emf.getRestrictions(Employee.class);
                 List<Employee> es = empMan.loadBy( //
                         Restrictions.and( //
                                 r.isNotNull("name"), //
@@ -263,8 +264,8 @@ public class Example {
             }
 
             {
-                QueryBuilder<Employee> q = empMan.createQuery("e");
-                q.addEm("d", deptMan);
+                QueryBuilder<Employee> q = emf.createQuery(Employee.class, "e");
+                q.addEm("d", Department.class);
 
                 q.append("select {e.*} from {e} ");
                 q.append("join {d} on {e.id.idDepartment}={d.id} ");
@@ -283,10 +284,10 @@ public class Example {
 
             }
             {
-                CriteriaBuilder c = empMan.createCriteria();
+                CriteriaBuilder c = emf.createCriteria();
 
-                Restrictions re = empMan.getRestrictions("e");
-                Restrictions rd = deptMan.getRestrictions("d");
+                Restrictions re = emf.getRestrictions(Employee.class, "e");
+                Restrictions rd = emf.getRestrictions(Department.class, "d");
 
                 c.append("select {} from {} ", re.all(), re.table());
                 c.append("join {} on {} ", rd.table(), re.eq("id.idDepartment", rd, "id"));
@@ -323,29 +324,71 @@ public class Example {
     /////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////
 
+    public static class DeptCount {
+
+        Department dept;
+        long employees;
+
+        public Department getDept() {
+            return dept;
+        }
+
+        public void setDept(Department dept) {
+            this.dept = dept;
+        }
+
+        public long getEmployees() {
+            return employees;
+        }
+
+        public void setEmployees(long employees) {
+            this.employees = employees;
+        }
+
+        @Override
+        public String toString() {
+            return "DeptCount [dept=" + dept + ", employees=" + employees + "]";
+        }
+
+    }
+
     public static class DepartmentDao extends GenericDao<Department, Long> {
 
-        public DepartmentDao(DataAccesFacade facade) {
-            super(facade);
+        public DepartmentDao(IEntityManagerFactory emf) {
+            super(emf);
         }
 
         public Department findDepartment(String name) {
-            Restrictions r = getRestrictions();
-            CriteriaBuilder c = createCriteria();
+
+            CriteriaBuilder c = emf.createCriteria();
+            Restrictions r = emf.getRestrictions(Department.class, "d");
             c.append("select {} from {} ", r.all(), r.table());
             c.append("where {}", r.ilike("name", ELike.CONTAINS, name));
-            return c.getExecutor(getEntityManager()).loadUnique();
+            return c.getExecutor(Department.class).loadUnique();
+        }
+
+        public List<DeptCount> getDeptCounts() {
+
+            QueryBuilder<DeptCount> q = emf.createQuery(DeptCount.class, "r");
+            q.addEm("d", Department.class);
+            q.addEm("e", Employee.class);
+
+            q.append("select {d.*}, count(*) as {r.employees} ");
+            q.append("from {d} join {e} on {d.id}={e.id.idDepartment} ");
+            q.append("group by {d.*} ");
+
+            return q.getExecutor().load();
         }
     }
 
     public static class EmployeeDao extends GenericDao<Employee, EmployeeId> {
 
-        public EmployeeDao(DataAccesFacade facade) {
-            super(facade);
+        public EmployeeDao(IEntityManagerFactory emf) {
+            super(emf);
         }
 
         public List<Employee> loadEmployeesOf(Department dept) {
-            QueryBuilder<Employee> q = createQuery("e");
+            QueryBuilder<Employee> q = emf.createQuery(Employee.class, "e");
             q.append("select {e.*} from {e} where {e.id.idDepartment=?} ", dept.getId());
             q.append("order by {e.id.dni} asc");
             return q.getExecutor().load();
@@ -384,11 +427,11 @@ public class Example {
         final DepartmentDao departmentDao;
         final EmployeeDao employeeDao;
 
-        public TestService(DataAccesFacade facade) {
+        public TestService(IEntityManagerFactory emf) {
             super();
-            this.facade = facade;
-            this.departmentDao = new DepartmentDao(facade);
-            this.employeeDao = new EmployeeDao(facade);
+            this.facade = emf.getFacade();
+            this.departmentDao = new DepartmentDao(emf);
+            this.employeeDao = new EmployeeDao(emf);
         }
 
         public void create(Department dept, Collection<Employee> employees) {
@@ -417,11 +460,21 @@ public class Example {
             }
         }
 
+        public List<DeptCount> getDeptCounts() {
+            facade.begin();
+            try {
+                return departmentDao.getDeptCounts();
+            } finally {
+                facade.rollback();
+            }
+        }
+
     }
 
     @Test
     public void testService() throws Exception {
-        TestService service = new TestService(facade);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department.class, Employee.class, DeptCount.class);
+        TestService service = new TestService(emf);
 
         {
             Department d = new Department();
@@ -444,5 +497,8 @@ public class Example {
         assertEquals("DeptEmpsDto [dept=Department [id=100, name=Java dept.], " + //
                 "emps=[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]]",
                 r.toString());
+
+        assertEquals("[DeptCount [dept=Department [id=100, name=Java dept.], employees=1]]",
+                service.getDeptCounts().toString());
     }
 }

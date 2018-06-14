@@ -28,6 +28,10 @@ public abstract class Generator {
 
     public abstract boolean generateBefore();
 
+    public QueryObject getQuery() {
+        return q;
+    }
+
     @Override
     public String toString() {
         return getClass().getName() + "; query=" + q;

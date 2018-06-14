@@ -1,4 +1,4 @@
-package org.lechuga.mapper.criteria;
+package org.lechuga.annotated.criteria;
 
 public enum ELike {
 

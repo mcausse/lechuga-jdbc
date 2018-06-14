@@ -9,6 +9,7 @@ import org.lechuga.anno.ents.Exp;
 import org.lechuga.anno.ents.ExpId;
 import org.lechuga.anno.ents.Fase;
 import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
@@ -43,8 +44,8 @@ public class EntityManagerFactoryTest {
     @Test
     public void testName() throws Exception {
 
-        EntityManagerFactory emf = new EntityManagerFactory(facade);
-        EntityManager<Exp, ExpId> em = emf.build(Exp.class, ExpId.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Exp.class);
+        EntityManager<Exp, ExpId> em = emf.buildEntityManager(Exp.class);
 
         facade.begin();
         try {

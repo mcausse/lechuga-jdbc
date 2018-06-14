@@ -2,6 +2,7 @@ package org.lechuga.annotated;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -13,6 +14,9 @@ import org.lechuga.annotated.anno.Table;
 import org.lechuga.annotated.anno.Transient;
 import org.lechuga.annotated.convention.Conventions;
 import org.lechuga.annotated.convention.DefaultConventions;
+import org.lechuga.annotated.criteria.CriteriaBuilder;
+import org.lechuga.annotated.criteria.Restrictions;
+import org.lechuga.annotated.query.QueryBuilder;
 import org.lechuga.annotated.util.AnnoReflectUtils;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.exception.LechugaException;
@@ -28,31 +32,73 @@ import org.lechuga.mapper.util.ReflectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EntityManagerFactory {
+public class EntityManagerFactory implements IEntityManagerFactory {
 
     static final Logger LOG = LoggerFactory.getLogger(EntityManagerFactory.class);
 
     final DataAccesFacade facade;
     final Conventions conventions;
+    final Map<Class<?>, TableModel<?>> models = new LinkedHashMap<>();
 
-    public EntityManagerFactory(DataAccesFacade facade, Conventions conventions) {
+    public EntityManagerFactory(DataAccesFacade facade, Class<?>... entityClasses) {
         super();
         this.facade = facade;
-        this.conventions = conventions;
+        this.conventions = new DefaultConventions();
+
+        for (Class<?> ec : entityClasses) {
+            models.put(ec, buildEntityModel(ec));
+        }
     }
 
-    public EntityManagerFactory(DataAccesFacade facade) {
-        this(facade, new DefaultConventions());
+    @Override
+    public DataAccesFacade getFacade() {
+        return facade;
     }
 
-    public <E, ID> EntityManager<E, ID> build(Class<E> entityClass, Class<ID> pkClass) {
-        LOG.info(entityClass.getName());
-        TableModel<E> model = buildEntityModel(entityClass);
-        return new EntityManager<>(facade, model);
+    @Override
+    public <E, ID> EntityManager<E, ID> buildEntityManager(Class<E> entityClass) {
+        TableModel<E> model = getModel(entityClass);
+        return new EntityManager<>(facade, this, model);
+    }
+
+    @Override
+    public <E> QueryBuilder<E> createQuery(Class<E> entityClass) {
+        return new QueryBuilder<>(facade, this, getModel(entityClass), null);
+    }
+
+    @Override
+    public <E> QueryBuilder<E> createQuery(Class<E> entityClass, String tableAlias) {
+        return new QueryBuilder<>(facade, this, getModel(entityClass), tableAlias);
+    }
+
+    @Override
+    public Restrictions getRestrictions(Class<?> entityClass) {
+        return new Restrictions(getModel(entityClass));
+    }
+
+    @Override
+    public Restrictions getRestrictions(Class<?> entityClass, String alias) {
+        return new Restrictions(getModel(entityClass), alias);
+    }
+
+    @Override
+    public CriteriaBuilder createCriteria() {
+        return new CriteriaBuilder(facade, this);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <E> TableModel<E> getModel(Class<?> entityClass) {
+        if (!models.containsKey(entityClass)) {
+            throw new RuntimeException("entity not registered: " + entityClass.getName());
+        }
+        TableModel<E> model = (TableModel<E>) models.get(entityClass);
+        return model;
     }
 
     protected <E> TableModel<E> buildEntityModel(Class<E> entityClass) {
 
+        LOG.info(entityClass.getName());
         String tableName;
         {
             Table annoTable = entityClass.getAnnotation(Table.class);

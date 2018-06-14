@@ -3,31 +3,32 @@ package org.lechuga;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
-import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.criteria.Criterion;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.exception.EmptyResultException;
 import org.lechuga.jdbc.exception.UnexpectedResultException;
 import org.lechuga.mapper.EntityManager;
 import org.lechuga.mapper.Order;
 import org.lechuga.mapper.TableModel;
-import org.lechuga.mapper.criteria.CriteriaBuilder;
-import org.lechuga.mapper.criteria.Criterion;
-import org.lechuga.mapper.criteria.Restrictions;
-import org.lechuga.mapper.query.QueryBuilder;
 
 public class GenericDao<T, ID> {
 
+    final protected IEntityManagerFactory emf;
     final Class<T> persistentClass;
-    final Class<ID> idClass;
     final EntityManager<T, ID> em;
 
     @SuppressWarnings("unchecked")
-    public GenericDao(DataAccesFacade facade) {
+    public GenericDao(IEntityManagerFactory emf) {
         super();
+        this.emf = emf;
         this.persistentClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
                 .getActualTypeArguments()[0];
-        this.idClass = (Class<ID>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
-        this.em = new EntityManagerFactory(facade).build(persistentClass, idClass);
+        this.em = emf.buildEntityManager(persistentClass);
+    }
+
+    public IEntityManagerFactory getEntityManagerFactory() {
+        return emf;
     }
 
     public EntityManager<T, ID> getEntityManager() {
@@ -44,22 +45,6 @@ public class GenericDao<T, ID> {
 
     public DataAccesFacade getDataAccesFacade() {
         return em.getDataAccesFacade();
-    }
-
-    public QueryBuilder<T> createQuery(String tableAlias) {
-        return em.createQuery(tableAlias);
-    }
-
-    public CriteriaBuilder createCriteria() {
-        return em.createCriteria();
-    }
-
-    public Restrictions getRestrictions() {
-        return em.getRestrictions();
-    }
-
-    public Restrictions getRestrictions(String alias) {
-        return em.getRestrictions(alias);
     }
 
     public List<T> loadBy(Criterion c, Order... orders) {

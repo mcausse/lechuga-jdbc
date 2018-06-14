@@ -1,7 +1,8 @@
-package org.lechuga.mapper.criteria;
+package org.lechuga.annotated.criteria;
 
 import java.util.Collection;
 
+import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.RowMapper;
 import org.lechuga.jdbc.extractor.ResultSetExtractor;
@@ -12,11 +13,13 @@ import org.lechuga.mapper.EntityManager;
 public class CriteriaBuilder implements QueryObject {
 
     final DataAccesFacade facade;
+    final IEntityManagerFactory emf;
     final Query q = new Query();
 
-    public CriteriaBuilder(DataAccesFacade facade) {
+    public CriteriaBuilder(DataAccesFacade facade, IEntityManagerFactory emf) {
         super();
         this.facade = facade;
+        this.emf = emf;
     }
 
     public void append(String format, QueryObject... qos) {
@@ -60,8 +63,15 @@ public class CriteriaBuilder implements QueryObject {
         return new CriteriaExecutor<E>(facade, rowMapper, q);
     }
 
+    // @Deprecated
     public <E> CriteriaExecutor<E> getExecutor(EntityManager<E, ?> em) {
         return new CriteriaExecutor<E>(facade, em.getModel().getRowMapper(), q);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <E> CriteriaExecutor<E> getExecutor(Class<E> entityClass) {
+        RowMapper<E> rowMapper = (RowMapper<E>) emf.getModel(entityClass).getRowMapper();
+        return new CriteriaExecutor<E>(facade, rowMapper, q);
     }
 
     public <T> T extract(ResultSetExtractor<T> extractor) {

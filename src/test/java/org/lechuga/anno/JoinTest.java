@@ -13,6 +13,11 @@ import org.junit.Test;
 import org.lechuga.anno.ents.Ingredient;
 import org.lechuga.anno.ents.Pizza;
 import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.criteria.CriteriaBuilder;
+import org.lechuga.annotated.criteria.ELike;
+import org.lechuga.annotated.criteria.Restrictions;
+import org.lechuga.annotated.query.QueryBuilder;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.ResultSetUtils;
@@ -20,10 +25,6 @@ import org.lechuga.jdbc.RowMapper;
 import org.lechuga.jdbc.extractor.MapResultSetExtractor;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
 import org.lechuga.mapper.EntityManager;
-import org.lechuga.mapper.criteria.CriteriaBuilder;
-import org.lechuga.mapper.criteria.ELike;
-import org.lechuga.mapper.criteria.Restrictions;
-import org.lechuga.mapper.query.QueryBuilder;
 import org.lechuga.mapper.util.Pair;
 
 public class JoinTest {
@@ -54,9 +55,9 @@ public class JoinTest {
     @Test
     public void testCriteria() throws Exception {
 
-        EntityManagerFactory emf = new EntityManagerFactory(facade);
-        EntityManager<Pizza, Long> pem = emf.build(Pizza.class, Long.class);
-        EntityManager<Ingredient, Integer> iem = emf.build(Ingredient.class, Integer.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Pizza.class, Ingredient.class);
+        EntityManager<Pizza, Long> pem = emf.buildEntityManager(Pizza.class);
+        EntityManager<Ingredient, Integer> iem = emf.buildEntityManager(Ingredient.class);
 
         facade.begin();
         try {
@@ -72,17 +73,10 @@ public class JoinTest {
 
             {
 
-                // QueryBuilder<Pizza> q = pem.createQuery("p");
-                // q.addEm("i", iem);
-                // q.append("select {p.name}, sum({i.price}) as price ");
-                // q.append("from {p} join {i} ");
-                // q.append("on {p.id}={i.idPizza} ");
-                // q.append("group by {p.name} ");
+                Restrictions pr = emf.getRestrictions(Pizza.class, "p");
+                Restrictions ir = emf.getRestrictions(Ingredient.class, "i");
 
-                Restrictions pr = pem.getRestrictions("p");
-                Restrictions ir = iem.getRestrictions("i");
-
-                CriteriaBuilder c = pem.createCriteria();
+                CriteriaBuilder c = emf.createCriteria();
                 c.append("select {}, sum({}) as price ", pr.column("name"), ir.column("price"));
                 c.append("from {} join {} ", pr.table(), ir.table());
                 c.append("on {} ", pr.eq("id", ir, "idPizza"));
@@ -128,9 +122,9 @@ public class JoinTest {
             }
 
             {
-                Restrictions pr = pem.getRestrictions("p");
+                Restrictions pr = emf.getRestrictions(Pizza.class, "p");
 
-                CriteriaBuilder c = pem.createCriteria();
+                CriteriaBuilder c = emf.createCriteria();
                 c.append("select {} ", pr.all());
                 c.append("from {} ", pr.table());
                 c.append("where {} ", //
@@ -157,9 +151,9 @@ public class JoinTest {
     @Test
     public void testComposition() throws Exception {
 
-        EntityManagerFactory emf = new EntityManagerFactory(facade);
-        EntityManager<Pizza, Long> pem = emf.build(Pizza.class, Long.class);
-        EntityManager<Ingredient, Integer> iem = emf.build(Ingredient.class, Integer.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Pizza.class, Ingredient.class);
+        EntityManager<Pizza, Long> pem = emf.buildEntityManager(Pizza.class);
+        EntityManager<Ingredient, Integer> iem = emf.buildEntityManager(Ingredient.class);
 
         facade.begin();
         try {
@@ -169,15 +163,15 @@ public class JoinTest {
             iem.store(new Ingredient(null, "base", 7.0, romana.getId()));
             iem.store(new Ingredient(null, "olivanchoa", 2.0, romana.getId()));
 
-            QueryBuilder<Ingredient> q = iem.createQuery("i");
+            QueryBuilder<Ingredient> q = emf.createQuery(Ingredient.class, "i");
             q.append("select {i.*} from {i} where {i.idPizza=?}", romana.getId());
             List<Ingredient> is = q.getExecutor().load();
             assertEquals(
                     "[Ingredient [id=100, name=base, price=7.0, idPizza=100], Ingredient [id=101, name=olivanchoa, price=2.0, idPizza=100]]",
                     is.toString());
 
-            QueryBuilder<Pizza> q2 = pem.createQuery("p");
-            q2.addEm("i", iem);
+            QueryBuilder<Pizza> q2 = emf.createQuery(Pizza.class, "p");
+            q2.addEm("i", Ingredient.class);
             q2.append("select {p.*} from {p} where {p.id=?}", is.get(0).getIdPizza());
             Pizza p = q2.getExecutor().loadUnique();
             assertEquals("Pizza [id=100, name=romana]", p.toString());
@@ -192,9 +186,9 @@ public class JoinTest {
     @Test
     public void testName() throws Exception {
 
-        EntityManagerFactory emf = new EntityManagerFactory(facade);
-        EntityManager<Pizza, Long> pem = emf.build(Pizza.class, Long.class);
-        EntityManager<Ingredient, Integer> iem = emf.build(Ingredient.class, Integer.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Pizza.class, Ingredient.class);
+        EntityManager<Pizza, Long> pem = emf.buildEntityManager(Pizza.class);
+        EntityManager<Ingredient, Integer> iem = emf.buildEntityManager(Ingredient.class);
 
         facade.begin();
         try {
@@ -210,8 +204,8 @@ public class JoinTest {
 
             {
 
-                QueryBuilder<Pizza> q = pem.createQuery("p");
-                q.addEm("i", iem);
+                QueryBuilder<Pizza> q = emf.createQuery(Pizza.class, "p");
+                q.addEm("i", Ingredient.class);
                 q.append("select {p.name}, sum({i.price}) as price ");
                 q.append("from {p} join {i} ");
                 q.append("on {p.id}={i.idPizza} ");

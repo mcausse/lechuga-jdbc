@@ -3,6 +3,10 @@ package org.lechuga.mapper;
 import java.util.Collection;
 import java.util.List;
 
+import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.criteria.CriteriaBuilder;
+import org.lechuga.annotated.criteria.Criterion;
+import org.lechuga.annotated.criteria.Restrictions;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.ScalarMappers;
 import org.lechuga.jdbc.exception.EmptyResultException;
@@ -10,19 +14,17 @@ import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.jdbc.exception.TooManyResultsException;
 import org.lechuga.jdbc.exception.UnexpectedResultException;
 import org.lechuga.jdbc.queryobject.QueryObject;
-import org.lechuga.mapper.criteria.CriteriaBuilder;
-import org.lechuga.mapper.criteria.Criterion;
-import org.lechuga.mapper.criteria.Restrictions;
-import org.lechuga.mapper.query.QueryBuilder;
 
 public class EntityManager<E, ID> {
 
     final DataAccesFacade facade;
+    final IEntityManagerFactory emf;
     final TableModel<E> model;
 
-    public EntityManager(DataAccesFacade facade, TableModel<E> model) {
+    public EntityManager(DataAccesFacade facade, IEntityManagerFactory emf, TableModel<E> model) {
         super();
         this.facade = facade;
+        this.emf = emf;
         this.model = model;
     }
 
@@ -34,12 +36,12 @@ public class EntityManager<E, ID> {
         return model;
     }
 
-    public DataAccesFacade getDataAccesFacade() {
-        return facade;
+    public IEntityManagerFactory getEntityManagerFactory() {
+        return emf;
     }
 
-    public QueryBuilder<E> createQuery(String tableAlias) {
-        return new QueryBuilder<>(facade, model, tableAlias);
+    public DataAccesFacade getDataAccesFacade() {
+        return facade;
     }
 
     // ==============================================
@@ -48,31 +50,19 @@ public class EntityManager<E, ID> {
     //
     // ==============================================
 
-    public CriteriaBuilder createCriteria() {
-        return new CriteriaBuilder(facade);
-    }
-
-    public Restrictions getRestrictions() {
-        return model.getRestrictions();
-    }
-
-    public Restrictions getRestrictions(String alias) {
-        return new Restrictions(model, alias);
-    }
-
     public List<E> loadBy(Criterion c, Order... orders) {
         CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
-        return criteria.getExecutor(this).load();
+        return criteria.getExecutor(model.getEntityClass()).load();
     }
 
     public E loadUniqueBy(Criterion c, Order... orders) {
         CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
-        return criteria.getExecutor(this).loadUnique();
+        return criteria.getExecutor(model.getEntityClass()).loadUnique();
     }
 
     protected CriteriaBuilder createCriteriaTemplate(Criterion c, Order... orders) {
-        CriteriaBuilder criteria = createCriteria();
-        Restrictions r = getRestrictions();
+        CriteriaBuilder criteria = emf.createCriteria();
+        Restrictions r = emf.getRestrictions(model.getEntityClass());
         criteria.append("select {} ", r.all());
         criteria.append("from {} ", r.table());
         criteria.append("where {} ", c);
@@ -88,9 +78,6 @@ public class EntityManager<E, ID> {
     //
     // ==============================================
 
-    // public List<E> loadBy(Criterion criterion) throws EmptyResultException {
-    // }
-
     public E loadById(ID idValue) throws EmptyResultException {
         QueryObject q = model.queryForLoadById(idValue);
         try {
@@ -99,24 +86,6 @@ public class EntityManager<E, ID> {
             throw new LechugaException("unique result expected, but obtained many: " + q.toString(), e);
         }
     }
-
-    // public void refresh(E entity) throws EmptyResultException {
-    // QueryObject q = model.queryForRefresh(entity);
-    // try {
-    // facade.loadUnique(q, new RowMapper<E>() {
-    // @Override
-    // public E mapRow(ResultSet rs) throws SQLException {
-    // for (PropertyModel p : model.getRegularProps()) {
-    // p.loadValue(entity, rs);
-    // }
-    // return entity;
-    // }
-    // });
-    // } catch (TooManyResultsException e) {
-    // throw new BaseException("expected a unique result, but obtained many: " +
-    // q.toString(), e);
-    // }
-    // }
 
     public List<E> loadByProp(String propertyName, Object value, Order... orders) {
         QueryObject q = model.queryForLoadByProp(propertyName, value, orders);

@@ -1,13 +1,13 @@
-package org.lechuga.mapper.query;
+package org.lechuga.annotated.query;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.queryobject.Query;
 import org.lechuga.jdbc.queryobject.QueryObject;
-import org.lechuga.mapper.EntityManager;
 import org.lechuga.mapper.TableModel;
 
 /**
@@ -38,6 +38,7 @@ import org.lechuga.mapper.TableModel;
 public class QueryBuilder<E> implements QueryObject {
 
     final DataAccesFacade facade;
+    final IEntityManagerFactory emf;
     final TableModel<E> resultEntityModel;
     final String tableAlias;
 
@@ -45,9 +46,11 @@ public class QueryBuilder<E> implements QueryObject {
     final Map<String, TableModel<?>> models;
     final QueryProcessor replacer;
 
-    public QueryBuilder(DataAccesFacade facade, TableModel<E> resultEntityModel, String tableAlias) {
+    public QueryBuilder(DataAccesFacade facade, IEntityManagerFactory emf, TableModel<E> resultEntityModel,
+            String tableAlias) {
         super();
         this.facade = facade;
+        this.emf = emf;
         this.resultEntityModel = resultEntityModel;
         this.tableAlias = tableAlias;
         this.q = new Query();
@@ -59,21 +62,9 @@ public class QueryBuilder<E> implements QueryObject {
         }
     }
 
-    public void addEm(final String alias, final TableModel<?> em) {
-        this.models.put(alias, em);
+    public void addEm(final String alias, Class<?> entityClass) {
+        this.models.put(alias, emf.getModel(entityClass));
     }
-
-    public void addEm(final String alias, final EntityManager<?, ?> em) {
-        this.models.put(alias, em.getModel());
-    }
-
-    // public void addEm(final String alias, final LentejaDao<?, ?> em) {
-    // this.models.put(alias, em.getEntityManager().getTableModel());
-    // }
-    //
-    // public TableModel<E> getResultEntityManager() {
-    // return resultEntityModel;
-    // }
 
     /**
      * <pre>

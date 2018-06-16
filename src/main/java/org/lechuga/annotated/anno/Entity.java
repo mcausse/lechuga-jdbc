@@ -11,5 +11,5 @@ public @interface Entity {
 
     Class<?> entity();
 
-    String table() default "";
+    String table();
 }

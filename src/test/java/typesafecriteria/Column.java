@@ -7,8 +7,6 @@ import org.lechuga.mapper.Accessor;
 import org.lechuga.mapper.autogen.Generator;
 import org.lechuga.mapper.handler.Handler;
 
-import typesafecriteria.AAAAAAAAAAAAAA.MetaField;
-
 public class Column {
 
     final boolean id;

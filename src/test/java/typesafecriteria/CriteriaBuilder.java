@@ -8,7 +8,6 @@ import org.lechuga.jdbc.RowMapper;
 import org.lechuga.jdbc.extractor.ResultSetExtractor;
 import org.lechuga.jdbc.queryobject.Query;
 import org.lechuga.jdbc.queryobject.QueryObject;
-import org.lechuga.mapper.EntityManager;
 
 public class CriteriaBuilder implements QueryObject {
 
@@ -63,10 +62,10 @@ public class CriteriaBuilder implements QueryObject {
         return new CriteriaExecutor<E>(facade, rowMapper, q);
     }
 
-    // @Deprecated
-    public <E> CriteriaExecutor<E> getExecutor(EntityManager<E, ?> em) {
-        return new CriteriaExecutor<E>(facade, em.getModel().getRowMapper(), q);
-    }
+    // // @Deprecated
+    // public <E> CriteriaExecutor<E> getExecutor(EntityManager<E, ?> em) {
+    // return new CriteriaExecutor<E>(facade, em.getModel().getRowMapper(), q);
+    // }
 
     @SuppressWarnings("unchecked")
     public <E> CriteriaExecutor<E> getExecutor(Class<E> entityClass) {

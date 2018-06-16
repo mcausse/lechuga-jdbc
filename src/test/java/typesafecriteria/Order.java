@@ -1,7 +1,5 @@
 package typesafecriteria;
 
-import typesafecriteria.AAAAAAAAAAAAAA.MetaField;
-
 public class Order {
 
     final MetaField<?, ?> metaField;

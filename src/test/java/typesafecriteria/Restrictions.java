@@ -8,8 +8,6 @@ import org.lechuga.annotated.criteria.Criterion;
 import org.lechuga.annotated.criteria.CriterionImpl;
 import org.lechuga.annotated.criteria.ELike;
 
-import typesafecriteria.AAAAAAAAAAAAAA.MetaField;
-
 public class Restrictions<E> {
 
     final TableModel<E> em;

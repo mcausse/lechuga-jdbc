@@ -24,9 +24,6 @@ import org.lechuga.mapper.util.ReflectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import typesafecriteria.AAAAAAAAAAAAAA.Entity;
-import typesafecriteria.AAAAAAAAAAAAAA.MetaField;
-
 public class EntityManagerFactory2 {// implements IEntityManagerFactory {
 
     static final Logger LOG = LoggerFactory.getLogger(EntityManagerFactory2.class);
@@ -55,7 +52,7 @@ public class EntityManagerFactory2 {// implements IEntityManagerFactory {
 
     public <E, ID> EntityManager<E, ID> buildEntityManager(Class<E> entityClass) {
         TableModel<E> model = getModelByEntityClass(entityClass);
-        return new EntityManager<>(facade, null/* FIXME this */, model);
+        return new EntityManager<>(facade, this, model);
     }
 
     // @Override
@@ -163,7 +160,9 @@ public class EntityManagerFactory2 {// implements IEntityManagerFactory {
             org.lechuga.annotated.anno.Column annoColumn = metaFieldField
                     .getAnnotation(org.lechuga.annotated.anno.Column.class);
             if (annoColumn == null) {
-                columnName = conventions.columnNameOf(metaFieldField.getName());
+                String[] proponameParts = metaField.getPropertyName().split("\\.");
+                String proponame = proponameParts[proponameParts.length - 1];
+                columnName = conventions.columnNameOf(proponame);
             } else {
                 columnName = annoColumn.value();
             }

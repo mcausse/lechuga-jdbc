@@ -3,6 +3,7 @@ package typesafecriteria;
 import java.util.Collection;
 import java.util.List;
 
+import org.lechuga.annotated.criteria.Criterion;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.ScalarMappers;
 import org.lechuga.jdbc.exception.EmptyResultException;
@@ -10,7 +11,6 @@ import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.jdbc.exception.TooManyResultsException;
 import org.lechuga.jdbc.exception.UnexpectedResultException;
 import org.lechuga.jdbc.queryobject.QueryObject;
-import org.lechuga.mapper.Order;
 
 public class EntityManager<E, ID> {
 
@@ -47,28 +47,27 @@ public class EntityManager<E, ID> {
     //
     // ==============================================
 
-    // public List<E> loadBy(Criterion c, Order... orders) {
-    // CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
-    // return criteria.getExecutor(model.getEntityClass()).load();
-    // }
-    //
-    // public E loadUniqueBy(Criterion c, Order... orders) {
-    // CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
-    // return criteria.getExecutor(model.getEntityClass()).loadUnique();
-    // }
-    //
-    // protected CriteriaBuilder createCriteriaTemplate(Criterion c, Order...
-    // orders) {
-    // CriteriaBuilder criteria = emf.createCriteria();
-    // Restrictions r = emf.getRestrictions(model.getEntityClass());
-    // criteria.append("select {} ", r.all());
-    // criteria.append("from {} ", r.table());
-    // criteria.append("where {} ", c);
-    // if (orders.length > 0) {
-    // criteria.append("order by {} ", r.orderBy(orders));
-    // }
-    // return criteria;
-    // }
+    public List<E> loadBy(Criterion c, Order... orders) {
+        CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
+        return criteria.getExecutor(model.getEntityClass()).load();
+    }
+
+    public E loadUniqueBy(Criterion c, Order... orders) {
+        CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
+        return criteria.getExecutor(model.getEntityClass()).loadUnique();
+    }
+
+    protected CriteriaBuilder createCriteriaTemplate(Criterion c, Order... orders) {
+        CriteriaBuilder criteria = emf.createCriteria();
+        Restrictions<E> r = emf.getRestrictions(model.getEntityClass());
+        criteria.append("select {} ", r.all());
+        criteria.append("from {} ", r.table());
+        criteria.append("where {} ", c);
+        if (orders.length > 0) {
+            criteria.append("order by {} ", r.orderBy(orders));
+        }
+        return criteria;
+    }
 
     // ==============================================
     //
@@ -85,13 +84,13 @@ public class EntityManager<E, ID> {
         }
     }
 
-    public List<E> loadByProp(String propertyName, Object value, Order... orders) {
-        QueryObject q = model.queryForLoadByProp(propertyName, value, orders);
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, Order... orders) {
+        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, orders);
         return facade.load(q, model.getRowMapper());
     }
 
-    public E loadUniqueByProp(String propertyName, Object value) throws UnexpectedResultException {
-        QueryObject q = model.queryForLoadByProp(propertyName, value, new Order[] {});
+    public <T> E loadUniqueByProp(MetaField<E, T> metaField, T value) throws UnexpectedResultException {
+        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, new Order[] {});
         return facade.loadUnique(q, model.getRowMapper());
     }
 

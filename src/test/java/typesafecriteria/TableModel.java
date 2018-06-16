@@ -16,11 +16,8 @@ import org.lechuga.jdbc.RowMapper;
 import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.jdbc.queryobject.Query;
 import org.lechuga.jdbc.queryobject.QueryObject;
-import org.lechuga.mapper.Order;
 import org.lechuga.mapper.autogen.Generator;
 import org.lechuga.mapper.util.ReflectUtils;
-
-import typesafecriteria.AAAAAAAAAAAAAA.MetaField;
 
 public class TableModel<E> {
 
@@ -150,7 +147,7 @@ public class TableModel<E> {
     protected String orderBy(Order[] orders) {
         StringJoiner r = new StringJoiner(",");
         for (Order o : orders) {
-            Column c = findColumnByName(o.getProperty());
+            Column c = findColumnByName(o.getMetaField().getPropertyName());
             r.add(c.getColumnName() + o.getOrder());
         }
         return " order by " + r.toString();

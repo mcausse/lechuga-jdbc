@@ -13,10 +13,11 @@ import org.lechuga.annotated.criteria.ELike;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
-import org.lechuga.mapper.HsqldbDDLGenerator;
 
 import typesafecriteria.ent.Department;
 import typesafecriteria.ent.Department_;
+import typesafecriteria.ent.DeptCount;
+import typesafecriteria.ent.DeptCount_;
 import typesafecriteria.ent.ESex;
 import typesafecriteria.ent.Employee;
 import typesafecriteria.ent.EmployeeId;
@@ -80,12 +81,6 @@ public class TypeSafeCriteriaTest {
             facade.rollback();
             throw e;
         }
-    }
-
-    @Test
-    public void testGenerateSqlScript() throws Exception {
-        String sql = HsqldbDDLGenerator.generateScript(Department.class, Employee.class);
-        System.err.println(sql);
     }
 
     @Test
@@ -208,34 +203,6 @@ public class TypeSafeCriteriaTest {
     /////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////
 
-    public static class DeptCount {
-
-        Department dept;
-        long employees;
-
-        public Department getDept() {
-            return dept;
-        }
-
-        public void setDept(Department dept) {
-            this.dept = dept;
-        }
-
-        public long getEmployees() {
-            return employees;
-        }
-
-        public void setEmployees(long employees) {
-            this.employees = employees;
-        }
-
-        @Override
-        public String toString() {
-            return "DeptCount [dept=" + dept + ", employees=" + employees + "]";
-        }
-
-    }
-
     public static class DepartmentDao extends GenericDao<Department, Long> {
 
         public DepartmentDao(EntityManagerFactory2 emf) {
@@ -251,19 +218,21 @@ public class TypeSafeCriteriaTest {
             return c.getExecutor(Department.class).loadUnique();
         }
 
-        // // TODO
-        // public List<DeptCount> getDeptCounts() {
-        //
-        // QueryBuilder<DeptCount> q = emf.createQuery(DeptCount.class, "r");
-        // q.addEm("d", Department.class);
-        // q.addEm("e", Employee.class);
-        //
-        // q.append("select {d.*}, count(*) as {r.employees} ");
-        // q.append("from {d} join {e} on {d.id}={e.id.idDepartment} ");
-        // q.append("group by {d.*} ");
-        //
-        // return q.getExecutor().load();
-        // }
+        public List<DeptCount> getDeptCounts() {
+
+            CriteriaBuilder c = emf.createCriteria();
+
+            Restrictions<DeptCount> r = emf.getRestrictions(DeptCount.class, "r");
+            Restrictions<Department> d = emf.getRestrictions(Department.class, "d");
+            Restrictions<Employee> e = emf.getRestrictions(Employee.class, "e");
+
+            c.append("select {}, count(*) as {} ", d.all(), r.column(DeptCount_.employees));
+            c.append("from {} join {} ", d.table(), e.table());
+            c.append("on {} ", d.eq(Department_.id, e, Employee_.idDept));
+            c.append("group by {} ", d.all());
+
+            return c.getExecutor(DeptCount.class).load();
+        }
     }
 
     public static class EmployeeDao extends GenericDao<Employee, EmployeeId> {
@@ -350,21 +319,21 @@ public class TypeSafeCriteriaTest {
             }
         }
 
-        // TODO
-        // public List<DeptCount> getDeptCounts() {
-        // facade.begin();
-        // try {
-        // return departmentDao.getDeptCounts();
-        // } finally {
-        // facade.rollback();
-        // }
-        // }
+        public List<DeptCount> getDeptCounts() {
+            facade.begin();
+            try {
+                return departmentDao.getDeptCounts();
+            } finally {
+                facade.rollback();
+            }
+        }
 
     }
 
     @Test
     public void testService() throws Exception {
-        EntityManagerFactory2 emf = new EntityManagerFactory2(facade, Department_.class, Employee_.class);
+        EntityManagerFactory2 emf = new EntityManagerFactory2(facade, Department_.class, Employee_.class,
+                DeptCount_.class);
         TestService service = new TestService(emf);
 
         {
@@ -388,9 +357,6 @@ public class TypeSafeCriteriaTest {
                 "emps=[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]]",
                 r.toString());
 
-        // TODO
-        // assertEquals("[DeptCount [dept=Department [id=100, name=Java dept.],
-        // employees=1]]",
-        // service.getDeptCounts().toString());
+        assertEquals("[DeptCount [employees=1, id=100, name=Java dept.]]", service.getDeptCounts().toString());
     }
 }

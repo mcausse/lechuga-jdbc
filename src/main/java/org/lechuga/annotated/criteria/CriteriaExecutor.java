@@ -5,6 +5,7 @@ import java.util.List;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.RowMapper;
 import org.lechuga.jdbc.extractor.Pager;
+import org.lechuga.jdbc.extractor.ResultSetExtractor;
 import org.lechuga.jdbc.extractor.ResultSetPagedExtractor;
 import org.lechuga.jdbc.queryobject.QueryObject;
 
@@ -35,6 +36,10 @@ public class CriteriaExecutor<E> {
 
     public Pager<E> loadPage(int pageSize, int numPage) {
         return facade.extract(qo, new ResultSetPagedExtractor<E>(rowMapper, pageSize, numPage));
+    }
+
+    public <X> X extract(ResultSetExtractor<X> extractor) {
+        return facade.extract(qo, extractor);
     }
 
 }

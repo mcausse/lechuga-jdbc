@@ -1,4 +1,4 @@
-package org.lechuga.mapper.util;
+package org.lechuga.mapper;
 
 import java.lang.reflect.Constructor;
 

@@ -21,13 +21,12 @@ import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.mapper.Accessor;
 import org.lechuga.mapper.Column;
 import org.lechuga.mapper.EntityManager;
-import org.lechuga.mapper.MetaField;
+import org.lechuga.mapper.ReflectUtils;
 import org.lechuga.mapper.TableModel;
 import org.lechuga.mapper.autogen.Generator;
 import org.lechuga.mapper.handler.EnumeratedHandler;
 import org.lechuga.mapper.handler.Handler;
 import org.lechuga.mapper.handler.Handlers;
-import org.lechuga.mapper.util.ReflectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,82 +52,32 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.lechuga.annotated.IEntityManagerFactory#getFacade()
-     */
     @Override
     public DataAccesFacade getFacade() {
         return facade;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.lechuga.annotated.IEntityManagerFactory#buildEntityManager(java.lang.
-     * Class)
-     */
     @Override
     public <E, ID> EntityManager<E, ID> buildEntityManager(Class<E> entityClass) {
         TableModel<E> model = getModelByEntityClass(entityClass);
         return new EntityManager<>(facade, this, model);
     }
 
-    // @Override
-    // public <E> QueryBuilder<E> createQuery(Class<E> entityClass) {
-    // return new QueryBuilder<>(facade, this, getModel(entityClass), null);
-    // }
-    //
-    // @Override
-    // public <E> QueryBuilder<E> createQuery(Class<E> entityClass, String
-    // tableAlias) {
-    // return new QueryBuilder<>(facade, this, getModel(entityClass), tableAlias);
-    // }
-    //
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.lechuga.annotated.IEntityManagerFactory#getRestrictions(java.lang.Class)
-     */
     @Override
     public <E> Restrictions<E> getRestrictions(Class<E> entityClass) {
         return new Restrictions<>(getModelByEntityClass(entityClass));
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.lechuga.annotated.IEntityManagerFactory#getRestrictions(java.lang.Class,
-     * java.lang.String)
-     */
     @Override
     public <E> Restrictions<E> getRestrictions(Class<E> entityClass, String alias) {
         return new Restrictions<>(getModelByEntityClass(entityClass), alias);
     }
 
-    // @Override
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.lechuga.annotated.IEntityManagerFactory#createCriteria()
-     */
     @Override
     public CriteriaBuilder createCriteria() {
         return new CriteriaBuilder(facade, this);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.lechuga.annotated.IEntityManagerFactory#getModelByEntityClass(java.lang.
-     * Class)
-     */
     @Override
     @SuppressWarnings("unchecked")
     public <E> TableModel<E> getModelByEntityClass(Class<?> entityClass) {
@@ -139,14 +88,15 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
         return model;
     }
 
-    // @SuppressWarnings("unchecked")
-    // public <E> TableModel<E> getModelByMetaClass(Class<?> metaClass) {
-    // if (!metaModels.containsKey(metaClass)) {
-    // throw new RuntimeException("entity not registered: " + metaClass.getName());
-    // }
-    // TableModel<E> model = (TableModel<E>) metaModels.get(metaClass);
-    // return model;
-    // }
+    @Override
+    @SuppressWarnings("unchecked")
+    public <E> TableModel<E> getModelByMetaClass(Class<?> metaClass) {
+        if (!metaModels.containsKey(metaClass)) {
+            throw new RuntimeException("meta-entity not registered: " + metaClass.getName());
+        }
+        TableModel<E> model = (TableModel<E>) metaModels.get(metaClass);
+        return model;
+    }
 
     @SuppressWarnings("unchecked")
     protected <E> TableModel<E> buildEntityModel(Class<E> metaEntityClass) {

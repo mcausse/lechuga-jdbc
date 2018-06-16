@@ -12,7 +12,7 @@ create sequence seq_department start with 100;
 create table employees (
  id_department integer	/* id.idDepartment */ ,
  dni varchar(100)	/* id.dni */ ,
- le_name varchar(100)	/* name */ ,
+ name varchar(100)	/* name */ ,
  salary decimal	/* salary */ ,
  birth_date timestamp	/* birthDate */ ,
  sex varchar(20)	/* sex */ 

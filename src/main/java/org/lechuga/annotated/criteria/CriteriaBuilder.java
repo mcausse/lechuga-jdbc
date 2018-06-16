@@ -62,11 +62,6 @@ public class CriteriaBuilder implements QueryObject {
         return new CriteriaExecutor<E>(facade, rowMapper, q);
     }
 
-    // // @Deprecated
-    // public <E> CriteriaExecutor<E> getExecutor(EntityManager<E, ?> em) {
-    // return new CriteriaExecutor<E>(facade, em.getModel().getRowMapper(), q);
-    // }
-
     @SuppressWarnings("unchecked")
     public <E> CriteriaExecutor<E> getExecutor(Class<E> entityClass) {
         RowMapper<E> rowMapper = (RowMapper<E>) emf.getModelByEntityClass(entityClass).getRowMapper();

@@ -1,10 +1,13 @@
 package typesafecriteria;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
@@ -13,12 +16,16 @@ import org.lechuga.GenericDao;
 import org.lechuga.annotated.EntityManagerFactory;
 import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.annotated.criteria.CriteriaBuilder;
+import org.lechuga.annotated.criteria.CriteriaExecutor;
 import org.lechuga.annotated.criteria.ELike;
 import org.lechuga.annotated.criteria.Restrictions;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
+import org.lechuga.jdbc.extractor.MapResultSetExtractor;
+import org.lechuga.jdbc.extractor.Pager;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
 import org.lechuga.mapper.EntityManager;
+import org.lechuga.mapper.HsqldbDDLGenerator;
 import org.lechuga.mapper.Order;
 
 import typesafecriteria.ent.Department;
@@ -31,6 +38,13 @@ import typesafecriteria.ent.EmployeeId;
 import typesafecriteria.ent.Employee_;
 
 public class TypeSafeCriteriaTest {
+
+    @Test
+    public void testGen() throws Exception {
+
+        String r = HsqldbDDLGenerator.generateScript(Employee_.class, Department_.class);
+        System.err.println(r);
+    }
 
     @Test
     public void testName2() throws Exception {
@@ -82,7 +96,7 @@ public class TypeSafeCriteriaTest {
         facade.begin();
         try {
             SqlScriptExecutor sql = new SqlScriptExecutor(facade);
-            sql.runFromClasspath("employees2.sql");
+            sql.runFromClasspath("employees.sql");
             facade.commit();
         } catch (Exception e) {
             facade.rollback();
@@ -103,6 +117,7 @@ public class TypeSafeCriteriaTest {
             Department d = new Department();
             d.setName("Java dept.");
             deptMan.store(d);
+            deptMan.store(d);
 
             Employee e = new Employee();
             e.setId(new EmployeeId(d.getId(), "8P"));
@@ -112,6 +127,7 @@ public class TypeSafeCriteriaTest {
             e.setSex(ESex.MALE);
 
             empMan.insert(e);
+            empMan.store(e);
 
             {
                 Employee es = empMan.loadById(e.getId());
@@ -123,6 +139,12 @@ public class TypeSafeCriteriaTest {
                 empMan.update(e);
                 empMan.update(e, "salary");
             }
+            {
+                Employee r = empMan.loadById(e.getId());
+                assertEquals(
+                        "Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]",
+                        r.toString());
+            }
 
             {
                 List<Employee> es = empMan.loadByProp(Employee_.sex, ESex.MALE, Order.asc(Employee_.birthDate));
@@ -130,6 +152,20 @@ public class TypeSafeCriteriaTest {
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
                         es.toString());
             }
+            {
+                Employee es = empMan.loadUniqueByProp(Employee_.sex, ESex.MALE);
+                assertEquals(
+                        "Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]",
+                        es.toString());
+            }
+
+            {
+                List<Employee> es = empMan.loadAll(Order.asc(Employee_.birthDate), Order.desc(Employee_.dni));
+                assertEquals(
+                        "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
+                        es.toString());
+            }
+
             {
                 Restrictions<Employee> r = emf.getRestrictions(Employee.class);
                 List<Employee> es = empMan.loadBy( //
@@ -141,6 +177,19 @@ public class TypeSafeCriteriaTest {
 
                 assertEquals(
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
+                        es.toString());
+            }
+            {
+                Restrictions<Employee> r = emf.getRestrictions(Employee.class);
+                Employee es = empMan.loadUniqueBy( //
+                        Restrictions.and( //
+                                r.isNotNull(Employee_.name), //
+                                r.between(Employee_.birthDate, "01/01/1800", "01/01/1900") //
+                        ) //
+                        , Order.asc(Employee_.salary));
+
+                assertEquals(
+                        "Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]",
                         es.toString());
             }
 
@@ -191,6 +240,84 @@ public class TypeSafeCriteriaTest {
                         r.toString());
             }
 
+            {
+                CriteriaBuilder c = emf.createCriteria();
+                Restrictions<Employee> r = emf.getRestrictions(Employee.class);
+                c.append("select {} from {}", r.all(), r.table());
+
+                CriteriaExecutor<Employee> exec = c.getExecutor(Employee.class);
+                List<Map<String, Object>> m = exec.extract(new MapResultSetExtractor());
+
+                assertEquals(
+                        "[{ID_DEPARTMENT=100, DNI=8P, LE_NAME=jbm, SALARY=38000, BIRTH_DATE=1837-05-22 00:00:00.0, SEX=MALE}]",
+                        m.toString());
+            }
+            {
+                assertTrue(empMan.exists(e));
+                assertTrue(empMan.existsById(e.getId()));
+                assertTrue(deptMan.exists(d));
+                assertTrue(deptMan.existsById(d.getId()));
+
+                empMan.deleteById(e.getId());
+                deptMan.delete(d);
+
+                assertFalse(empMan.exists(e));
+                assertFalse(empMan.existsById(e.getId()));
+                assertFalse(deptMan.exists(d));
+                assertFalse(deptMan.existsById(d.getId()));
+
+            }
+
+            facade.commit();
+        } catch (Throwable e) {
+            facade.rollback();
+            throw e;
+        }
+
+    }
+
+    @Test
+    public void testPager() throws Exception {
+
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class);
+        EntityManager<Employee, EmployeeId> empMan = emf.buildEntityManager(Employee.class);
+        EntityManager<Department, Long> deptMan = emf.buildEntityManager(Department.class);
+
+        facade.begin();
+        try {
+
+            Department d = new Department();
+            d.setName("Java dept.");
+            deptMan.store(d);
+            deptMan.store(d);
+
+            for (int i = 0; i < 5; i++) {
+                Employee e = new Employee();
+                e.setId(new EmployeeId(d.getId(), i + "P"));
+                e.setName("jbm" + i);
+                e.setSalary(38000.0);
+                e.setBirthDate("22/05/1837");
+                e.setSex(ESex.MALE);
+                empMan.store(e);
+            }
+
+            CriteriaBuilder c = emf.createCriteria();
+            Restrictions<Employee> r = emf.getRestrictions(Employee.class);
+            c.append("select {} from {}", r.all(), r.table());
+            CriteriaExecutor<Employee> exec = c.getExecutor(Employee.class);
+
+            Pager<Employee> p0 = exec.loadPage(3, 0);
+            Pager<Employee> p1 = exec.loadPage(3, 1);
+            Pager<Employee> p2 = exec.loadPage(3, 2);
+
+            assertEquals(
+                    "Pager [pageSize=3, numPage=0, totalRows=5, totalPages=2, page=[Employee [id=EmployeeId [idDepartment=100, dni=0P], name=jbm0, salary=38000.0, birthDate=22/05/1837, sex=MALE], Employee [id=EmployeeId [idDepartment=100, dni=1P], name=jbm1, salary=38000.0, birthDate=22/05/1837, sex=MALE], Employee [id=EmployeeId [idDepartment=100, dni=2P], name=jbm2, salary=38000.0, birthDate=22/05/1837, sex=MALE]]]",
+                    p0.toString());
+            assertEquals(
+                    "Pager [pageSize=3, numPage=1, totalRows=5, totalPages=2, page=[Employee [id=EmployeeId [idDepartment=100, dni=3P], name=jbm3, salary=38000.0, birthDate=22/05/1837, sex=MALE], Employee [id=EmployeeId [idDepartment=100, dni=4P], name=jbm4, salary=38000.0, birthDate=22/05/1837, sex=MALE]]]",
+                    p1.toString());
+            assertEquals("Pager [pageSize=3, numPage=2, totalRows=5, totalPages=2, page=[]]", p2.toString());
+
             facade.commit();
         } catch (Throwable e) {
             facade.rollback();
@@ -237,6 +364,7 @@ public class TypeSafeCriteriaTest {
             c.append("from {} join {} ", d.table(), e.table());
             c.append("on {} ", d.eq(Department_.id, e, Employee_.idDept));
             c.append("group by {} ", d.all());
+            c.append("order by {}", d.orderBy(Order.asc(Department_.id)));
 
             return c.getExecutor(DeptCount.class).load();
         }

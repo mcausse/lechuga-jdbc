@@ -4,12 +4,12 @@ import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
 import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.MetaField;
 import org.lechuga.annotated.criteria.Criterion;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.exception.EmptyResultException;
 import org.lechuga.jdbc.exception.UnexpectedResultException;
 import org.lechuga.mapper.EntityManager;
-import org.lechuga.mapper.MetaField;
 import org.lechuga.mapper.Order;
 import org.lechuga.mapper.TableModel;
 

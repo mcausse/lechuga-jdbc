@@ -2,6 +2,7 @@ package org.lechuga.mapper;
 
 import java.sql.ResultSet;
 
+import org.lechuga.annotated.MetaField;
 import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.mapper.autogen.Generator;
 import org.lechuga.mapper.handler.Handler;

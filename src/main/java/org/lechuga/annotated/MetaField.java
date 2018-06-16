@@ -1,4 +1,4 @@
-package org.lechuga.mapper;
+package org.lechuga.annotated;
 
 public class MetaField<E, T> {
 

@@ -16,9 +16,10 @@ public interface IEntityManagerFactory {
 
     <E> Restrictions<E> getRestrictions(Class<E> entityClass, String alias);
 
-    // @Override
-    CriteriaBuilder createCriteria();
-
     <E> TableModel<E> getModelByEntityClass(Class<?> entityClass);
+
+    <E> TableModel<E> getModelByMetaClass(Class<?> metaClass);
+
+    CriteriaBuilder createCriteria();
 
 }

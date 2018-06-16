@@ -1,10 +1,10 @@
 package typesafecriteria.ent;
 
+import org.lechuga.annotated.MetaField;
 import org.lechuga.annotated.anno.Column;
 import org.lechuga.annotated.anno.Entity;
 import org.lechuga.annotated.anno.Generated;
 import org.lechuga.annotated.anno.Id;
-import org.lechuga.mapper.MetaField;
 import org.lechuga.mapper.autogen.HsqldbSequence;
 
 @Entity(entity = Department.class, table = "departments")

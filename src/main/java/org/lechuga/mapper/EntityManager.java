@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.MetaField;
 import org.lechuga.annotated.criteria.CriteriaBuilder;
 import org.lechuga.annotated.criteria.Criterion;
 import org.lechuga.annotated.criteria.Restrictions;
@@ -275,42 +276,5 @@ public class EntityManager<E, ID> {
             delete(e);
         }
     }
-
-    // public <O> List<O> getManyRefs(E entity, String entityAlias, EntityManager<O,
-    // ?> refEm, String refAlias,
-    // String where) {
-    //
-    // QueryBuilder<O> c = refEm.createQuery(refAlias);
-    // c.addEm(entityAlias, this);
-    // c.append("select {" + refAlias + ".*} from {" + refAlias + "} where ");
-    // c.append(where);
-    // return c.getExecutor().load();
-    // }
-
-    // // // TODO
-    // public <E2> List<E2> loadOneToMany(E self, EntityManager<E2, ?> otherEm,
-    // String... otherFkPropertyNames) {
-    //
-    // Restrictions tr=getRestrictions("s");
-    // Restrictions or=otherEm.getRestrictions("o");
-    //
-    // for(String oc : otherFkPropertyNames) {
-    // or.
-    // }
-    //
-    //
-    // CriteriaBuilder c = otherEm.createCriteria();
-    // c.append("select {} from {} ", tr.all(), tr.table());
-    // c.append("join {} ",or.table());
-    //
-    // return null;
-    // }
-    // //
-    // public <E2> E2 loadManyToOne(E self, String selfFkPropertyName,
-    // EntityManager<E2, Object> otherEm) {
-    // Column thisFk = model.findColumnByName(selfFkPropertyName);
-    // Object thisFkValue = thisFk.accessor.get(self);
-    // return otherEm.loadById(thisFkValue);
-    // }
 
 }

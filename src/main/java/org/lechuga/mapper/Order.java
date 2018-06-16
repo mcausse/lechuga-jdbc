@@ -1,5 +1,7 @@
 package org.lechuga.mapper;
 
+import org.lechuga.annotated.MetaField;
+
 public class Order {
 
     final MetaField<?, ?> metaField;

@@ -11,13 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import org.lechuga.annotated.MetaField;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.RowMapper;
 import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.jdbc.queryobject.Query;
 import org.lechuga.jdbc.queryobject.QueryObject;
 import org.lechuga.mapper.autogen.Generator;
-import org.lechuga.mapper.util.ReflectUtils;
 
 public class TableModel<E> {
 
@@ -80,69 +80,17 @@ public class TableModel<E> {
     }
 
     public Column findColumnByMetaField(MetaField<?, ?> metaField) {
-        if (!this.propsMap.containsKey(metaField.propertyName)) {
-            throw new LechugaException("property not found: " + entityClass.getName() + "#" + metaField.propertyName);
+        if (!this.propsMap.containsKey(metaField.getPropertyName())) {
+            throw new LechugaException(
+                    "property not found: " + entityClass.getName() + "#" + metaField.getPropertyName());
         }
-        if (this.propsMap.get(metaField.propertyName).getMetafield() != metaField) {
+        if (this.propsMap.get(metaField.getPropertyName()).getMetafield() != metaField) {
             throw new LechugaException("this meta-field is not of meta-model: meta-model=" + metaModelClass.getName()
                     + "; meta-field=" + metaField);
         }
-        Column col = this.propsMap.get(metaField.propertyName);
+        Column col = this.propsMap.get(metaField.getPropertyName());
         return col;
     }
-
-    // /**
-    // * TODO si retornés List<Column>, es podria utilitzar objectes compostos en
-    // * queries, loadByProp, etc, igual que es fa en loadById.
-    // */
-    //
-    // // TODO experimental
-    // public Q findColumnKKKByName(String prefix) {
-    // List<Column> cs = new ArrayList<>();
-    // int offset;
-    //
-    // if (propsMap.containsKey(prefix)) {
-    // cs.add(propsMap.get(prefix));
-    // offset = -1;
-    // } else {
-    // offset = 1;
-    // for (int i = 0; i < prefix.length(); i++) {
-    // if (prefix.charAt(i) == '.') {
-    // offset++;
-    // }
-    // }
-    //
-    // for (Entry<String, Column> c : propsMap.entrySet()) {
-    // if (c.getKey().startsWith(prefix + ".")) {
-    // cs.add(c.getValue());
-    // }
-    // }
-    // }
-    //
-    // return new Q(offset, cs);
-    // }
-    //
-    // // TODO experimental
-    // public static class Q {
-    //
-    // final int offset;
-    // final List<Column> cs;
-    //
-    // public Q(int offset, List<Column> cs) {
-    // super();
-    // this.offset = offset;
-    // this.cs = cs;
-    // }
-    //
-    // public int getOffset() {
-    // return offset;
-    // }
-    //
-    // public List<Column> getCs() {
-    // return cs;
-    // }
-    //
-    // }
 
     protected String orderBy(Order[] orders) {
         StringJoiner r = new StringJoiner(",");
@@ -323,7 +271,7 @@ public class TableModel<E> {
         q.append(c.getColumnName());
         q.append("=?");
 
-        q.addArg(c.handler.getJdbcValue(value)); // TODO
+        q.addArg(c.convertValueForJdbc(value));
 
         if (orders.length > 0) {
             q.append(orderBy(orders));
@@ -413,10 +361,6 @@ public class TableModel<E> {
     public Map<String, Column> getPropsMap() {
         return propsMap;
     }
-
-    // public Restrictions getRestrictions() {
-    // return new Restrictions(this);
-    // }
 
     @Override
     public String toString() {

@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.StringJoiner;
 
+import org.lechuga.annotated.MetaField;
 import org.lechuga.mapper.Column;
-import org.lechuga.mapper.MetaField;
 import org.lechuga.mapper.Order;
 import org.lechuga.mapper.TableModel;
 
@@ -243,6 +243,8 @@ public class Restrictions<E> {
         return r;
     }
 
+    // TODO això esta be?? només es podra fer Orders d'una mateixa entitat>, no
+    // barrejades ?¿?¿?
     public Criterion orderBy(Collection<Order> orders) {
         CriterionImpl r = new CriterionImpl();
         int c = 0;

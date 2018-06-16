@@ -9,20 +9,21 @@ import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.exception.EmptyResultException;
 import org.lechuga.jdbc.exception.UnexpectedResultException;
 import org.lechuga.mapper.EntityManager;
+import org.lechuga.mapper.MetaField;
 import org.lechuga.mapper.Order;
 import org.lechuga.mapper.TableModel;
 
-public class GenericDao<T, ID> {
+public class GenericDao<E, ID> {
 
     final protected IEntityManagerFactory emf;
-    final Class<T> persistentClass;
-    final EntityManager<T, ID> em;
+    final Class<E> persistentClass;
+    final EntityManager<E, ID> em;
 
     @SuppressWarnings("unchecked")
     public GenericDao(IEntityManagerFactory emf) {
         super();
         this.emf = emf;
-        this.persistentClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
+        this.persistentClass = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass())
                 .getActualTypeArguments()[0];
         this.em = emf.buildEntityManager(persistentClass);
     }
@@ -31,15 +32,15 @@ public class GenericDao<T, ID> {
         return emf;
     }
 
-    public EntityManager<T, ID> getEntityManager() {
+    public EntityManager<E, ID> getEntityManager() {
         return em;
     }
 
-    public Class<T> getEntityClass() {
+    public Class<E> getEntityClass() {
         return em.getEntityClass();
     }
 
-    public TableModel<T> getModel() {
+    public TableModel<E> getModel() {
         return em.getModel();
     }
 
@@ -47,27 +48,27 @@ public class GenericDao<T, ID> {
         return em.getDataAccesFacade();
     }
 
-    public List<T> loadBy(Criterion c, Order... orders) {
+    public List<E> loadBy(Criterion c, Order... orders) {
         return em.loadBy(c, orders);
     }
 
-    public T loadUniqueBy(Criterion c, Order... orders) {
+    public E loadUniqueBy(Criterion c, Order... orders) {
         return em.loadUniqueBy(c, orders);
     }
 
-    public T loadById(ID idValue) throws EmptyResultException {
+    public E loadById(ID idValue) throws EmptyResultException {
         return em.loadById(idValue);
     }
 
-    public List<T> loadByProp(String propertyName, Object value, Order... orders) {
-        return em.loadByProp(propertyName, value, orders);
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, Order... orders) {
+        return em.loadByProp(metaField, value, orders);
     }
 
-    public T loadUniqueByProp(String propertyName, Object value) throws UnexpectedResultException {
-        return em.loadUniqueByProp(propertyName, value);
+    public <T> E loadUniqueByProp(MetaField<E, T> metaField, T value) throws UnexpectedResultException {
+        return em.loadUniqueByProp(metaField, value);
     }
 
-    public List<T> loadAll(Order... orders) {
+    public List<E> loadAll(Order... orders) {
         return em.loadAll(orders);
     }
 
@@ -75,15 +76,15 @@ public class GenericDao<T, ID> {
         em.deleteById(idValue);
     }
 
-    public void delete(T entity) {
+    public void delete(E entity) {
         em.delete(entity);
     }
 
-    public void store(T entity) {
+    public void store(E entity) {
         em.store(entity);
     }
 
-    public boolean exists(T entity) {
+    public boolean exists(E entity) {
         return em.exists(entity);
     }
 
@@ -91,31 +92,31 @@ public class GenericDao<T, ID> {
         return em.existsById(id);
     }
 
-    public void update(T entity) {
+    public void update(E entity) {
         em.update(entity);
     }
 
-    public void update(T entity, String... properties) {
+    public void update(E entity, String... properties) {
         em.update(entity, properties);
     }
 
-    public void insert(T entity) {
+    public void insert(E entity) {
         em.insert(entity);
     }
 
-    public void store(Iterable<T> entities) {
+    public void store(Iterable<E> entities) {
         em.store(entities);
     }
 
-    public void insert(Iterable<T> entities) {
+    public void insert(Iterable<E> entities) {
         em.insert(entities);
     }
 
-    public void update(Iterable<T> entities) {
+    public void update(Iterable<E> entities) {
         em.update(entities);
     }
 
-    public void delete(Iterable<T> entities) {
+    public void delete(Iterable<E> entities) {
         em.delete(entities);
     }
 

@@ -62,7 +62,7 @@ public class EntityManager<E, ID> {
 
     protected CriteriaBuilder createCriteriaTemplate(Criterion c, Order... orders) {
         CriteriaBuilder criteria = emf.createCriteria();
-        Restrictions r = emf.getRestrictions(model.getEntityClass());
+        Restrictions<E> r = emf.getRestrictions(model.getEntityClass());
         criteria.append("select {} ", r.all());
         criteria.append("from {} ", r.table());
         criteria.append("where {} ", c);
@@ -87,13 +87,13 @@ public class EntityManager<E, ID> {
         }
     }
 
-    public List<E> loadByProp(String propertyName, Object value, Order... orders) {
-        QueryObject q = model.queryForLoadByProp(propertyName, value, orders);
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, Order... orders) {
+        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, orders);
         return facade.load(q, model.getRowMapper());
     }
 
-    public E loadUniqueByProp(String propertyName, Object value) throws UnexpectedResultException {
-        QueryObject q = model.queryForLoadByProp(propertyName, value, new Order[] {});
+    public <T> E loadUniqueByProp(MetaField<E, T> metaField, T value) throws UnexpectedResultException {
+        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, new Order[] {});
         return facade.loadUnique(q, model.getRowMapper());
     }
 

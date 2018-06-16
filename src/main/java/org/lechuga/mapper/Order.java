@@ -2,25 +2,25 @@ package org.lechuga.mapper;
 
 public class Order {
 
-    final String property;
+    final MetaField<?, ?> metaField;
     final String order;
 
-    private Order(String property, String order) {
+    private Order(MetaField<?, ?> metaField, String order) {
         super();
-        this.property = property;
+        this.metaField = metaField;
         this.order = order;
     }
 
-    public static Order asc(String property) {
-        return new Order(property, " asc");
+    public static Order asc(MetaField<?, ?> metaField) {
+        return new Order(metaField, " asc");
     }
 
-    public static Order desc(String property) {
-        return new Order(property, " desc");
+    public static Order desc(MetaField<?, ?> metaField) {
+        return new Order(metaField, " desc");
     }
 
-    public String getProperty() {
-        return property;
+    public MetaField<?, ?> getMetaField() {
+        return metaField;
     }
 
     public String getOrder() {
@@ -29,7 +29,7 @@ public class Order {
 
     @Override
     public String toString() {
-        return property + order;
+        return metaField + order;
     }
 
 }

@@ -5,21 +5,22 @@ import java.util.Collection;
 import java.util.StringJoiner;
 
 import org.lechuga.mapper.Column;
+import org.lechuga.mapper.MetaField;
 import org.lechuga.mapper.Order;
 import org.lechuga.mapper.TableModel;
 
-public class Restrictions {
+public class Restrictions<E> {
 
-    final TableModel<?> em;
+    final TableModel<E> em;
     final String alias;
 
-    public Restrictions(TableModel<?> em, String alias) {
+    public Restrictions(TableModel<E> em, String alias) {
         super();
         this.em = em;
         this.alias = alias;
     }
 
-    public Restrictions(TableModel<?> em) {
+    public Restrictions(TableModel<E> em) {
         this(em, null);
     }
 
@@ -58,88 +59,89 @@ public class Restrictions {
         return new CriterionImpl(j.toString());
     }
 
-    public Criterion column(String propertyName) {
-        return unaryOperator("", propertyName, "");
+    public Criterion column(MetaField<E, ?> metaField) {
+        return unaryOperator("", metaField, "");
     }
 
-    Criterion unaryOperator(String pre, String propertyName, String post) {
-        Column c = em.findColumnByName(propertyName);
+    Criterion unaryOperator(String pre, MetaField<E, ?> metaField, String post) {
+        Column c = em.findColumnByMetaField(metaField);
         return new CriterionImpl(pre + aliaseColumn(c.getColumnName()) + post);
     }
 
-    Criterion binaryOperator(String propertyName, String op, Object value) {
-        Column c = em.findColumnByName(propertyName);
+    <T> Criterion binaryOperator(MetaField<E, T> metaField, String op, T value) {
+        Column c = em.findColumnByMetaField(metaField);
         CriterionImpl q = new CriterionImpl();
         q.append(aliaseColumn(c.getColumnName()) + op + "?");
         q.addArg(c.convertValueForJdbc(value));
         return q;
     }
 
-    Criterion binaryOperator(String propertyName1, String op, Restrictions rs2, String propertyName2) {
+    <E2> Criterion binaryOperator(MetaField<E, ?> metaField1, String op, Restrictions<E2> rs2,
+            MetaField<E2, ?> metaField2) {
         CriterionImpl c = new CriterionImpl();
-        Column c1 = em.findColumnByName(propertyName1);
+        Column c1 = em.findColumnByMetaField(metaField1);
         c.append(aliaseColumn(c1.getColumnName()));
         c.append(op);
-        c.append(rs2.column(propertyName2));
+        c.append(rs2.column(metaField2));
         return c;
     }
 
-    public Criterion isNull(String propertyName) {
-        return unaryOperator("", propertyName, " is null");
+    public Criterion isNull(MetaField<E, ?> metaField) {
+        return unaryOperator("", metaField, " is null");
     }
 
-    public Criterion isNotNull(String propertyName) {
-        return unaryOperator("", propertyName, " is not null");
+    public Criterion isNotNull(MetaField<E, ?> metaField) {
+        return unaryOperator("", metaField, " is not null");
     }
 
-    public Criterion eq(String propertyName, Object value) {
-        return binaryOperator(propertyName, "=", value);
+    public <T> Criterion eq(MetaField<E, T> metaField, T value) {
+        return binaryOperator(metaField, "=", value);
     }
 
-    public Criterion ne(String propertyName, Object value) {
-        return binaryOperator(propertyName, "<>", value);
+    public <T> Criterion ne(MetaField<E, T> metaField, T value) {
+        return binaryOperator(metaField, "<>", value);
     }
 
-    public Criterion le(String propertyName, Object value) {
-        return binaryOperator(propertyName, "<=", value);
+    public <T> Criterion le(MetaField<E, T> metaField, T value) {
+        return binaryOperator(metaField, "<=", value);
     }
 
-    public Criterion ge(String propertyName, Object value) {
-        return binaryOperator(propertyName, ">=", value);
+    public <T> Criterion ge(MetaField<E, T> metaField, T value) {
+        return binaryOperator(metaField, ">=", value);
     }
 
-    public Criterion lt(String propertyName, Object value) {
-        return binaryOperator(propertyName, "<", value);
+    public <T> Criterion lt(MetaField<E, T> metaField, T value) {
+        return binaryOperator(metaField, "<", value);
     }
 
-    public Criterion gt(String propertyName, Object value) {
-        return binaryOperator(propertyName, ">", value);
+    public <T> Criterion gt(MetaField<E, T> metaField, T value) {
+        return binaryOperator(metaField, ">", value);
     }
 
     //
 
-    public Criterion eq(String propertyName1, Restrictions rs2, String propertyName2) {
-        return binaryOperator(propertyName1, "=", rs2, propertyName2);
+    public <E2> Criterion eq(MetaField<E, ?> metaField1, Restrictions<E2> rs2, MetaField<E2, ?> metaField2) {
+        return binaryOperator(metaField1, "=", rs2, metaField2);
     }
 
-    public Criterion ne(String propertyName1, Restrictions rs2, String propertyName2) {
-        return binaryOperator(propertyName1, "<>", rs2, propertyName2);
+    public <E2> Criterion ne(MetaField<E, ?> metaField1, Restrictions<E2> rs2, MetaField<E2, ?> metaField2) {
+        return binaryOperator(metaField1, "<>", rs2, metaField2);
     }
 
-    public Criterion le(String propertyName1, Restrictions rs2, String propertyName2) {
-        return binaryOperator(propertyName1, "<=", rs2, propertyName2);
+    public <E2> Criterion le(MetaField<E, ?> metaField1, Restrictions<E2> rs2, MetaField<E2, ?> metaField2) {
+        return binaryOperator(metaField1, "<=", rs2, metaField2);
     }
 
-    public Criterion ge(String propertyName1, Restrictions rs2, String propertyName2) {
-        return binaryOperator(propertyName1, ">=", rs2, propertyName2);
+    public <E2> Criterion ge(MetaField<E, ?> metaField1, Restrictions<E2> rs2, MetaField<E2, ?> metaField2) {
+        return binaryOperator(metaField1, ">=", rs2, metaField2);
     }
 
-    public Criterion lt(String propertyName1, Restrictions rs2, String propertyName2) {
-        return binaryOperator(propertyName1, "<", rs2, propertyName2);
+    public <E2> Criterion lt(MetaField<E, ?> metaField1, Restrictions<E2> rs2, MetaField<E2, ?> metaField2) {
+        return binaryOperator(metaField1, "<", rs2, metaField2);
     }
 
-    public Criterion gt(String propertyName1, Restrictions rs2, String propertyName2) {
-        return binaryOperator(propertyName1, ">", rs2, propertyName2);
+    public <E2> Criterion gt(MetaField<E, ?> metaField1, Restrictions<E2> rs2, MetaField<E2, ?> metaField2) {
+        return binaryOperator(metaField1, ">", rs2, metaField2);
     }
 
     // ////
@@ -183,8 +185,8 @@ public class Restrictions {
 
     // ////
 
-    public Criterion in(String propertyName, Collection<Object> values) {
-        Column c = em.findColumnByName(propertyName);
+    public <T> Criterion in(MetaField<E, T> metaField, Collection<T> values) {
+        Column c = em.findColumnByMetaField(metaField);
         CriterionImpl r = new CriterionImpl();
         r.append(aliaseColumn(c.getColumnName()));
         r.append(" in (");
@@ -201,20 +203,22 @@ public class Restrictions {
         return r;
     }
 
-    public Criterion in(String propertyName, Object... values) {
-        return in(propertyName, Arrays.asList(values));
+    @SuppressWarnings("unchecked")
+    public <T> Criterion in(MetaField<E, T> metaField, T... values) {
+        return in(metaField, Arrays.asList(values));
     }
 
-    public Criterion notIn(String propertyName, Collection<Object> values) {
-        return not(in(propertyName, Arrays.asList(values)));
+    public <T> Criterion notIn(MetaField<E, T> metaField, Collection<T> values) {
+        return not(in(metaField, values));
     }
 
-    public Criterion notIn(String propertyName, Object... values) {
-        return not(in(propertyName, Arrays.asList(values)));
+    @SuppressWarnings("unchecked")
+    public <T> Criterion notIn(MetaField<E, T> metaField, T... values) {
+        return not(in(metaField, Arrays.asList(values)));
     }
 
-    public Criterion between(String propertyName, Object value1, Object value2) {
-        Column c = em.findColumnByName(propertyName);
+    public <T> Criterion between(MetaField<E, T> metaField, T value1, T value2) {
+        Column c = em.findColumnByMetaField(metaField);
         CriterionImpl r = new CriterionImpl();
         r.append(aliaseColumn(c.getColumnName()));
         r.append(" between ? and ?");
@@ -223,16 +227,16 @@ public class Restrictions {
         return r;
     }
 
-    public Criterion like(String propertyName, ELike like, String value) {
-        Column c = em.findColumnByName(propertyName);
+    public Criterion like(MetaField<E, String> metaField, ELike like, String value) {
+        Column c = em.findColumnByMetaField(metaField);
         CriterionImpl r = new CriterionImpl();
         r.append(aliaseColumn(c.getColumnName()) + " like ?");
         r.addArg(like.process(value));
         return r;
     }
 
-    public Criterion ilike(String propertyName, ELike like, String value) {
-        Column c = em.findColumnByName(propertyName);
+    public Criterion ilike(MetaField<E, String> metaField, ELike like, String value) {
+        Column c = em.findColumnByMetaField(metaField);
         CriterionImpl r = new CriterionImpl();
         r.append("upper(" + aliaseColumn(c.getColumnName()) + ") like upper(?)");
         r.addArg(like.process(value));
@@ -248,7 +252,7 @@ public class Restrictions {
             }
             c++;
 
-            Column column = em.findColumnByName(o.getProperty());
+            Column column = em.findColumnByMetaField(o.getMetaField());
             r.append(aliaseColumn(column.getColumnName()) + o.getOrder());
         }
         return r;

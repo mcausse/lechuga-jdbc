@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import org.lechuga.annotated.criteria.Restrictions;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.RowMapper;
 import org.lechuga.jdbc.exception.LechugaException;
@@ -23,6 +22,7 @@ import org.lechuga.mapper.util.ReflectUtils;
 public class TableModel<E> {
 
     final Class<E> entityClass;
+    final Class<?> metaModelClass;
     final String tableName;
 
     final Set<Column> idColumns = new LinkedHashSet<>();
@@ -32,10 +32,21 @@ public class TableModel<E> {
 
     final RowMapper<E> rowMapper;
 
-    public TableModel(Class<E> entityClass, String tableName) {
+    public TableModel(Class<E> entityClass, Class<?> metaModelClass, String tableName, Collection<Column> columns) {
         super();
         this.entityClass = entityClass;
+        this.metaModelClass = metaModelClass;
         this.tableName = tableName;
+
+        for (Column column : columns) {
+            if (column.isId()) {
+                idColumns.add(column);
+            } else {
+                regularColumns.add(column);
+            }
+            allColumns.add(column);
+            propsMap.put(column.getPropertyName(), column);
+        }
 
         this.rowMapper = new RowMapper<E>() {
             @Override
@@ -47,16 +58,6 @@ public class TableModel<E> {
                 return entity;
             }
         };
-    }
-
-    public void addColumn(Column c) {
-        if (c.isId()) {
-            idColumns.add(c);
-        } else {
-            regularColumns.add(c);
-        }
-        allColumns.add(c);
-        propsMap.put(c.getPropertyName(), c);
     }
 
     public Class<E> getEntityClass() {
@@ -76,6 +77,18 @@ public class TableModel<E> {
             throw new LechugaException("property not found: " + entityClass.getName() + "#" + name);
         }
         return this.propsMap.get(name);
+    }
+
+    public Column findColumnByMetaField(MetaField<?, ?> metaField) {
+        if (!this.propsMap.containsKey(metaField.propertyName)) {
+            throw new LechugaException("property not found: " + entityClass.getName() + "#" + metaField.propertyName);
+        }
+        if (this.propsMap.get(metaField.propertyName).getMetafield() != metaField) {
+            throw new LechugaException("this meta-field is not of meta-model: meta-model=" + metaModelClass.getName()
+                    + "; meta-field=" + metaField);
+        }
+        Column col = this.propsMap.get(metaField.propertyName);
+        return col;
     }
 
     // /**
@@ -134,7 +147,7 @@ public class TableModel<E> {
     protected String orderBy(Order[] orders) {
         StringJoiner r = new StringJoiner(",");
         for (Order o : orders) {
-            Column c = findColumnByName(o.getProperty());
+            Column c = findColumnByName(o.getMetaField().getPropertyName());
             r.add(c.getColumnName() + o.getOrder());
         }
         return " order by " + r.toString();
@@ -401,9 +414,9 @@ public class TableModel<E> {
         return propsMap;
     }
 
-    public Restrictions getRestrictions() {
-        return new Restrictions(this);
-    }
+    // public Restrictions getRestrictions() {
+    // return new Restrictions(this);
+    // }
 
     @Override
     public String toString() {

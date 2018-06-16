@@ -1,28 +1,27 @@
 package org.lechuga.annotated;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.lechuga.annotated.anno.CustomHandler;
+import org.lechuga.annotated.anno.Entity;
 import org.lechuga.annotated.anno.EnumHandler;
 import org.lechuga.annotated.anno.Generated;
 import org.lechuga.annotated.anno.Id;
-import org.lechuga.annotated.anno.Table;
-import org.lechuga.annotated.anno.Transient;
 import org.lechuga.annotated.convention.Conventions;
 import org.lechuga.annotated.convention.DefaultConventions;
 import org.lechuga.annotated.criteria.CriteriaBuilder;
 import org.lechuga.annotated.criteria.Restrictions;
-import org.lechuga.annotated.query.QueryBuilder;
-import org.lechuga.annotated.util.AnnoReflectUtils;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.exception.LechugaException;
 import org.lechuga.mapper.Accessor;
 import org.lechuga.mapper.Column;
 import org.lechuga.mapper.EntityManager;
+import org.lechuga.mapper.MetaField;
 import org.lechuga.mapper.TableModel;
 import org.lechuga.mapper.autogen.Generator;
 import org.lechuga.mapper.handler.EnumeratedHandler;
@@ -32,107 +31,169 @@ import org.lechuga.mapper.util.ReflectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EntityManagerFactory implements IEntityManagerFactory {
+public class EntityManagerFactory implements IEntityManagerFactory {// implements IEntityManagerFactory {
 
     static final Logger LOG = LoggerFactory.getLogger(EntityManagerFactory.class);
 
     final DataAccesFacade facade;
     final Conventions conventions;
-    final Map<Class<?>, TableModel<?>> models = new LinkedHashMap<>();
 
-    public EntityManagerFactory(DataAccesFacade facade, Class<?>... entityClasses) {
+    final Map<Class<?>, TableModel<?>> metaModels = new LinkedHashMap<>();
+    final Map<Class<?>, TableModel<?>> entityModels = new LinkedHashMap<>();
+
+    public EntityManagerFactory(DataAccesFacade facade, Class<?>... metaEntityClasses) {
         super();
         this.facade = facade;
         this.conventions = new DefaultConventions();
 
-        for (Class<?> ec : entityClasses) {
-            models.put(ec, buildEntityModel(ec));
+        for (Class<?> metaEntityClass : metaEntityClasses) {
+            TableModel<?> model = buildEntityModel(metaEntityClass);
+            metaModels.put(metaEntityClass, model);
+            entityModels.put(model.getEntityClass(), model);
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.lechuga.annotated.IEntityManagerFactory#getFacade()
+     */
     @Override
     public DataAccesFacade getFacade() {
         return facade;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.lechuga.annotated.IEntityManagerFactory#buildEntityManager(java.lang.
+     * Class)
+     */
     @Override
     public <E, ID> EntityManager<E, ID> buildEntityManager(Class<E> entityClass) {
-        TableModel<E> model = getModel(entityClass);
+        TableModel<E> model = getModelByEntityClass(entityClass);
         return new EntityManager<>(facade, this, model);
     }
 
+    // @Override
+    // public <E> QueryBuilder<E> createQuery(Class<E> entityClass) {
+    // return new QueryBuilder<>(facade, this, getModel(entityClass), null);
+    // }
+    //
+    // @Override
+    // public <E> QueryBuilder<E> createQuery(Class<E> entityClass, String
+    // tableAlias) {
+    // return new QueryBuilder<>(facade, this, getModel(entityClass), tableAlias);
+    // }
+    //
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.lechuga.annotated.IEntityManagerFactory#getRestrictions(java.lang.Class)
+     */
     @Override
-    public <E> QueryBuilder<E> createQuery(Class<E> entityClass) {
-        return new QueryBuilder<>(facade, this, getModel(entityClass), null);
+    public <E> Restrictions<E> getRestrictions(Class<E> entityClass) {
+        return new Restrictions<>(getModelByEntityClass(entityClass));
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.lechuga.annotated.IEntityManagerFactory#getRestrictions(java.lang.Class,
+     * java.lang.String)
+     */
     @Override
-    public <E> QueryBuilder<E> createQuery(Class<E> entityClass, String tableAlias) {
-        return new QueryBuilder<>(facade, this, getModel(entityClass), tableAlias);
+    public <E> Restrictions<E> getRestrictions(Class<E> entityClass, String alias) {
+        return new Restrictions<>(getModelByEntityClass(entityClass), alias);
     }
 
-    @Override
-    public Restrictions getRestrictions(Class<?> entityClass) {
-        return new Restrictions(getModel(entityClass));
-    }
-
-    @Override
-    public Restrictions getRestrictions(Class<?> entityClass, String alias) {
-        return new Restrictions(getModel(entityClass), alias);
-    }
-
+    // @Override
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.lechuga.annotated.IEntityManagerFactory#createCriteria()
+     */
     @Override
     public CriteriaBuilder createCriteria() {
         return new CriteriaBuilder(facade, this);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.lechuga.annotated.IEntityManagerFactory#getModelByEntityClass(java.lang.
+     * Class)
+     */
     @Override
     @SuppressWarnings("unchecked")
-    public <E> TableModel<E> getModel(Class<?> entityClass) {
-        if (!models.containsKey(entityClass)) {
+    public <E> TableModel<E> getModelByEntityClass(Class<?> entityClass) {
+        if (!entityModels.containsKey(entityClass)) {
             throw new RuntimeException("entity not registered: " + entityClass.getName());
         }
-        TableModel<E> model = (TableModel<E>) models.get(entityClass);
+        TableModel<E> model = (TableModel<E>) entityModels.get(entityClass);
         return model;
     }
 
-    protected <E> TableModel<E> buildEntityModel(Class<E> entityClass) {
+    // @SuppressWarnings("unchecked")
+    // public <E> TableModel<E> getModelByMetaClass(Class<?> metaClass) {
+    // if (!metaModels.containsKey(metaClass)) {
+    // throw new RuntimeException("entity not registered: " + metaClass.getName());
+    // }
+    // TableModel<E> model = (TableModel<E>) metaModels.get(metaClass);
+    // return model;
+    // }
 
-        LOG.info(entityClass.getName());
+    @SuppressWarnings("unchecked")
+    protected <E> TableModel<E> buildEntityModel(Class<E> metaEntityClass) {
+
+        LOG.info(metaEntityClass.getName());
+        Class<E> entityClass;
         String tableName;
         {
-            Table annoTable = entityClass.getAnnotation(Table.class);
-            if (annoTable == null) {
-                tableName = conventions.tableNameOf(entityClass);
-            } else {
-                tableName = annoTable.value();
+            Entity annoEntity = metaEntityClass.getAnnotation(Entity.class);
+            if (annoEntity == null) {
+                throw new RuntimeException("expectad a meta-model Class (@" + Entity.class.getName()
+                        + "-annotated), but received: " + metaEntityClass);
             }
+            entityClass = (Class<E>) annoEntity.entity();
+            tableName = annoEntity.table();
         }
 
-        TableModel<E> r = new TableModel<>(entityClass, tableName);
-        LOG.info(entityClass.getName() + ": " + r);
+        List<Column> cs = new ArrayList<>();
+        for (Field f : metaEntityClass.getFields()) {
+            if (MetaField.class.isAssignableFrom(f.getType())) {
+                MetaField<?, ?> col;
+                try {
+                    col = (MetaField<?, ?>) f.get(null);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
 
-        Map<String, Field> fs = AnnoReflectUtils.getFields(entityClass);
-        {
-            for (Entry<String, Field> f : fs.entrySet()) {
-
-                if (f.getValue().getAnnotation(Transient.class) != null) {
+                if (col == null) {
                     continue;
                 }
 
-                Column c = buildPropertyModel(entityClass, f.getKey(), f.getValue());
+                Column c = buildPropertyModel(entityClass, col, f);
                 LOG.info(entityClass.getName() + ": " + c);
-                r.addColumn(c);
+                cs.add(c);
             }
         }
+
+        TableModel<E> r = new TableModel<>(entityClass, metaEntityClass, tableName, cs);
+        LOG.info(entityClass.getName() + ": " + r);
         return r;
     }
 
-    protected Column buildPropertyModel(Class<?> entityClass, String propertyPathName, Field p) {
+    protected Column buildPropertyModel(Class<?> entityClass, MetaField<?, ?> metaField, Field metaFieldField) {
 
         Generator generator;
         {
-            Generated annoGenerated = p.getAnnotation(Generated.class);
+            Generated annoGenerated = metaFieldField.getAnnotation(Generated.class);
             if (annoGenerated == null) {
                 generator = null;
             } else {
@@ -146,29 +207,35 @@ public class EntityManagerFactory implements IEntityManagerFactory {
         }
         String columnName;
         {
-            org.lechuga.annotated.anno.Column annoColumn = p.getAnnotation(org.lechuga.annotated.anno.Column.class);
+            org.lechuga.annotated.anno.Column annoColumn = metaFieldField
+                    .getAnnotation(org.lechuga.annotated.anno.Column.class);
             if (annoColumn == null) {
-                columnName = conventions.columnNameOf(p.getName());
+                String[] proponameParts = metaField.getPropertyName().split("\\.");
+                String proponame = proponameParts[proponameParts.length - 1];
+                columnName = conventions.columnNameOf(proponame);
             } else {
                 columnName = annoColumn.value();
             }
         }
 
-        boolean isPk = p.getAnnotation(Id.class) != null;
+        boolean isPk = metaFieldField.getAnnotation(Id.class) != null;
+
+        Accessor accessor = new Accessor(entityClass, metaField.getPropertyName());
 
         Handler handler;
         {
-            EnumHandler enumHandler = p.getAnnotation(EnumHandler.class);
+            EnumHandler enumHandler = metaFieldField.getAnnotation(EnumHandler.class);
             if (enumHandler != null) {
-                if (!Enum.class.isAssignableFrom(p.getType())) {
-                    throw new LechugaException("property '" + entityClass.getSimpleName() + "#" + p.getName()
-                            + "' is not of Enum type: " + p.getType().getName());
+                if (!Enum.class.isAssignableFrom(accessor.getPropertyFinalType())) {
+                    throw new LechugaException(
+                            "property '" + entityClass.getSimpleName() + "#" + metaFieldField.getName()
+                                    + "' is not of Enum type: " + accessor.getPropertyFinalType().getName());
                 }
-                handler = new EnumeratedHandler(p.getType());
+                handler = new EnumeratedHandler(accessor.getPropertyFinalType());
             } else {
-                CustomHandler annoCustomHandler = p.getAnnotation(CustomHandler.class);
+                CustomHandler annoCustomHandler = metaFieldField.getAnnotation(CustomHandler.class);
                 if (annoCustomHandler == null) {
-                    handler = Handlers.getHandlerFor(p.getType());
+                    handler = Handlers.getHandlerFor(accessor.getPropertyFinalType());
                 } else {
                     try {
                         handler = ReflectUtils.newInstance(annoCustomHandler.value(), annoCustomHandler.args());
@@ -180,8 +247,7 @@ public class EntityManagerFactory implements IEntityManagerFactory {
             }
         }
 
-        Accessor accessor = new Accessor(entityClass, propertyPathName);
-        return new Column(isPk, columnName, accessor, handler, generator);
+        return new Column(isPk, columnName, entityClass, metaField, accessor, handler, generator);
     }
 
 }

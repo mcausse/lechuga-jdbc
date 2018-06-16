@@ -1,7 +1,7 @@
 package typesafecriteria.ent;
 
-import typesafecriteria.Entity;
-import typesafecriteria.MetaField;
+import org.lechuga.annotated.anno.Entity;
+import org.lechuga.mapper.MetaField;
 
 @Entity(entity = DeptCount.class, table = "")
 public interface DeptCount_ extends Department_ {

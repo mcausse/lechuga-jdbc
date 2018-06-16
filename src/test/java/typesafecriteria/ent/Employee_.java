@@ -2,12 +2,11 @@ package typesafecriteria.ent;
 
 import org.lechuga.annotated.anno.Column;
 import org.lechuga.annotated.anno.CustomHandler;
+import org.lechuga.annotated.anno.Entity;
 import org.lechuga.annotated.anno.EnumHandler;
 import org.lechuga.annotated.anno.Id;
+import org.lechuga.mapper.MetaField;
 import org.lechuga.mapper.handler.custom.StringDateHandler;
-
-import typesafecriteria.Entity;
-import typesafecriteria.MetaField;
 
 @Entity(entity = Employee.class, table = "employees")
 public interface Employee_ {

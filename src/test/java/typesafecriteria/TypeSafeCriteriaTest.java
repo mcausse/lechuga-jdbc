@@ -9,10 +9,17 @@ import java.util.List;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
+import org.lechuga.GenericDao;
+import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.criteria.CriteriaBuilder;
 import org.lechuga.annotated.criteria.ELike;
+import org.lechuga.annotated.criteria.Restrictions;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
+import org.lechuga.mapper.EntityManager;
+import org.lechuga.mapper.Order;
 
 import typesafecriteria.ent.Department;
 import typesafecriteria.ent.Department_;
@@ -28,7 +35,7 @@ public class TypeSafeCriteriaTest {
     @Test
     public void testName2() throws Exception {
 
-        EntityManagerFactory2 emf = new EntityManagerFactory2(null, Employee_.class, Department_.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(null, Employee_.class, Department_.class);
 
         Restrictions<Employee> r = emf.getRestrictions(Employee.class);
         Restrictions<Employee> re = emf.getRestrictions(Employee.class, "e");
@@ -86,7 +93,7 @@ public class TypeSafeCriteriaTest {
     @Test
     public void testName() throws Exception {
 
-        EntityManagerFactory2 emf = new EntityManagerFactory2(facade, Department_.class, Employee_.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class);
         EntityManager<Employee, EmployeeId> empMan = emf.buildEntityManager(Employee.class);
         EntityManager<Department, Long> deptMan = emf.buildEntityManager(Department.class);
 
@@ -205,7 +212,7 @@ public class TypeSafeCriteriaTest {
 
     public static class DepartmentDao extends GenericDao<Department, Long> {
 
-        public DepartmentDao(EntityManagerFactory2 emf) {
+        public DepartmentDao(IEntityManagerFactory emf) {
             super(emf);
         }
 
@@ -237,7 +244,7 @@ public class TypeSafeCriteriaTest {
 
     public static class EmployeeDao extends GenericDao<Employee, EmployeeId> {
 
-        public EmployeeDao(EntityManagerFactory2 emf) {
+        public EmployeeDao(IEntityManagerFactory emf) {
             super(emf);
         }
 
@@ -286,7 +293,7 @@ public class TypeSafeCriteriaTest {
         final DepartmentDao departmentDao;
         final EmployeeDao employeeDao;
 
-        public TestService(EntityManagerFactory2 emf) {
+        public TestService(IEntityManagerFactory emf) {
             super();
             this.facade = emf.getFacade();
             this.departmentDao = new DepartmentDao(emf);
@@ -332,7 +339,7 @@ public class TypeSafeCriteriaTest {
 
     @Test
     public void testService() throws Exception {
-        EntityManagerFactory2 emf = new EntityManagerFactory2(facade, Department_.class, Employee_.class,
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class,
                 DeptCount_.class);
         TestService service = new TestService(emf);
 

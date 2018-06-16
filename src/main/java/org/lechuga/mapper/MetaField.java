@@ -1,4 +1,4 @@
-package typesafecriteria;
+package org.lechuga.mapper;
 
 public class MetaField<E, T> {
 

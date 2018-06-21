@@ -1,4 +1,4 @@
-package org.lechuga;
+package org.lechuga.mapper;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -9,9 +9,6 @@ import org.lechuga.annotated.criteria.Criterion;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.exception.EmptyResultException;
 import org.lechuga.jdbc.exception.UnexpectedResultException;
-import org.lechuga.mapper.EntityManager;
-import org.lechuga.mapper.Order;
-import org.lechuga.mapper.TableModel;
 
 public class GenericDao<E, ID> {
 
@@ -25,7 +22,7 @@ public class GenericDao<E, ID> {
         this.emf = emf;
         this.persistentClass = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass())
                 .getActualTypeArguments()[0];
-        this.em = emf.buildEntityManager(persistentClass);
+        this.em = emf.getEntityManager(persistentClass);
     }
 
     public IEntityManagerFactory getEntityManagerFactory() {
@@ -96,8 +93,9 @@ public class GenericDao<E, ID> {
         em.update(entity);
     }
 
-    public void update(E entity, String... properties) {
-        em.update(entity, properties);
+    @SuppressWarnings("unchecked")
+    public void update(E entity, MetaField<E, ?>... metaFields) {
+        em.update(entity, metaFields);
     }
 
     public void insert(E entity) {

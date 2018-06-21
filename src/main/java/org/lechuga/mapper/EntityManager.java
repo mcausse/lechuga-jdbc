@@ -233,10 +233,10 @@ public class EntityManager<E, ID> {
         }
     }
 
-    public void update(E entity, String... properties) {
-        QueryObject q = model.queryForUpdate(entity, properties);
+    @SuppressWarnings("unchecked")
+    public void update(E entity, MetaField<E, ?>... metaFields) {
+        QueryObject q = model.queryForUpdate(entity, metaFields);
         int affectedResults = facade.update(q);
-
         if (affectedResults != 1) {
             throw new LechugaException(
                     "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);

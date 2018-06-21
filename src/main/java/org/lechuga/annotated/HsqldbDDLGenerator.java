@@ -1,4 +1,4 @@
-package org.lechuga.mapper;
+package org.lechuga.annotated;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -6,8 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.lechuga.annotated.EntityManagerFactory;
-import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.mapper.Column;
+import org.lechuga.mapper.TableModel;
 import org.lechuga.mapper.autogen.HsqldbIdentity;
 import org.lechuga.mapper.autogen.HsqldbSequence;
 
@@ -22,12 +22,12 @@ public class HsqldbDDLGenerator {
         this.em = em;
         this.idproperties = new LinkedHashMap<>();
 
-        for (Column c : em.idColumns) {
+        for (Column c : em.getIdColumns()) {
             idproperties.put(c.getPropertyName(), c);
         }
 
         this.properties = new LinkedHashMap<>(idproperties);
-        for (Column c : em.allColumns) {
+        for (Column c : em.getAllColumns()) {
             properties.put(c.getPropertyName(), c);
         }
     }

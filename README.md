@@ -159,7 +159,9 @@
 	Department d = ...
 	Employee e = ...
 	
-	List<Employee> es = Department_.employees.load(emf, d);
+	List<Employee> es = Department_.employees.load(emf, d, //
+	        Order.desc(Employee_.salary), Order.asc(Employee_.dni));
+
 	
 	Department d2 = Employee_.department.load(emf, e);
 	
@@ -173,17 +175,10 @@
 ```sql
 
 	select r.id_department,r.dni,r.le_name,r.salary,r.birth_date,r.sex 
-	from employees r join departments s on s.id=r.id_department 
-	where s.id=? 
-	order by r.id_department asc, r.dni asc  
+	from employees r where r.id_department=? order by r.salary desc, r.dni asc  
 	-- [101(Long)]
 	
-	select r.id,r.dept_name 
-	from departments r 
-	join employees s on s.id_department=r.id 
-	where s.id_department=? and s.dni=? 
-	order by r.id asc  
-	-- [101(Long), 8P(String)]
+	select r.id,r.dept_name from departments r where r.id=?  -- [101(Long)]
 
 ```
 

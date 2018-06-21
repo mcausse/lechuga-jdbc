@@ -1,4 +1,4 @@
-package movies.ent;
+package examples.ex1.movies;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,8 +10,8 @@ import java.util.Map;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
-import org.lechuga.GenericDao;
 import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.HsqldbDDLGenerator;
 import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.annotated.MetaField;
 import org.lechuga.annotated.anno.Entity;
@@ -23,15 +23,15 @@ import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.extractor.MapResultSetExtractor;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
-import org.lechuga.mapper.HsqldbDDLGenerator;
+import org.lechuga.mapper.GenericDao;
 import org.lechuga.mapper.autogen.HsqldbIdentity;
 import org.lechuga.mapper.autogen.HsqldbSequence;
 
-public class MoviesEnt {
+public class MoviesTest {
 
     final DataAccesFacade facade;
 
-    public MoviesEnt() {
+    public MoviesTest() {
         final JDBCDataSource ds = new JDBCDataSource();
         ds.setUrl("jdbc:hsqldb:mem:a");
         ds.setUser("sa");

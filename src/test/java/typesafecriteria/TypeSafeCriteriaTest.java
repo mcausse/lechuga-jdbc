@@ -12,8 +12,8 @@ import java.util.Map;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.Before;
 import org.junit.Test;
-import org.lechuga.GenericDao;
 import org.lechuga.annotated.EntityManagerFactory;
+import org.lechuga.annotated.HsqldbDDLGenerator;
 import org.lechuga.annotated.IEntityManagerFactory;
 import org.lechuga.annotated.criteria.CriteriaBuilder;
 import org.lechuga.annotated.criteria.CriteriaExecutor;
@@ -25,7 +25,7 @@ import org.lechuga.jdbc.extractor.MapResultSetExtractor;
 import org.lechuga.jdbc.extractor.Pager;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
 import org.lechuga.mapper.EntityManager;
-import org.lechuga.mapper.HsqldbDDLGenerator;
+import org.lechuga.mapper.GenericDao;
 import org.lechuga.mapper.Order;
 
 import typesafecriteria.ent.Department;
@@ -108,8 +108,8 @@ public class TypeSafeCriteriaTest {
     public void testManyToOneOneToMany() throws Exception {
 
         IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class);
-        EntityManager<Employee, EmployeeId> empMan = emf.buildEntityManager(Employee.class);
-        EntityManager<Department, Long> deptMan = emf.buildEntityManager(Department.class);
+        EntityManager<Employee, EmployeeId> empMan = emf.getEntityManager(Employee.class);
+        EntityManager<Department, Long> deptMan = emf.getEntityManager(Department.class);
 
         facade.begin();
         try {
@@ -138,13 +138,8 @@ public class TypeSafeCriteriaTest {
             e.setSex(ESex.MALE);
             empMan.store(e);
 
-            // select id_department,dni,le_name,salary,birth_date,sex from employees join
-            // departments on id=id_department where id=? order by id_department asc, dni
-            // asc -- [101(Long)]
-            // select id,dept_name from departments join employees on id_department=id where
-            // id_department=? and dni=? order by id asc -- [101(Long), 8P(String)]
-
-            List<Employee> es = Department_.employees.load(emf, d);
+            List<Employee> es = Department_.employees.load(emf, d, //
+                    Order.desc(Employee_.salary), Order.asc(Employee_.dni));
 
             Department d2 = Employee_.department.load(emf, e);
 
@@ -161,12 +156,13 @@ public class TypeSafeCriteriaTest {
 
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testName() throws Exception {
 
         IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class);
-        EntityManager<Employee, EmployeeId> empMan = emf.buildEntityManager(Employee.class);
-        EntityManager<Department, Long> deptMan = emf.buildEntityManager(Department.class);
+        EntityManager<Employee, EmployeeId> empMan = emf.getEntityManager(Employee.class);
+        EntityManager<Department, Long> deptMan = emf.getEntityManager(Department.class);
 
         facade.begin();
         try {
@@ -194,7 +190,7 @@ public class TypeSafeCriteriaTest {
 
                 e.setSalary(38000.0);
                 empMan.update(e);
-                empMan.update(e, "salary");
+                empMan.update(e, Employee_.salary);
             }
             {
                 Employee r = empMan.loadById(e.getId());
@@ -337,8 +333,8 @@ public class TypeSafeCriteriaTest {
     public void testPager() throws Exception {
 
         IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class);
-        EntityManager<Employee, EmployeeId> empMan = emf.buildEntityManager(Employee.class);
-        EntityManager<Department, Long> deptMan = emf.buildEntityManager(Department.class);
+        EntityManager<Employee, EmployeeId> empMan = emf.getEntityManager(Employee.class);
+        EntityManager<Department, Long> deptMan = emf.getEntityManager(Department.class);
 
         facade.begin();
         try {
@@ -435,14 +431,17 @@ public class TypeSafeCriteriaTest {
 
         public List<Employee> loadEmployeesOf(Department dept) {
 
-            CriteriaBuilder c = emf.createCriteria();
-            Restrictions<Employee> r = emf.getRestrictions(Employee.class, "e");
-
-            c.append("select {} from {} ", r.all(), r.table());
-            c.append("where {} ", r.eq(Employee_.idDept, dept.getId()));
-            c.append("order by {}", r.orderBy(Order.asc(Employee_.dni)));
-
-            return c.getExecutor(Employee.class).load();
+            // @formatter:off
+            // CriteriaBuilder c = emf.createCriteria();
+            // Restrictions<Employee> r = emf.getRestrictions(Employee.class, "e");
+            //
+            // c.append("select {} from {} ", r.all(), r.table());
+            // c.append("where {} ", r.eq(Employee_.idDept, dept.getId()));
+            // c.append("order by {}", r.orderBy(Order.asc(Employee_.dni)));
+            //
+            // return c.getExecutor(Employee.class).load();
+            // @formatter:on
+            return Department_.employees.load(emf, dept);
         }
     }
 

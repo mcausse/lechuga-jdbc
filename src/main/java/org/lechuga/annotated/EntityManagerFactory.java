@@ -58,7 +58,7 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
     }
 
     @Override
-    public <E, ID> EntityManager<E, ID> buildEntityManager(Class<E> entityClass) {
+    public <E, ID> EntityManager<E, ID> getEntityManager(Class<E> entityClass) {
         TableModel<E> model = getModelByEntityClass(entityClass);
         return new EntityManager<>(facade, this, model);
     }
@@ -111,7 +111,12 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
                         + "-annotated), but received: " + metaEntityClass);
             }
             entityClass = (Class<E>) annoEntity.entity();
-            tableName = annoEntity.table();
+
+            if (annoEntity.table().isEmpty()) {
+                tableName = conventions.tableNameOf(entityClass);
+            } else {
+                tableName = annoEntity.table();
+            }
         }
 
         List<Column> cs = new ArrayList<>();

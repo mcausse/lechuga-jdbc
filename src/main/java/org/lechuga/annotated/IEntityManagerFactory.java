@@ -10,6 +10,7 @@ public interface IEntityManagerFactory {
 
     DataAccesFacade getFacade();
 
+    // TODO renombrar a getEntityManager
     <E, ID> EntityManager<E, ID> buildEntityManager(Class<E> entityClass);
 
     <E> Restrictions<E> getRestrictions(Class<E> entityClass);

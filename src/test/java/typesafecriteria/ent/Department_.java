@@ -1,6 +1,8 @@
 package typesafecriteria.ent;
 
 import org.lechuga.annotated.MetaField;
+import org.lechuga.annotated.OneToMany;
+import org.lechuga.annotated.PropPair;
 import org.lechuga.annotated.anno.Column;
 import org.lechuga.annotated.anno.Entity;
 import org.lechuga.annotated.anno.Generated;
@@ -16,4 +18,8 @@ public interface Department_ {
 
     @Column("dept_name")
     public static final MetaField<Department, String> name = new MetaField<>("name");
+
+    public static final OneToMany<Department, Employee> employees = new OneToMany<>(Department.class, Employee.class,
+            new PropPair<>(Department_.id, Employee_.idDept));
+
 }

@@ -1,6 +1,8 @@
 package typesafecriteria.ent;
 
+import org.lechuga.annotated.ManyToOne;
 import org.lechuga.annotated.MetaField;
+import org.lechuga.annotated.PropPair;
 import org.lechuga.annotated.anno.Column;
 import org.lechuga.annotated.anno.CustomHandler;
 import org.lechuga.annotated.anno.Entity;
@@ -26,4 +28,8 @@ public interface Employee_ {
 
     @EnumHandler
     public static final MetaField<Employee, ESex> sex = new MetaField<>("sex");
+
+    public static final ManyToOne<Employee, Department> department = new ManyToOne<>(Employee.class, Department.class,
+            new PropPair<>(Employee_.idDept, Department_.id));
+
 }

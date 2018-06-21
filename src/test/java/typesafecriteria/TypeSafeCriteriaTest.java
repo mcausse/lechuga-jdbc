@@ -105,6 +105,63 @@ public class TypeSafeCriteriaTest {
     }
 
     @Test
+    public void testManyToOneOneToMany() throws Exception {
+
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class);
+        EntityManager<Employee, EmployeeId> empMan = emf.buildEntityManager(Employee.class);
+        EntityManager<Department, Long> deptMan = emf.buildEntityManager(Department.class);
+
+        facade.begin();
+        try {
+
+            Department d = new Department();
+            d.setName("DB dept.");
+            deptMan.store(d);
+
+            Employee e = new Employee();
+            e.setId(new EmployeeId(d.getId(), "8P"));
+            e.setName("jor");
+            e.setSalary(38000.0);
+            e.setBirthDate("22/05/1837");
+            e.setSex(ESex.MALE);
+            empMan.store(e);
+
+            d = new Department();
+            d.setName("Java dept.2");
+            deptMan.store(d);
+
+            e = new Employee();
+            e.setId(new EmployeeId(d.getId(), "8P"));
+            e.setName("jbm2");
+            e.setSalary(38000.0);
+            e.setBirthDate("22/05/1837");
+            e.setSex(ESex.MALE);
+            empMan.store(e);
+
+            // select id_department,dni,le_name,salary,birth_date,sex from employees join
+            // departments on id=id_department where id=? order by id_department asc, dni
+            // asc -- [101(Long)]
+            // select id,dept_name from departments join employees on id_department=id where
+            // id_department=? and dni=? order by id asc -- [101(Long), 8P(String)]
+
+            List<Employee> es = Department_.employees.load(emf, d);
+
+            Department d2 = Employee_.department.load(emf, e);
+
+            assertEquals(
+                    "[Employee [id=EmployeeId [idDepartment=101, dni=8P], name=jbm2, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
+                    es.toString());
+            assertEquals("Department [id=101, name=Java dept.2]", d2.toString());
+
+            facade.commit();
+        } catch (Throwable e) {
+            facade.rollback();
+            throw e;
+        }
+
+    }
+
+    @Test
     public void testName() throws Exception {
 
         IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class);

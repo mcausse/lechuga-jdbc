@@ -30,40 +30,41 @@
 ```java
 	@Entity(entity = Department.class, table = "departments")
 	public interface Department_ {
-	
-	    @Generated(value = HsqldbSequence.class, args = "seq_department")
-	    @Id
-	    public static final MetaField<Department, Long> id = new MetaField<>("id");
-	
-	    @Column("dept_name")
-	    public static final MetaField<Department, String> name = new MetaField<>("name");
-	    
-    	public static final OneToMany<Department, Employee> employees = new OneToMany<>(Department.class, Employee.class,
-            new PropPair<>(Department_.id, Employee_.idDept));
+
+		@Generated(value = HsqldbSequence.class, args = "seq_department")
+		@Id
+		public static final MetaField<Department, Long> id = new MetaField<>("id");
+
+		@Column("dept_name")
+		public static final MetaField<Department, String> name = new MetaField<>("name");
+
+		public static final OneToMany<Department, Employee> employees = new OneToMany<>(
+			Department.class, Employee.class,
+			new PropPair<>(Department_.id, Employee_.idDept));
 	}
 	
 	@Entity(entity = Employee.class, table = "employees")
 	public interface Employee_ {
-	
-	    @Id
-	    public static final MetaField<Employee, Long> idDept = new MetaField<>("id.idDepartment");
-	    @Id
-	    public static final MetaField<Employee, String> dni = new MetaField<>("id.dni");
-	
-	    @Column("le_name")
-	    public static final MetaField<Employee, String> name = new MetaField<>("name");
-	
-	    public static final MetaField<Employee, Float> salary = new MetaField<>("salary");
-	
-	    @CustomHandler(value = StringDateHandler.class, args = "dd/MM/yyyy")
-	    public static final MetaField<Employee, String> birthDate = new MetaField<>("birthDate");
-	
-	    @EnumHandler
-	    public static final MetaField<Employee, ESex> sex = new MetaField<>("sex");
-	    
-	    
-		 public static final ManyToOne<Employee, Department> department = new ManyToOne<>(Employee.class, Department.class,
-            new PropPair<>(Employee_.idDept, Department_.id));
+
+		@Id
+		public static final MetaField<Employee, Long> idDept = new MetaField<>("id.idDepartment");
+		@Id
+		public static final MetaField<Employee, String> dni = new MetaField<>("id.dni");
+		
+		@Column("le_name")
+		public static final MetaField<Employee, String> name = new MetaField<>("name");
+		
+		public static final MetaField<Employee, Float> salary = new MetaField<>("salary");
+		
+		@CustomHandler(value = StringDateHandler.class, args = "dd/MM/yyyy")
+		public static final MetaField<Employee, String> birthDate = new MetaField<>("birthDate");
+		
+		@EnumHandler
+		public static final MetaField<Employee, ESex> sex = new MetaField<>("sex");
+
+		public static final ManyToOne<Employee, Department> department = new ManyToOne<>(
+			Employee.class, Department.class,
+			new PropPair<>(Employee_.idDept, Department_.id));
 	}
 ```
 
@@ -186,7 +187,7 @@
 
 ```
 
-## Criteria
+## TypeSafeCriteria
 
 ```java
 	CriteriaBuilder c = emf.createCriteria();

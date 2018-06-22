@@ -87,9 +87,12 @@ public class VotrTest {
         assertEquals(
                 "VotacioDto [votacio=Votacio [hashVotacio=aaa, nom=bestseller, descripcio=lo-bestseller, dataInici=1970-01-01 01:00:00.0, dataFi=null], "
                         + "usuari=Usuari [id=UsuariId [hashUsuari=bbb, hashVotacio=aaa], email=mhc@votr.com, alias=mhoms, idOpcioVotada=100, dataVotacio=1970-01-01 01:00:00.0], "
+                        + "usuaris=["
+                        + "Usuari [id=UsuariId [hashUsuari=bbb, hashVotacio=aaa], email=mhc@votr.com, alias=mhoms, idOpcioVotada=100, dataVotacio=1970-01-01 01:00:00.0], "
+                        + "Usuari [id=UsuariId [hashUsuari=ccc, hashVotacio=aaa], email=msm@votr.com, alias=null, idOpcioVotada=null, dataVotacio=null]], "
                         + "usuariOpcioVotada=Opcio [id=OpcioId [idOpcio=100, hashVotacio=aaa], nom=eneida, descripcio=la-eneida], "
-                        + "opcionsUsuaris="
-                        + "{Opcio [id=OpcioId [idOpcio=100, hashVotacio=aaa], nom=eneida, descripcio=la-eneida]=[Usuari [id=UsuariId [hashUsuari=bbb, hashVotacio=aaa], email=mhc@votr.com, alias=mhoms, idOpcioVotada=100, dataVotacio=1970-01-01 01:00:00.0]], "
+                        + "opcionsUsuaris={"
+                        + "Opcio [id=OpcioId [idOpcio=100, hashVotacio=aaa], nom=eneida, descripcio=la-eneida]=[Usuari [id=UsuariId [hashUsuari=bbb, hashVotacio=aaa], email=mhc@votr.com, alias=mhoms, idOpcioVotada=100, dataVotacio=1970-01-01 01:00:00.0]], "
                         + "Opcio [id=OpcioId [idOpcio=101, hashVotacio=aaa], nom=odissea, descripcio=la-odissea]=[]}]",
                 dto.toString());
 
@@ -113,21 +116,24 @@ public class VotrTest {
 
             public final Votacio votacio;
             public final Usuari usuari;
+            public final List<Usuari> usuaris;
             public final Opcio usuariOpcioVotada;
             public final Map<Opcio, List<Usuari>> opcionsUsuaris;
 
-            public VotacioDto(Votacio votacio, Usuari usuari, Opcio usuariOpcioVotada, Map<Opcio, List<Usuari>> opcionsUsuaris) {
+            public VotacioDto(Votacio votacio, Usuari usuari, List<Usuari> usuaris, Opcio usuariOpcioVotada,
+                    Map<Opcio, List<Usuari>> opcionsUsuaris) {
                 super();
                 this.votacio = votacio;
                 this.usuari = usuari;
+                this.usuaris = usuaris;
                 this.usuariOpcioVotada = usuariOpcioVotada;
                 this.opcionsUsuaris = opcionsUsuaris;
             }
 
             @Override
             public String toString() {
-                return "VotacioDto [votacio=" + votacio + ", usuari=" + usuari + ", usuariOpcioVotada=" + usuariOpcioVotada
-                        + ", opcionsUsuaris=" + opcionsUsuaris + "]";
+                return "VotacioDto [votacio=" + votacio + ", usuari=" + usuari + ", usuaris=" + usuaris + ", usuariOpcioVotada="
+                        + usuariOpcioVotada + ", opcionsUsuaris=" + opcionsUsuaris + "]";
             }
 
         }
@@ -215,6 +221,8 @@ public class VotrTest {
             Votacio votacio = Usuari_.votacio.load(emf, usuari);
             Opcio opcioVotada = Usuari_.opcioVotada.load(emf, usuari);
 
+            List<Usuari> usuaris = Votacio_.usuaris.load(emf, votacio, Order.asc(Usuari_.email));
+
             Map<Opcio, List<Usuari>> opcionsUsuaris = new LinkedHashMap<>();
             List<Opcio> opcions = Votacio_.opcions.load(emf, votacio, Order.asc(Opcio_.idOpcio));
             opcions.forEach(o -> {
@@ -222,7 +230,7 @@ public class VotrTest {
                 opcionsUsuaris.put(o, usuarisVotats);
             });
 
-            return new VotacioDto(votacio, usuari, opcioVotada, opcionsUsuaris);
+            return new VotacioDto(votacio, usuari, usuaris, opcioVotada, opcionsUsuaris);
         }
 
     }

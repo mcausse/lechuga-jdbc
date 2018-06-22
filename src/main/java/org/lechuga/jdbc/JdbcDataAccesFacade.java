@@ -183,8 +183,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
     }
 
     @Override
-    public <T> T loadUnique(final QueryObject q, final RowMapper<T> rowMapper)
-            throws TooManyResultsException, EmptyResultException {
+    public <T> T loadUnique(final QueryObject q, final RowMapper<T> rowMapper) throws TooManyResultsException, EmptyResultException {
 
         LOG.debug("{}", q);
         Connection c;

@@ -69,8 +69,7 @@ public class VotrTest {
 
         IEntityManagerFactory emf = new EntityManagerFactory(facade, Usuari_.class, Opcio_.class, Votacio_.class);
 
-        VotrService service = TransactionalServiceProxyfier.proxyfy(facade, new VotrServiceImpl(emf),
-                VotrService.class);
+        VotrService service = TransactionalServiceProxyfier.proxyfy(facade, new VotrServiceImpl(emf), VotrService.class);
 
         Votacio v = new Votacio("aaa", "bestseller", "lo-bestseller", new Date(0L), null);
         Opcio o1 = new Opcio(null, "eneida", "la-eneida");
@@ -117,8 +116,7 @@ public class VotrTest {
             public final Opcio usuariOpcioVotada;
             public final Map<Opcio, List<Usuari>> opcionsUsuaris;
 
-            public VotacioDto(Votacio votacio, Usuari usuari, Opcio usuariOpcioVotada,
-                    Map<Opcio, List<Usuari>> opcionsUsuaris) {
+            public VotacioDto(Votacio votacio, Usuari usuari, Opcio usuariOpcioVotada, Map<Opcio, List<Usuari>> opcionsUsuaris) {
                 super();
                 this.votacio = votacio;
                 this.usuari = usuari;
@@ -128,8 +126,8 @@ public class VotrTest {
 
             @Override
             public String toString() {
-                return "VotacioDto [votacio=" + votacio + ", usuari=" + usuari + ", usuariOpcioVotada="
-                        + usuariOpcioVotada + ", opcionsUsuaris=" + opcionsUsuaris + "]";
+                return "VotacioDto [votacio=" + votacio + ", usuari=" + usuari + ", usuariOpcioVotada=" + usuariOpcioVotada
+                        + ", opcionsUsuaris=" + opcionsUsuaris + "]";
             }
 
         }
@@ -174,7 +172,6 @@ public class VotrTest {
         @Override
         public void create(Votacio votacio, List<Opcio> opcions, List<Usuari> usuaris) {
 
-            votacio.setDataInici(new Date(0L));
             votacionsDao.store(votacio);
 
             opcions.forEach(o -> {
@@ -314,8 +311,8 @@ public class VotrTest {
 
         @Override
         public String toString() {
-            return "Votacio [hashVotacio=" + hashVotacio + ", nom=" + nom + ", descripcio=" + descripcio
-                    + ", dataInici=" + dataInici + ", dataFi=" + dataFi + "]";
+            return "Votacio [hashVotacio=" + hashVotacio + ", nom=" + nom + ", descripcio=" + descripcio + ", dataInici=" + dataInici
+                    + ", dataFi=" + dataFi + "]";
         }
 
     }
@@ -553,8 +550,8 @@ public class VotrTest {
 
         @Override
         public String toString() {
-            return "Usuari [id=" + id + ", email=" + email + ", alias=" + alias + ", idOpcioVotada=" + idOpcioVotada
-                    + ", dataVotacio=" + dataVotacio + "]";
+            return "Usuari [id=" + id + ", email=" + email + ", alias=" + alias + ", idOpcioVotada=" + idOpcioVotada + ", dataVotacio="
+                    + dataVotacio + "]";
         }
 
     }

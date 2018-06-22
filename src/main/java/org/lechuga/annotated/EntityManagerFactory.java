@@ -107,8 +107,8 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
         {
             Entity annoEntity = metaEntityClass.getAnnotation(Entity.class);
             if (annoEntity == null) {
-                throw new RuntimeException("expectad a meta-model Class (@" + Entity.class.getName()
-                        + "-annotated), but received: " + metaEntityClass);
+                throw new RuntimeException(
+                        "expectad a meta-model Class (@" + Entity.class.getName() + "-annotated), but received: " + metaEntityClass);
             }
             entityClass = (Class<E>) annoEntity.entity();
 
@@ -162,8 +162,7 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
         }
         String columnName;
         {
-            org.lechuga.annotated.anno.Column annoColumn = metaFieldField
-                    .getAnnotation(org.lechuga.annotated.anno.Column.class);
+            org.lechuga.annotated.anno.Column annoColumn = metaFieldField.getAnnotation(org.lechuga.annotated.anno.Column.class);
             if (annoColumn == null) {
                 String[] proponameParts = metaField.getPropertyName().split("\\.");
                 String proponame = proponameParts[proponameParts.length - 1];
@@ -182,9 +181,8 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
             EnumHandler enumHandler = metaFieldField.getAnnotation(EnumHandler.class);
             if (enumHandler != null) {
                 if (!Enum.class.isAssignableFrom(accessor.getPropertyFinalType())) {
-                    throw new LechugaException(
-                            "property '" + entityClass.getSimpleName() + "#" + metaFieldField.getName()
-                                    + "' is not of Enum type: " + accessor.getPropertyFinalType().getName());
+                    throw new LechugaException("property '" + entityClass.getSimpleName() + "#" + metaFieldField.getName()
+                            + "' is not of Enum type: " + accessor.getPropertyFinalType().getName());
                 }
                 handler = new EnumeratedHandler(accessor.getPropertyFinalType());
             } else {
@@ -195,8 +193,8 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
                     try {
                         handler = ReflectUtils.newInstance(annoCustomHandler.value(), annoCustomHandler.args());
                     } catch (Exception e) {
-                        throw new LechugaException("instancing " + annoCustomHandler.value().getClass().getSimpleName()
-                                + "(" + Arrays.toString(annoCustomHandler.args()) + ")", e);
+                        throw new LechugaException("instancing " + annoCustomHandler.value().getClass().getSimpleName() + "("
+                                + Arrays.toString(annoCustomHandler.args()) + ")", e);
                     }
                 }
             }

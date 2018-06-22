@@ -76,8 +76,7 @@ public class Restrictions<E> {
         return q;
     }
 
-    <E2> Criterion binaryOperator(MetaField<E, ?> metaField1, String op, Restrictions<E2> rs2,
-            MetaField<E2, ?> metaField2) {
+    <E2> Criterion binaryOperator(MetaField<E, ?> metaField1, String op, Restrictions<E2> rs2, MetaField<E2, ?> metaField2) {
         CriterionImpl c = new CriterionImpl();
         Column c1 = em.findColumnByMetaField(metaField1);
         c.append(aliaseColumn(c1.getColumnName()));

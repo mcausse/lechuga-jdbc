@@ -80,8 +80,7 @@ public class MoviesTest {
         serv.create(reservoirDogs, Arrays.asList(cpenn));
 
         List<Map<String, Object>> r = serv.getActorFitness();
-        assertEquals(
-                "[{ID=100, NAME=CWALKEN, NUM_FILMS=2}, {ID=101, NAME=SPENN, NUM_FILMS=1}, {ID=102, NAME=CPENN, NUM_FILMS=1}]",
+        assertEquals("[{ID=100, NAME=CWALKEN, NUM_FILMS=2}, {ID=101, NAME=SPENN, NUM_FILMS=1}, {ID=102, NAME=CPENN, NUM_FILMS=1}]",
                 r.toString());
     }
 

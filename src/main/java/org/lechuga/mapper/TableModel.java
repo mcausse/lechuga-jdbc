@@ -81,12 +81,11 @@ public class TableModel<E> {
 
     public Column findColumnByMetaField(MetaField<?, ?> metaField) {
         if (!this.propsMap.containsKey(metaField.getPropertyName())) {
-            throw new LechugaException(
-                    "property not found: " + entityClass.getName() + "#" + metaField.getPropertyName());
+            throw new LechugaException("property not found: " + entityClass.getName() + "#" + metaField.getPropertyName());
         }
         if (this.propsMap.get(metaField.getPropertyName()).getMetafield() != metaField) {
-            throw new LechugaException("this meta-field is not of meta-model: meta-model=" + metaModelClass.getName()
-                    + "; meta-field=" + metaField);
+            throw new LechugaException(
+                    "this meta-field is not of meta-model: meta-model=" + metaModelClass.getName() + "; meta-field=" + metaField);
         }
         Column col = this.propsMap.get(metaField.getPropertyName());
         return col;

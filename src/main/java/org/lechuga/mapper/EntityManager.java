@@ -107,8 +107,7 @@ public class EntityManager<E, ID> {
         QueryObject q = model.queryForDeleteById(idValue);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new LechugaException(
-                    "DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+            throw new LechugaException("DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
 
@@ -116,8 +115,7 @@ public class EntityManager<E, ID> {
         QueryObject q = model.queryForDelete(entity);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new LechugaException(
-                    "DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+            throw new LechugaException("DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
 
@@ -151,9 +149,8 @@ public class EntityManager<E, ID> {
              * en comptes d'store().
              */
             if (p.getPropertyType().isPrimitive()) {
-                throw new LechugaException(
-                        "@Id-annotated field is of primitive type: use insert()/update() instead of store(): "
-                                + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
+                throw new LechugaException("@Id-annotated field is of primitive type: use insert()/update() instead of store(): "
+                        + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
             }
         }
 
@@ -228,8 +225,7 @@ public class EntityManager<E, ID> {
         int affectedResults = facade.update(q);
 
         if (affectedResults != 1) {
-            throw new LechugaException(
-                    "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+            throw new LechugaException("UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
 
@@ -238,8 +234,7 @@ public class EntityManager<E, ID> {
         QueryObject q = model.queryForUpdate(entity, metaFields);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new LechugaException(
-                    "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+            throw new LechugaException("UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
 

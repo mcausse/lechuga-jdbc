@@ -43,8 +43,8 @@ public class Pager<T> {
 
     @Override
     public String toString() {
-        return String.format("Pager [pageSize=%s, numPage=%s, totalRows=%s, totalPages=%s, page=%s]", pageSize, numPage,
-                totalRows, totalPages, page);
+        return String.format("Pager [pageSize=%s, numPage=%s, totalRows=%s, totalPages=%s, page=%s]", pageSize, numPage, totalRows,
+                totalPages, page);
     }
 
 }

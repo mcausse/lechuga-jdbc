@@ -20,8 +20,7 @@ public class GenericDao<E, ID> {
     public GenericDao(IEntityManagerFactory emf) {
         super();
         this.emf = emf;
-        this.persistentClass = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass())
-                .getActualTypeArguments()[0];
+        this.persistentClass = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.em = emf.getEntityManager(persistentClass);
     }
 

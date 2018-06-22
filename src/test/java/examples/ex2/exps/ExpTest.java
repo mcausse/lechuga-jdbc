@@ -84,8 +84,7 @@ public class ExpTest {
         try {
 
             Exp e = emf.getEntityManager(Exp.class).loadById(expId);
-            List<Tex> texs = Exp_.texs.load(emf, e, Order.asc(Tex_.codPos), Order.asc(Tex_.anyExp),
-                    Order.asc(Tex_.numExp));
+            List<Tex> texs = Exp_.texs.load(emf, e, Order.asc(Tex_.codPos), Order.asc(Tex_.anyExp), Order.asc(Tex_.numExp));
 
             Exp e0 = Tex_.exp.load(emf, texs.get(0));
             Exp e1 = Tex_.exp.load(emf, texs.get(1));
@@ -94,10 +93,8 @@ public class ExpTest {
             assertEquals("Exp [id=ExpId [codPos=08201, anyExp=1987, numExp=123], desc=old-exp]", e0.toString());
             assertEquals("Exp [id=ExpId [codPos=08201, anyExp=1987, numExp=123], desc=old-exp]", e1.toString());
 
-            assertEquals(
-                    "[Tex [idTex=100, text=fase1, codPosx=08201, anyExpx=1987, numExpx=123], "
-                            + "Tex [idTex=101, text=fase2, codPosx=08201, anyExpx=1987, numExpx=123]]",
-                    texs.toString());
+            assertEquals("[Tex [idTex=100, text=fase1, codPosx=08201, anyExpx=1987, numExpx=123], "
+                    + "Tex [idTex=101, text=fase2, codPosx=08201, anyExpx=1987, numExpx=123]]", texs.toString());
 
         } finally {
             emf.getFacade().rollback();
@@ -298,8 +295,8 @@ public class ExpTest {
 
         @Override
         public String toString() {
-            return "Tex [idTex=" + idTex + ", text=" + text + ", codPosx=" + codPosx + ", anyExpx=" + anyExpx
-                    + ", numExpx=" + numExpx + "]";
+            return "Tex [idTex=" + idTex + ", text=" + text + ", codPosx=" + codPosx + ", anyExpx=" + anyExpx + ", numExpx=" + numExpx
+                    + "]";
         }
 
     }

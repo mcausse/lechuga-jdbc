@@ -20,8 +20,8 @@ public class Column {
     final Handler handler;
     final Generator generator;
 
-    public Column(boolean id, String columnName, Class<?> entityClass, MetaField<?, ?> metafield, Accessor accessor,
-            Handler handler, Generator generator) {
+    public Column(boolean id, String columnName, Class<?> entityClass, MetaField<?, ?> metafield, Accessor accessor, Handler handler,
+            Generator generator) {
         super();
         this.id = id;
         this.columnName = columnName;
@@ -88,8 +88,8 @@ public class Column {
 
     @Override
     public String toString() {
-        return "Column [id=" + id + ", columnName=" + columnName + ", accessor=" + accessor + ", handler=" + handler
-                + ", generator=" + generator + "]";
+        return "Column [id=" + id + ", columnName=" + columnName + ", accessor=" + accessor + ", handler=" + handler + ", generator="
+                + generator + "]";
     }
 
 }

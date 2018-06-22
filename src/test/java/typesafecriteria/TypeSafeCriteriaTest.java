@@ -143,8 +143,7 @@ public class TypeSafeCriteriaTest {
 
             Department d2 = Employee_.department.load(emf, e);
 
-            assertEquals(
-                    "[Employee [id=EmployeeId [idDepartment=101, dni=8P], name=jbm2, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
+            assertEquals("[Employee [id=EmployeeId [idDepartment=101, dni=8P], name=jbm2, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
                     es.toString());
             assertEquals("Department [id=101, name=Java dept.2]", d2.toString());
 
@@ -301,8 +300,7 @@ public class TypeSafeCriteriaTest {
                 CriteriaExecutor<Employee> exec = c.getExecutor(Employee.class);
                 List<Map<String, Object>> m = exec.extract(new MapResultSetExtractor());
 
-                assertEquals(
-                        "[{ID_DEPARTMENT=100, DNI=8P, LE_NAME=jbm, SALARY=38000, BIRTH_DATE=1837-05-22 00:00:00.0, SEX=MALE}]",
+                assertEquals("[{ID_DEPARTMENT=100, DNI=8P, LE_NAME=jbm, SALARY=38000, BIRTH_DATE=1837-05-22 00:00:00.0, SEX=MALE}]",
                         m.toString());
             }
             {
@@ -523,8 +521,7 @@ public class TypeSafeCriteriaTest {
 
     @Test
     public void testService() throws Exception {
-        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class,
-                DeptCount_.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class, DeptCount_.class);
         TestService service = new TestService(emf);
 
         {

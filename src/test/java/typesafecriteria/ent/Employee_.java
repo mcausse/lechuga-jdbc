@@ -29,7 +29,8 @@ public interface Employee_ {
     @EnumHandler
     public static final MetaField<Employee, ESex> sex = new MetaField<>("sex");
 
-    public static final ManyToOne<Employee, Department> department = new ManyToOne<>(Employee.class, Department.class,
+    public static final ManyToOne<Employee, Department> department = new ManyToOne<>( //
+            Employee.class, Department.class, //
             new PropPair<>(Employee_.idDept, Department_.id));
 
 }

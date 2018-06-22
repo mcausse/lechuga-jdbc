@@ -12,21 +12,19 @@ import org.lechuga.jdbc.exception.UnexpectedResultException;
 
 public class GenericDao<E, ID> {
 
-    final protected IEntityManagerFactory emf;
     final Class<E> persistentClass;
     final EntityManager<E, ID> em;
 
     @SuppressWarnings("unchecked")
     public GenericDao(IEntityManagerFactory emf) {
         super();
-        this.emf = emf;
         this.persistentClass = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass())
                 .getActualTypeArguments()[0];
         this.em = emf.getEntityManager(persistentClass);
     }
 
     public IEntityManagerFactory getEntityManagerFactory() {
-        return emf;
+        return em.getEntityManagerFactory();
     }
 
     public EntityManager<E, ID> getEntityManager() {

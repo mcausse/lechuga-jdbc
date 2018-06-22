@@ -399,8 +399,8 @@ public class TypeSafeCriteriaTest {
 
         public Department findDepartment(String name) {
 
-            CriteriaBuilder c = emf.createCriteria();
-            Restrictions<Department> r = emf.getRestrictions(Department.class, "d");
+            CriteriaBuilder c = getEntityManagerFactory().createCriteria();
+            Restrictions<Department> r = getEntityManagerFactory().getRestrictions(Department.class, "d");
             c.append("select {} from {} ", r.all(), r.table());
             c.append("where {}", r.ilike(Department_.name, ELike.CONTAINS, name));
             return c.getExecutor(Department.class).loadUnique();
@@ -408,11 +408,11 @@ public class TypeSafeCriteriaTest {
 
         public List<DeptCount> getDeptCounts() {
 
-            CriteriaBuilder c = emf.createCriteria();
+            CriteriaBuilder c = getEntityManagerFactory().createCriteria();
 
-            Restrictions<DeptCount> r = emf.getRestrictions(DeptCount.class, "r");
-            Restrictions<Department> d = emf.getRestrictions(Department.class, "d");
-            Restrictions<Employee> e = emf.getRestrictions(Employee.class, "e");
+            Restrictions<DeptCount> r = getEntityManagerFactory().getRestrictions(DeptCount.class, "r");
+            Restrictions<Department> d = getEntityManagerFactory().getRestrictions(Department.class, "d");
+            Restrictions<Employee> e = getEntityManagerFactory().getRestrictions(Employee.class, "e");
 
             c.append("select {}, count(*) as {} ", d.all(), r.column(DeptCount_.employees));
             c.append("from {} join {} ", d.table(), e.table());
@@ -442,7 +442,8 @@ public class TypeSafeCriteriaTest {
             //
             // return c.getExecutor(Employee.class).load();
             // @formatter:on
-            return Department_.employees.load(emf, dept);
+
+            return Department_.employees.load(getEntityManagerFactory(), dept);
         }
     }
 

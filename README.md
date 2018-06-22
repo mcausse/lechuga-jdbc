@@ -120,7 +120,7 @@
 ```java
 	e.setSalary(38000.0);
 	empMan.update(e);
-	empMan.update(e, "salary");
+	empMan.update(e, Arrays.asList(Employee_.salary));
 ```
 ```sql
 	update employees set birth_date=?,name=?,salary=?,sex=? 
@@ -131,7 +131,8 @@
 ```
 
 ```java
-	List<Employee> es = empMan.loadByProp(Employee_.sex, ESex.MALE, Order.asc(Employee_.birthDate));
+	List<Employee> es = empMan.loadByProp(Employee_.sex, ESex.MALE,
+                        Arrays.asList(Order.asc(Employee_.birthDate)));
 ```
 ```sql
 	select birth_date,dni,id_department,name,salary,sex from employees 
@@ -145,7 +146,7 @@
 			r.isNotNull(Employee_.name),
 			r.between(Employee_.birthDate, "01/01/1800", "01/01/1900")
 		)
-		, Order.asc(Employee_.salary));
+		, Arrays.asList(Order.asc(Employee_.salary)));
 ```
 ```sql
 	select birth_date,dni,id_department,name,salary,sex from employees 
@@ -160,7 +161,7 @@
 	Employee e = ...
 	
 	List<Employee> es = Department_.employees.load(emf, d, //
-	        Order.desc(Employee_.salary), Order.asc(Employee_.dni));
+	        Order.desc(Employee_.salary), Arrays.asList(Order.asc(Employee_.dni)));
 
 	
 	Department d2 = Employee_.department.load(emf, e);

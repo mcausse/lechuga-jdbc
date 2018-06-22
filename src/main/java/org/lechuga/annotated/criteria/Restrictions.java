@@ -243,8 +243,6 @@ public class Restrictions<E> {
         return r;
     }
 
-    // TODO això esta be?? només es podra fer Orders d'una mateixa entitat>, no
-    // barrejades ?¿?¿?
     public Criterion orderBy(Collection<Order<E>> orders) {
         CriterionImpl r = new CriterionImpl();
         int c = 0;

@@ -15,7 +15,7 @@ public class Column {
     final Class<?> entityClass;
     final MetaField<?, ?> metafield;
 
-    /* private /* TODO */final Accessor accessor;
+    final Accessor accessor;
 
     final Handler handler;
     final Generator generator;

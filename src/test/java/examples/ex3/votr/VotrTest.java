@@ -69,7 +69,8 @@ public class VotrTest {
 
         IEntityManagerFactory emf = new EntityManagerFactory(facade, Usuari_.class, Opcio_.class, Votacio_.class);
 
-        VotrService service = TransactionalServiceProxyfier.proxyfy(facade, new VotrServiceImpl(emf), VotrService.class);
+        VotrService service = TransactionalServiceProxyfier.proxyfy(facade, new VotrServiceImpl(emf),
+                VotrService.class);
 
         Votacio v = new Votacio("aaa", "bestseller", "lo-bestseller", new Date(0L), null);
         Opcio o1 = new Opcio(null, "eneida", "la-eneida");
@@ -132,8 +133,8 @@ public class VotrTest {
 
             @Override
             public String toString() {
-                return "VotacioDto [votacio=" + votacio + ", usuari=" + usuari + ", usuaris=" + usuaris + ", usuariOpcioVotada="
-                        + usuariOpcioVotada + ", opcionsUsuaris=" + opcionsUsuaris + "]";
+                return "VotacioDto [votacio=" + votacio + ", usuari=" + usuari + ", usuaris=" + usuaris
+                        + ", usuariOpcioVotada=" + usuariOpcioVotada + ", opcionsUsuaris=" + opcionsUsuaris + "]";
             }
 
         }
@@ -195,23 +196,21 @@ public class VotrTest {
             });
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void usuariModificaAlias(String hashVotacio, String hashUsuari, String alias) {
 
             Usuari usuari = usuarisDao.loadById(new UsuariId(hashUsuari, hashVotacio));
             usuari.setAlias(alias);
-            usuarisDao.update(usuari, Usuari_.alias);
+            usuarisDao.update(usuari, Arrays.asList(Usuari_.alias));
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void usuariVota(String hashVotacio, String hashUsuari, Long idOpcioVotada) {
 
             Usuari usuari = usuarisDao.loadById(new UsuariId(hashUsuari, hashVotacio));
             usuari.setIdOpcioVotada(idOpcioVotada);
             usuari.setDataVotacio(new Date(0L));
-            usuarisDao.update(usuari, Usuari_.idOpcioVotada, Usuari_.dataVotacio);
+            usuarisDao.update(usuari, Arrays.asList(Usuari_.idOpcioVotada, Usuari_.dataVotacio));
         }
 
         @Override
@@ -221,12 +220,12 @@ public class VotrTest {
             Votacio votacio = Usuari_.votacio.load(emf, usuari);
             Opcio opcioVotada = Usuari_.opcioVotada.load(emf, usuari);
 
-            List<Usuari> usuaris = Votacio_.usuaris.load(emf, votacio, Order.asc(Usuari_.email));
+            List<Usuari> usuaris = Votacio_.usuaris.load(emf, votacio, Arrays.asList(Order.asc(Usuari_.email)));
 
             Map<Opcio, List<Usuari>> opcionsUsuaris = new LinkedHashMap<>();
-            List<Opcio> opcions = Votacio_.opcions.load(emf, votacio, Order.asc(Opcio_.idOpcio));
+            List<Opcio> opcions = Votacio_.opcions.load(emf, votacio, Arrays.asList(Order.asc(Opcio_.idOpcio)));
             opcions.forEach(o -> {
-                List<Usuari> usuarisVotats = Opcio_.usuarisVotats.load(emf, o, Order.asc(Usuari_.email));
+                List<Usuari> usuarisVotats = Opcio_.usuarisVotats.load(emf, o, Arrays.asList(Order.asc(Usuari_.email)));
                 opcionsUsuaris.put(o, usuarisVotats);
             });
 
@@ -319,8 +318,8 @@ public class VotrTest {
 
         @Override
         public String toString() {
-            return "Votacio [hashVotacio=" + hashVotacio + ", nom=" + nom + ", descripcio=" + descripcio + ", dataInici=" + dataInici
-                    + ", dataFi=" + dataFi + "]";
+            return "Votacio [hashVotacio=" + hashVotacio + ", nom=" + nom + ", descripcio=" + descripcio
+                    + ", dataInici=" + dataInici + ", dataFi=" + dataFi + "]";
         }
 
     }
@@ -558,8 +557,8 @@ public class VotrTest {
 
         @Override
         public String toString() {
-            return "Usuari [id=" + id + ", email=" + email + ", alias=" + alias + ", idOpcioVotada=" + idOpcioVotada + ", dataVotacio="
-                    + dataVotacio + "]";
+            return "Usuari [id=" + id + ", email=" + email + ", alias=" + alias + ", idOpcioVotada=" + idOpcioVotada
+                    + ", dataVotacio=" + dataVotacio + "]";
         }
 
     }

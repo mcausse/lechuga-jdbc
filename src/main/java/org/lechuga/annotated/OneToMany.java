@@ -24,8 +24,12 @@ public class OneToMany<E, R> {
         this.mappings = mappings;
     }
 
+    public List<R> load(IEntityManagerFactory emf, E entity) {
+        return load(emf, entity, null);
+    }
+
     @SuppressWarnings("unchecked")
-    public List<R> load(IEntityManagerFactory emf, E entity, Order... orders) {
+    public List<R> load(IEntityManagerFactory emf, E entity, List<Order<R>> orders) {
 
         Restrictions<R> rr = emf.getRestrictions(refEntityClass, "r");
 
@@ -43,7 +47,7 @@ public class OneToMany<E, R> {
 
         c.append("where {} ", Restrictions.and(wheres));
 
-        if (orders.length > 0) {
+        if (orders != null && !orders.isEmpty()) {
             c.append("order by {} ", rr.orderBy(orders));
         }
 

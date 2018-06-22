@@ -16,7 +16,8 @@ public class ResultSetUtils {
         return Enum.valueOf(enumClass, v);
     }
 
-    public static <T extends Enum<T>> T getEnum(final Class<T> enumClass, final ResultSet rs, String columnLabel) throws SQLException {
+    public static <T extends Enum<T>> T getEnum(final Class<T> enumClass, final ResultSet rs, String columnLabel)
+            throws SQLException {
 
         final String v = rs.getString(columnLabel);
         if (v == null) {

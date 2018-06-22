@@ -20,7 +20,8 @@ public class GenericDao<E, ID> {
     public GenericDao(IEntityManagerFactory emf) {
         super();
         this.emf = emf;
-        this.persistentClass = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        this.persistentClass = (Class<E>) ((ParameterizedType) getClass().getGenericSuperclass())
+                .getActualTypeArguments()[0];
         this.em = emf.getEntityManager(persistentClass);
     }
 
@@ -44,11 +45,19 @@ public class GenericDao<E, ID> {
         return em.getDataAccesFacade();
     }
 
-    public List<E> loadBy(Criterion c, Order... orders) {
+    public List<E> loadBy(Criterion c) {
+        return em.loadBy(c);
+    }
+
+    public E loadUniqueBy(Criterion c) {
+        return em.loadUniqueBy(c);
+    }
+
+    public List<E> loadBy(Criterion c, List<Order<E>> orders) {
         return em.loadBy(c, orders);
     }
 
-    public E loadUniqueBy(Criterion c, Order... orders) {
+    public E loadUniqueBy(Criterion c, List<Order<E>> orders) {
         return em.loadUniqueBy(c, orders);
     }
 
@@ -56,16 +65,24 @@ public class GenericDao<E, ID> {
         return em.loadById(idValue);
     }
 
-    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, Order... orders) {
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, List<Order<E>> orders) {
         return em.loadByProp(metaField, value, orders);
+    }
+
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value) {
+        return em.loadByProp(metaField, value);
     }
 
     public <T> E loadUniqueByProp(MetaField<E, T> metaField, T value) throws UnexpectedResultException {
         return em.loadUniqueByProp(metaField, value);
     }
 
-    public List<E> loadAll(Order... orders) {
+    public List<E> loadAll(List<Order<E>> orders) {
         return em.loadAll(orders);
+    }
+
+    public List<E> loadAll() {
+        return em.loadAll();
     }
 
     public void deleteById(ID idValue) {
@@ -92,8 +109,7 @@ public class GenericDao<E, ID> {
         em.update(entity);
     }
 
-    @SuppressWarnings("unchecked")
-    public void update(E entity, MetaField<E, ?>... metaFields) {
+    public void update(E entity, List<MetaField<E, ?>> metaFields) {
         em.update(entity, metaFields);
     }
 

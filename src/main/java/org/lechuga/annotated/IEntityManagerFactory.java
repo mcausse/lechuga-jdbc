@@ -16,7 +16,7 @@ public interface IEntityManagerFactory {
 
     <E> Restrictions<E> getRestrictions(Class<E> entityClass, String alias);
 
-    <E> TableModel<E> getModelByEntityClass(Class<?> entityClass);
+    <E> TableModel<E> getModelByEntityClass(Class<E> entityClass);
 
     <E> TableModel<E> getModelByMetaClass(Class<?> metaClass);
 

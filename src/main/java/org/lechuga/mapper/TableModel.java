@@ -81,19 +81,20 @@ public class TableModel<E> {
 
     public Column findColumnByMetaField(MetaField<?, ?> metaField) {
         if (!this.propsMap.containsKey(metaField.getPropertyName())) {
-            throw new LechugaException("property not found: " + entityClass.getName() + "#" + metaField.getPropertyName());
+            throw new LechugaException(
+                    "property not found: " + entityClass.getName() + "#" + metaField.getPropertyName());
         }
         if (this.propsMap.get(metaField.getPropertyName()).getMetafield() != metaField) {
-            throw new LechugaException(
-                    "this meta-field is not of meta-model: meta-model=" + metaModelClass.getName() + "; meta-field=" + metaField);
+            throw new LechugaException("this meta-field is not of meta-model: meta-model=" + metaModelClass.getName()
+                    + "; meta-field=" + metaField);
         }
         Column col = this.propsMap.get(metaField.getPropertyName());
         return col;
     }
 
-    protected String orderBy(Order[] orders) {
+    protected String orderBy(List<Order<E>> orders) {
         StringJoiner r = new StringJoiner(",");
-        for (Order o : orders) {
+        for (Order<E> o : orders) {
             Column c = findColumnByName(o.getMetaField().getPropertyName());
             r.add(c.getColumnName() + o.getOrder());
         }
@@ -124,7 +125,7 @@ public class TableModel<E> {
         return q;
     }
 
-    public QueryObject queryForLoadAll(Order[] orders) {
+    public QueryObject queryForLoadAll(List<Order<E>> orders) {
         Query q = new Query();
         q.append("select ");
         {
@@ -136,7 +137,7 @@ public class TableModel<E> {
         }
         q.append(" from ");
         q.append(tableName);
-        if (orders.length > 0) {
+        if (orders != null && !orders.isEmpty()) {
             q.append(orderBy(orders));
         }
         return q;
@@ -193,8 +194,7 @@ public class TableModel<E> {
         return q;
     }
 
-    @SuppressWarnings("unchecked")
-    public QueryObject queryForUpdate(E entity, MetaField<E, ?>... metaFields) {
+    public QueryObject queryForUpdate(E entity, List<MetaField<E, ?>> metaFields) {
 
         Query q = new Query();
         q.append("update ");
@@ -254,7 +254,7 @@ public class TableModel<E> {
         return q;
     }
 
-    public QueryObject queryForLoadByProp(String propertyName, Object value, Order[] orders) {
+    public QueryObject queryForLoadByProp(String propertyName, Object value, List<Order<E>> orders) {
         Query q = new Query();
         q.append("select ");
         {
@@ -274,7 +274,7 @@ public class TableModel<E> {
 
         q.addArg(c.convertValueForJdbc(value));
 
-        if (orders.length > 0) {
+        if (orders != null && !orders.isEmpty()) {
             q.append(orderBy(orders));
         }
         return q;

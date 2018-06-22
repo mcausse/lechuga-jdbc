@@ -76,7 +76,8 @@ public class Restrictions<E> {
         return q;
     }
 
-    <E2> Criterion binaryOperator(MetaField<E, ?> metaField1, String op, Restrictions<E2> rs2, MetaField<E2, ?> metaField2) {
+    <E2> Criterion binaryOperator(MetaField<E, ?> metaField1, String op, Restrictions<E2> rs2,
+            MetaField<E2, ?> metaField2) {
         CriterionImpl c = new CriterionImpl();
         Column c1 = em.findColumnByMetaField(metaField1);
         c.append(aliaseColumn(c1.getColumnName()));
@@ -244,10 +245,10 @@ public class Restrictions<E> {
 
     // TODO això esta be?? només es podra fer Orders d'una mateixa entitat>, no
     // barrejades ?¿?¿?
-    public Criterion orderBy(Collection<Order> orders) {
+    public Criterion orderBy(Collection<Order<E>> orders) {
         CriterionImpl r = new CriterionImpl();
         int c = 0;
-        for (Order o : orders) {
+        for (Order<E> o : orders) {
             if (c > 0) {
                 r.append(", ");
             }
@@ -257,10 +258,6 @@ public class Restrictions<E> {
             r.append(aliaseColumn(column.getColumnName()) + o.getOrder());
         }
         return r;
-    }
-
-    public Criterion orderBy(Order... orders) {
-        return orderBy(Arrays.asList(orders));
     }
 
 }

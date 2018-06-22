@@ -62,9 +62,8 @@ public class CriteriaBuilder implements QueryObject {
         return new CriteriaExecutor<E>(facade, rowMapper, q);
     }
 
-    @SuppressWarnings("unchecked")
     public <E> CriteriaExecutor<E> getExecutor(Class<E> entityClass) {
-        RowMapper<E> rowMapper = (RowMapper<E>) emf.getModelByEntityClass(entityClass).getRowMapper();
+        RowMapper<E> rowMapper = emf.getModelByEntityClass(entityClass).getRowMapper();
         return new CriteriaExecutor<E>(facade, rowMapper, q);
     }
 

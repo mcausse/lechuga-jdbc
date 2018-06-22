@@ -15,7 +15,8 @@ public class FormattedNumberHandler implements Handler {
     final DecimalFormat formatter;
     final String numericFormat;
 
-    public FormattedNumberHandler(final String numericFormat, final String decimalSeparator, final String groupingSeparator) {
+    public FormattedNumberHandler(final String numericFormat, final String decimalSeparator,
+            final String groupingSeparator) {
         super();
 
         this.numericFormat = numericFormat;

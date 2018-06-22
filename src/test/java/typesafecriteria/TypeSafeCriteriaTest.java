@@ -139,11 +139,12 @@ public class TypeSafeCriteriaTest {
             empMan.store(e);
 
             List<Employee> es = Department_.employees.load(emf, d, //
-                    Order.desc(Employee_.salary), Order.asc(Employee_.dni));
+                    Arrays.asList(Order.desc(Employee_.salary), Order.asc(Employee_.dni)));
 
             Department d2 = Employee_.department.load(emf, e);
 
-            assertEquals("[Employee [id=EmployeeId [idDepartment=101, dni=8P], name=jbm2, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
+            assertEquals(
+                    "[Employee [id=EmployeeId [idDepartment=101, dni=8P], name=jbm2, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
                     es.toString());
             assertEquals("Department [id=101, name=Java dept.2]", d2.toString());
 
@@ -155,7 +156,6 @@ public class TypeSafeCriteriaTest {
 
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testName() throws Exception {
 
@@ -189,7 +189,7 @@ public class TypeSafeCriteriaTest {
 
                 e.setSalary(38000.0);
                 empMan.update(e);
-                empMan.update(e, Employee_.salary);
+                empMan.update(e, Arrays.asList(Employee_.salary));
             }
             {
                 Employee r = empMan.loadById(e.getId());
@@ -199,7 +199,8 @@ public class TypeSafeCriteriaTest {
             }
 
             {
-                List<Employee> es = empMan.loadByProp(Employee_.sex, ESex.MALE, Order.asc(Employee_.birthDate));
+                List<Employee> es = empMan.loadByProp(Employee_.sex, ESex.MALE,
+                        Arrays.asList(Order.asc(Employee_.birthDate)));
                 assertEquals(
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
                         es.toString());
@@ -212,7 +213,8 @@ public class TypeSafeCriteriaTest {
             }
 
             {
-                List<Employee> es = empMan.loadAll(Order.asc(Employee_.birthDate), Order.desc(Employee_.dni));
+                List<Employee> es = empMan
+                        .loadAll(Arrays.asList(Order.asc(Employee_.birthDate), Order.desc(Employee_.dni)));
                 assertEquals(
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
                         es.toString());
@@ -225,7 +227,7 @@ public class TypeSafeCriteriaTest {
                                 r.isNotNull(Employee_.name), //
                                 r.between(Employee_.birthDate, "01/01/1800", "01/01/1900") //
                         ) //
-                        , Order.asc(Employee_.salary));
+                        , Arrays.asList(Order.asc(Employee_.salary)));
 
                 assertEquals(
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
@@ -238,7 +240,7 @@ public class TypeSafeCriteriaTest {
                                 r.isNotNull(Employee_.name), //
                                 r.between(Employee_.birthDate, "01/01/1800", "01/01/1900") //
                         ) //
-                        , Order.asc(Employee_.salary));
+                        , Arrays.asList(Order.asc(Employee_.salary)));
 
                 assertEquals(
                         "Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]",
@@ -300,7 +302,8 @@ public class TypeSafeCriteriaTest {
                 CriteriaExecutor<Employee> exec = c.getExecutor(Employee.class);
                 List<Map<String, Object>> m = exec.extract(new MapResultSetExtractor());
 
-                assertEquals("[{ID_DEPARTMENT=100, DNI=8P, LE_NAME=jbm, SALARY=38000, BIRTH_DATE=1837-05-22 00:00:00.0, SEX=MALE}]",
+                assertEquals(
+                        "[{ID_DEPARTMENT=100, DNI=8P, LE_NAME=jbm, SALARY=38000, BIRTH_DATE=1837-05-22 00:00:00.0, SEX=MALE}]",
                         m.toString());
             }
             {
@@ -415,7 +418,7 @@ public class TypeSafeCriteriaTest {
             c.append("from {} join {} ", d.table(), e.table());
             c.append("on {} ", d.eq(Department_.id, e, Employee_.idDept));
             c.append("group by {} ", d.all());
-            c.append("order by {}", d.orderBy(Order.asc(Department_.id)));
+            c.append("order by {}", d.orderBy(Arrays.asList(Order.asc(Department_.id))));
 
             return c.getExecutor(DeptCount.class).load();
         }
@@ -521,7 +524,8 @@ public class TypeSafeCriteriaTest {
 
     @Test
     public void testService() throws Exception {
-        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class, DeptCount_.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Department_.class, Employee_.class,
+                DeptCount_.class);
         TestService service = new TestService(emf);
 
         {

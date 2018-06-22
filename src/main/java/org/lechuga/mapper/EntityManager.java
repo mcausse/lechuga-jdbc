@@ -1,6 +1,7 @@
 package org.lechuga.mapper;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.lechuga.annotated.IEntityManagerFactory;
@@ -51,23 +52,31 @@ public class EntityManager<E, ID> {
     //
     // ==============================================
 
-    public List<E> loadBy(Criterion c, Order... orders) {
+    public List<E> loadBy(Criterion c) {
+        return loadBy(c, null);
+    }
+
+    public E loadUniqueBy(Criterion c) {
+        return loadUniqueBy(c, null);
+    }
+
+    public List<E> loadBy(Criterion c, List<Order<E>> orders) {
         CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
         return criteria.getExecutor(model.getEntityClass()).load();
     }
 
-    public E loadUniqueBy(Criterion c, Order... orders) {
+    public E loadUniqueBy(Criterion c, List<Order<E>> orders) {
         CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
         return criteria.getExecutor(model.getEntityClass()).loadUnique();
     }
 
-    protected CriteriaBuilder createCriteriaTemplate(Criterion c, Order... orders) {
+    protected CriteriaBuilder createCriteriaTemplate(Criterion c, List<Order<E>> orders) {
         CriteriaBuilder criteria = emf.createCriteria();
         Restrictions<E> r = emf.getRestrictions(model.getEntityClass());
         criteria.append("select {} ", r.all());
         criteria.append("from {} ", r.table());
         criteria.append("where {} ", c);
-        if (orders.length > 0) {
+        if (orders != null && !orders.isEmpty()) {
             criteria.append("order by {} ", r.orderBy(orders));
         }
         return criteria;
@@ -88,26 +97,35 @@ public class EntityManager<E, ID> {
         }
     }
 
-    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, Order... orders) {
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, List<Order<E>> orders) {
         QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, orders);
         return facade.load(q, model.getRowMapper());
     }
 
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value) {
+        return loadByProp(metaField, value, null);
+    }
+
     public <T> E loadUniqueByProp(MetaField<E, T> metaField, T value) throws UnexpectedResultException {
-        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, new Order[] {});
+        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, Collections.emptyList());
         return facade.loadUnique(q, model.getRowMapper());
     }
 
-    public List<E> loadAll(Order... orders) {
+    public List<E> loadAll(List<Order<E>> orders) {
         QueryObject q = model.queryForLoadAll(orders);
         return facade.load(q, model.getRowMapper());
+    }
+
+    public List<E> loadAll() {
+        return loadAll(null);
     }
 
     public void deleteById(ID idValue) {
         QueryObject q = model.queryForDeleteById(idValue);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new LechugaException("DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+            throw new LechugaException(
+                    "DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
 
@@ -115,7 +133,8 @@ public class EntityManager<E, ID> {
         QueryObject q = model.queryForDelete(entity);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new LechugaException("DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+            throw new LechugaException(
+                    "DELETE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
 
@@ -149,8 +168,9 @@ public class EntityManager<E, ID> {
              * en comptes d'store().
              */
             if (p.getPropertyType().isPrimitive()) {
-                throw new LechugaException("@Id-annotated field is of primitive type: use insert()/update() instead of store(): "
-                        + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
+                throw new LechugaException(
+                        "@Id-annotated field is of primitive type: use insert()/update() instead of store(): "
+                                + entity.getClass().getSimpleName() + "#" + p.getPropertyName());
             }
         }
 
@@ -225,16 +245,17 @@ public class EntityManager<E, ID> {
         int affectedResults = facade.update(q);
 
         if (affectedResults != 1) {
-            throw new LechugaException("UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+            throw new LechugaException(
+                    "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public void update(E entity, MetaField<E, ?>... metaFields) {
+    public void update(E entity, List<MetaField<E, ?>> metaFields) {
         QueryObject q = model.queryForUpdate(entity, metaFields);
         int affectedResults = facade.update(q);
         if (affectedResults != 1) {
-            throw new LechugaException("UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
+            throw new LechugaException(
+                    "UPDATE: " + q.toString() + ": expected affectedRows=1, but affected: " + affectedResults);
         }
     }
 

@@ -21,16 +21,16 @@ import org.lechuga.mapper.autogen.Generator;
 
 public class TableModel<E> {
 
-    final Class<E> entityClass;
-    final Class<?> metaModelClass;
-    final String tableName;
+    protected final Class<E> entityClass;
+    protected final Class<?> metaModelClass;
+    protected final String tableName;
 
-    final Set<Column> idColumns = new LinkedHashSet<>();
-    final Set<Column> regularColumns = new LinkedHashSet<>();
-    final Set<Column> allColumns = new LinkedHashSet<>();
-    final Map<String, Column> propsMap = new LinkedHashMap<>();
+    protected final Set<Column> idColumns = new LinkedHashSet<>();
+    protected final Set<Column> regularColumns = new LinkedHashSet<>();
+    protected final Set<Column> allColumns = new LinkedHashSet<>();
+    protected final Map<String, Column> propsMap = new LinkedHashMap<>();
 
-    final RowMapper<E> rowMapper;
+    protected final RowMapper<E> rowMapper;
 
     public TableModel(Class<E> entityClass, Class<?> metaModelClass, String tableName, Collection<Column> columns) {
         super();
@@ -58,6 +58,10 @@ public class TableModel<E> {
                 return entity;
             }
         };
+    }
+
+    public Class<?> getMetaModelClass() {
+        return metaModelClass;
     }
 
     public Class<E> getEntityClass() {

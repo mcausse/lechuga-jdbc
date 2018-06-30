@@ -60,7 +60,7 @@ public class VotrTest {
     @Test
     public void testGen() throws Exception {
 
-        String r = HsqldbDDLGenerator.generateScript(Usuari_.class, Opcio_.class, Votacio_.class);
+        String r = HsqldbDDLGenerator.generateScript(Votacio_.class, Opcio_.class, Usuari_.class);
         System.err.println(r);
     }
 
@@ -182,8 +182,7 @@ public class VotrTest {
             votacionsDao.store(votacio);
 
             opcions.forEach(o -> {
-                o.setId(new OpcioId());
-                o.getId().setHashVotacio(votacio.getHashVotacio());
+                o.setId(new OpcioId(null, votacio.getHashVotacio()));
                 opcionsDao.store(o);
             });
 
@@ -235,7 +234,7 @@ public class VotrTest {
     }
 
     @Entity(entity = Votacio.class, table = "votacions")
-    public static class Votacio_ {
+    public static interface Votacio_ {
 
         @Id
         public static final MetaField<Votacio, String> hashVotacio = new MetaField<>("hashVotacio");
@@ -325,7 +324,7 @@ public class VotrTest {
     }
 
     @Entity(entity = Opcio.class, table = "opcions")
-    public static class Opcio_ {
+    public static interface Opcio_ {
 
         @Id
         @Generated(value = HsqldbIdentity.class)
@@ -430,7 +429,7 @@ public class VotrTest {
     }
 
     @Entity(entity = Usuari.class, table = "usuaris")
-    public static class Usuari_ {
+    public static interface Usuari_ {
 
         @Id
         public static final MetaField<Usuari, String> hashUsuari = new MetaField<>("id.hashUsuari");

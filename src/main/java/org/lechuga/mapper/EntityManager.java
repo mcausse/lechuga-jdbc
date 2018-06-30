@@ -19,9 +19,9 @@ import org.lechuga.jdbc.queryobject.QueryObject;
 
 public class EntityManager<E, ID> {
 
-    final DataAccesFacade facade;
-    final IEntityManagerFactory emf;
-    final TableModel<E> model;
+    protected final DataAccesFacade facade;
+    protected final IEntityManagerFactory emf;
+    protected final TableModel<E> model;
 
     public EntityManager(DataAccesFacade facade, IEntityManagerFactory emf, TableModel<E> model) {
         super();

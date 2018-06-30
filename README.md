@@ -160,8 +160,8 @@
 	Department d = ...
 	Employee e = ...
 	
-	List<Employee> es = Department_.employees.load(emf, d, //
-	        Order.desc(Employee_.salary), Arrays.asList(Order.asc(Employee_.dni)));
+	List<Employee> es = Department_.employees.load(emf, d,
+	        Arrays.asList(Order.desc(Employee_.salary), Order.asc(Employee_.dni)));
 
 	
 	Department d2 = Employee_.department.load(emf, e);
@@ -368,7 +368,7 @@
 	    }
 	
 	    DeptEmpsDto r = service.findDeptByName("ava");
-	    assertEquals("DeptEmpsDto [dept=Department [id=100, name=Java dept.], " + //
+	    assertEquals("DeptEmpsDto [dept=Department [id=100, name=Java dept.], " + 
 	            "emps=[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]]",
 	            r.toString());
 	

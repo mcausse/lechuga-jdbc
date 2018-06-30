@@ -53,7 +53,7 @@ public class ExpTest {
     @Test
     public void testGen() throws Exception {
 
-        String r = HsqldbDDLGenerator.generateScript(Tex_.class, Exp_.class);
+        String r = HsqldbDDLGenerator.generateScript(Exp_.class, Tex_.class);
         System.err.println(r);
     }
 

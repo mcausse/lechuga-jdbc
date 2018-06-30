@@ -2,7 +2,7 @@ package org.lechuga.annotated;
 
 public class MetaField<E, T> {
 
-    final String propertyName;
+    protected final String propertyName;
 
     public MetaField(String propertyName) {
         super();

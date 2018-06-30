@@ -1,20 +1,22 @@
 package org.lechuga.annotated;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.lechuga.annotated.criteria.CriteriaBuilder;
 import org.lechuga.annotated.criteria.Criterion;
 import org.lechuga.annotated.criteria.Restrictions;
+import org.lechuga.jdbc.util.Pair;
 import org.lechuga.mapper.Column;
 import org.lechuga.mapper.EntityManager;
 import org.lechuga.mapper.Order;
 
 public class OneToMany<E, R> {
 
-    final Class<E> selfEntityClass;
-    final Class<R> refEntityClass;
-    final PropPair<E, R>[] mappings;
+    protected final Class<E> selfEntityClass;
+    protected final Class<R> refEntityClass;
+    protected final PropPair<E, R>[] mappings;
 
     @SafeVarargs
     public OneToMany(Class<E> selfEntityClass, Class<R> refEntityClass, PropPair<E, R>... mappings) {
@@ -26,6 +28,15 @@ public class OneToMany<E, R> {
 
     public List<R> load(IEntityManagerFactory emf, E entity) {
         return load(emf, entity, null);
+    }
+
+    public List<Pair<E, List<R>>> load(IEntityManagerFactory emf, Collection<E> entities) {
+        List<Pair<E, List<R>>> r = new ArrayList<>();
+        for (E entity : entities) {
+            // XXX cada volta és una query!
+            r.add(new Pair<>(entity, load(emf, entity)));
+        }
+        return r;
     }
 
     @SuppressWarnings("unchecked")

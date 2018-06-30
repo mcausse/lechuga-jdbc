@@ -13,7 +13,10 @@ import org.junit.Test;
 import org.lechuga.annotated.EntityManagerFactory;
 import org.lechuga.annotated.HsqldbDDLGenerator;
 import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.ManyToOne;
 import org.lechuga.annotated.MetaField;
+import org.lechuga.annotated.OneToMany;
+import org.lechuga.annotated.PropPair;
 import org.lechuga.annotated.anno.Entity;
 import org.lechuga.annotated.anno.Generated;
 import org.lechuga.annotated.anno.Id;
@@ -22,6 +25,7 @@ import org.lechuga.annotated.criteria.Restrictions;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.JdbcDataAccesFacade;
 import org.lechuga.jdbc.extractor.MapResultSetExtractor;
+import org.lechuga.jdbc.util.Pair;
 import org.lechuga.jdbc.util.SqlScriptExecutor;
 import org.lechuga.mapper.GenericDao;
 import org.lechuga.mapper.autogen.HsqldbIdentity;
@@ -72,17 +76,58 @@ public class MoviesTest {
 
         Film deadZone = new Film("The Dead Zone", 1983);
 
+        Film warDogs = new Film("War Dogs", 1983);
+
         Film reservoirDogs = new Film("Reservoir Dogs", 1992);
         Actor cpenn = new Actor("CPENN");
 
-        serv.create(closeRange, Arrays.asList(cwalken, spenn));
+        serv.create(closeRange, Arrays.asList(cwalken, spenn, cpenn));
+        serv.create(warDogs, Arrays.asList(cwalken));
         serv.create(deadZone, Arrays.asList(cwalken));
         serv.create(reservoirDogs, Arrays.asList(cpenn));
 
         List<Map<String, Object>> r = serv.getActorFitness();
         assertEquals(
-                "[{ID=100, NAME=CWALKEN, NUM_FILMS=2}, {ID=101, NAME=SPENN, NUM_FILMS=1}, {ID=102, NAME=CPENN, NUM_FILMS=1}]",
+                "[{ID=100, NAME=CWALKEN, NUM_FILMS=3}, {ID=102, NAME=CPENN, NUM_FILMS=2}, {ID=101, NAME=SPENN, NUM_FILMS=1}]",
                 r.toString());
+
+        // TODO comparar amb ManyToMany
+        facade.begin();
+        try {
+
+            // select r.id_film,r.id_actor from film_actor r where r.id_film=? -- [10(Long)]
+            //
+            // select e.id_film,e.id_actor,r.id,r.name from film_actor e join actors r on
+            // e.id_actor=r.id where r.id=? or r.id=? or r.id=? -- [100(Integer),
+            // 101(Integer), 102(Integer)]
+
+            List<FilmActor> closeRangeFilmActors = Film_.filmActors.load(emf, closeRange);
+
+            assertEquals("[FilmActor [id=FilmActorId [idFilm=10, idActor=100]], "
+                    + "FilmActor [id=FilmActorId [idFilm=10, idActor=101]], "
+                    + "FilmActor [id=FilmActorId [idFilm=10, idActor=102]]]", closeRangeFilmActors.toString());
+
+            List<Pair<FilmActor, Actor>> actorsAtCloseRange = FilmActor_.actors.load(emf, closeRangeFilmActors);
+
+            assertEquals(
+                    "[Pair [left=FilmActor [id=FilmActorId [idFilm=10, idActor=100]], right=Actor [id=100, name=CWALKEN]], "
+                            + "Pair [left=FilmActor [id=FilmActorId [idFilm=10, idActor=101]], right=Actor [id=101, name=SPENN]], "
+                            + "Pair [left=FilmActor [id=FilmActorId [idFilm=10, idActor=102]], right=Actor [id=102, name=CPENN]]]",
+                    actorsAtCloseRange.toString());
+
+            // [Pair [left=FilmActor [id=FilmActorId [idFilm=10, idActor=100]], right=Actor
+            // [id=100, name=CWALKEN]], Pair [left=FilmActor [id=FilmActorId [idFilm=11,
+            // idActor=100]], right=Actor [id=100, name=CWALKEN]], Pair [left=FilmActor
+            // [id=FilmActorId [idFilm=12, idActor=100]], right=Actor [id=100,
+            // name=CWALKEN]], Pair [left=FilmActor [id=FilmActorId [idFilm=10,
+            // idActor=101]], right=Actor [id=101, name=SPENN]], Pair [left=FilmActor
+            // [id=FilmActorId [idFilm=10, idActor=102]], right=Actor [id=102, name=CPENN]],
+            // Pair [left=FilmActor [id=FilmActorId [idFilm=13, idActor=102]], right=Actor
+            // [id=102, name=CPENN]]]
+        } finally {
+            facade.rollback();
+        }
+
     }
 
     public static class FilmsService {
@@ -174,7 +219,37 @@ public class MoviesTest {
         public static final MetaField<Film, Long> idFilm = new MetaField<>("id");
         public static final MetaField<Film, String> title = new MetaField<>("title");
         public static final MetaField<Film, Integer> year = new MetaField<>("year");
+
+        public static final OneToMany<Film, FilmActor> filmActors = new OneToMany<>( //
+                Film.class, FilmActor.class, //
+                new PropPair<>(Film_.idFilm, FilmActor_.idFilm));
+
+        // TODO
+        // public static final ManyToMany<Film, FilmActor, Actor> actors = new
+        // ManyToMany<>(Film_.filmActors,
+        // FilmActor_.actors);
+
     }
+
+    // // TODO
+    // public static class ManyToMany<E, I, R> {
+    //
+    // final OneToMany<E, I> oneToMany;
+    // final ManyToOne<I, R> manyToOne;
+    //
+    // public ManyToMany(OneToMany<E, I> oneToMany, ManyToOne<I, R> manyToOne) {
+    // super();
+    // this.oneToMany = oneToMany;
+    // this.manyToOne = manyToOne;
+    // }
+    //
+    // public List<R> load(IEntityManagerFactory emf, E entity) {
+    // List<I> is = oneToMany.load(emf, entity);
+    //
+    // return manyToOne.load(emf, is);
+    // }
+    //
+    // }
 
     @Entity(entity = FilmActor.class, table = "film_actor")
     public static interface FilmActor_ {
@@ -183,6 +258,14 @@ public class MoviesTest {
         public static final MetaField<FilmActor, Long> idFilm = new MetaField<>("id.idFilm");
         @Id
         public static final MetaField<FilmActor, Integer> idActor = new MetaField<>("id.idActor");
+
+        public static final ManyToOne<FilmActor, Film> films = new ManyToOne<>( //
+                FilmActor.class, Film.class, //
+                new PropPair<>(FilmActor_.idFilm, Film_.idFilm));
+
+        public static final ManyToOne<FilmActor, Actor> actors = new ManyToOne<>( //
+                FilmActor.class, Actor.class, //
+                new PropPair<>(FilmActor_.idActor, Actor_.idActor));
     }
 
     @Entity(entity = Actor.class, table = "actors")
@@ -192,6 +275,11 @@ public class MoviesTest {
         @Id
         public static final MetaField<Actor, Integer> idActor = new MetaField<>("id");
         public static final MetaField<Actor, String> name = new MetaField<>("name");
+
+        public static final OneToMany<Actor, FilmActor> filmActors = new OneToMany<>( //
+                Actor.class, FilmActor.class, //
+                new PropPair<>(Actor_.idActor, FilmActor_.idActor));
+
     }
 
     public static class Film {
@@ -234,6 +322,11 @@ public class MoviesTest {
             this.year = year;
         }
 
+        @Override
+        public String toString() {
+            return "Film [id=" + id + ", title=" + title + ", year=" + year + "]";
+        }
+
     }
 
     public static class FilmActorId {
@@ -267,6 +360,11 @@ public class MoviesTest {
             this.idActor = idActor;
         }
 
+        @Override
+        public String toString() {
+            return "FilmActorId [idFilm=" + idFilm + ", idActor=" + idActor + "]";
+        }
+
     }
 
     public static class FilmActor {
@@ -288,6 +386,11 @@ public class MoviesTest {
 
         public void setId(FilmActorId id) {
             this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            return "FilmActor [id=" + id + "]";
         }
 
     }
@@ -320,6 +423,11 @@ public class MoviesTest {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return "Actor [id=" + id + ", name=" + name + "]";
         }
 
     }

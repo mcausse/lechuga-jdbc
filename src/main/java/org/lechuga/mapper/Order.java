@@ -4,8 +4,8 @@ import org.lechuga.annotated.MetaField;
 
 public class Order<E> {
 
-    final MetaField<E, ?> metaField;
-    final String order;
+    protected final MetaField<E, ?> metaField;
+    protected final String order;
 
     private Order(MetaField<E, ?> metaField, String order) {
         super();

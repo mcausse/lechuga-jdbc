@@ -34,11 +34,11 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
 
     static final Logger LOG = LoggerFactory.getLogger(EntityManagerFactory.class);
 
-    final DataAccesFacade facade;
-    final Conventions conventions;
+    protected final DataAccesFacade facade;
+    protected final Conventions conventions;
 
-    final Map<Class<?>, TableModel<?>> metaModels = new LinkedHashMap<>();
-    final Map<Class<?>, TableModel<?>> entityModels = new LinkedHashMap<>();
+    protected final Map<Class<?>, TableModel<?>> metaModels = new LinkedHashMap<>();
+    protected final Map<Class<?>, TableModel<?>> entityModels = new LinkedHashMap<>();
 
     public EntityManagerFactory(DataAccesFacade facade, Class<?>... metaEntityClasses) {
         super();
@@ -202,7 +202,7 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
             }
         }
 
-        return new Column(isPk, columnName, entityClass, metaField, accessor, handler, generator);
+        return new Column(isPk, columnName, metaField, accessor, handler, generator);
     }
 
 }

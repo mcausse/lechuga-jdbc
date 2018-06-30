@@ -12,8 +12,8 @@ import org.lechuga.jdbc.exception.UnexpectedResultException;
 
 public class GenericDao<E, ID> {
 
-    final Class<E> persistentClass;
-    final EntityManager<E, ID> em;
+    protected final Class<E> persistentClass;
+    protected final EntityManager<E, ID> em;
 
     @SuppressWarnings("unchecked")
     public GenericDao(IEntityManagerFactory emf) {

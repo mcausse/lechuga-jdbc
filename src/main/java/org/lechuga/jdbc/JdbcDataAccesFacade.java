@@ -21,7 +21,7 @@ public class JdbcDataAccesFacade implements DataAccesFacade {
 
     static final Logger LOG = LoggerFactory.getLogger(JdbcDataAccesFacade.class);
 
-    final DataSource ds;
+    protected final DataSource ds;
 
     @Override
     public DataSource getDataSource() {

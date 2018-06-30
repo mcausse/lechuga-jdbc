@@ -1,11 +1,16 @@
 package org.lechuga.annotated;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringJoiner;
 
+import org.lechuga.jdbc.util.Pair;
 import org.lechuga.mapper.Column;
 import org.lechuga.mapper.TableModel;
 import org.lechuga.mapper.autogen.HsqldbIdentity;
@@ -13,11 +18,11 @@ import org.lechuga.mapper.autogen.HsqldbSequence;
 
 public class HsqldbDDLGenerator {
 
-    final TableModel<?> em;
-    final Map<String, Column> idproperties;
-    final Map<String, Column> properties;
+    protected final TableModel<?> em;
+    protected final Map<String, Column> idproperties;
+    protected final Map<String, Column> properties;
 
-    HsqldbDDLGenerator(TableModel<?> em) {
+    protected HsqldbDDLGenerator(TableModel<?> em) {
         super();
         this.em = em;
         this.idproperties = new LinkedHashMap<>();
@@ -49,6 +54,119 @@ public class HsqldbDDLGenerator {
             TableModel<?> ec = emf.getModelByMetaClass(c);
             HsqldbDDLGenerator gen = new HsqldbDDLGenerator(ec);
             r.append(gen.generateCreates());
+        }
+        r.append("\n\n");
+
+        List<Pair<Class<?>, Class<?>>> relsMap = new ArrayList<>();
+        for (Class<?> c : metaClasses) {
+            IEntityManagerFactory emf = new EntityManagerFactory(null, metaClasses);
+            TableModel<?> ec = emf.getModelByMetaClass(c);
+            HsqldbDDLGenerator gen = new HsqldbDDLGenerator(ec);
+            r.append(gen.generateForeigns(emf, relsMap));
+        }
+
+        return r.toString();
+    }
+
+    protected String generateForeigns(IEntityManagerFactory emf, List<Pair<Class<?>, Class<?>>> relsMap) {
+
+        StringBuilder r = new StringBuilder();
+
+        for (Field f : em.getMetaModelClass().getFields()) {
+            if (ManyToOne.class.isAssignableFrom(f.getType())) {
+
+                ManyToOne<?, ?> mto;
+                try {
+                    mto = (ManyToOne<?, ?>) f.get(null);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                boolean exists = false;
+                for (Pair<Class<?>, Class<?>> rel : relsMap) {
+                    if (rel.getLeft().equals(mto.selfEntityClass) && rel.getRight().equals(mto.refEntityClass)) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (exists) {
+                    break;
+                }
+                relsMap.add(new Pair<>(mto.selfEntityClass, mto.refEntityClass));
+                relsMap.add(new Pair<>(mto.refEntityClass, mto.selfEntityClass));
+
+                // alter table employees add foreign key (id_department) references
+                // departments(id);
+                TableModel<?> self = emf.getEntityManager(mto.selfEntityClass).getModel();
+                TableModel<?> ref = emf.getEntityManager(mto.refEntityClass).getModel();
+
+                StringJoiner selfj = new StringJoiner(",");
+                StringJoiner refj = new StringJoiner(",");
+                for (PropPair<?, ?> m : mto.mappings) {
+                    Column selfc = self.findColumnByMetaField(m.left);
+                    Column refc = ref.findColumnByMetaField(m.right);
+                    selfj.add(selfc.getColumnName());
+                    refj.add(refc.getColumnName());
+                }
+
+                r.append("alter table ");
+                r.append(self.getTableName());
+                r.append(" add foreign key (");
+                r.append(selfj);
+                r.append(") references ");
+                r.append(ref.getTableName());
+                r.append(" (");
+                r.append(refj);
+                r.append(");\n");
+            }
+
+            if (OneToMany.class.isAssignableFrom(f.getType())) {
+
+                OneToMany<?, ?> mto;
+                try {
+                    mto = (OneToMany<?, ?>) f.get(null);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                boolean exists = false;
+                for (Pair<Class<?>, Class<?>> rel : relsMap) {
+                    if (rel.getLeft().equals(mto.selfEntityClass) && rel.getRight().equals(mto.refEntityClass)) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (exists) {
+                    break;
+                }
+                relsMap.add(new Pair<>(mto.selfEntityClass, mto.refEntityClass));
+                relsMap.add(new Pair<>(mto.refEntityClass, mto.selfEntityClass));
+
+                // alter table employees add foreign key (id_department) references
+                // departments(id);
+                TableModel<?> self = emf.getEntityManager(mto.selfEntityClass).getModel();
+                TableModel<?> ref = emf.getEntityManager(mto.refEntityClass).getModel();
+
+                StringJoiner selfj = new StringJoiner(",");
+                StringJoiner refj = new StringJoiner(",");
+                for (PropPair<?, ?> m : mto.mappings) {
+                    Column selfc = self.findColumnByMetaField(m.left);
+                    Column refc = ref.findColumnByMetaField(m.right);
+                    selfj.add(selfc.getColumnName());
+                    refj.add(refc.getColumnName());
+                }
+
+                r.append("alter table ");
+                r.append(ref.getTableName());
+                r.append(" add foreign key (");
+                r.append(refj);
+                r.append(") references ");
+                r.append(self.getTableName());
+                r.append(" (");
+                r.append(selfj);
+                r.append(");\n");
+            }
+
         }
 
         return r.toString();

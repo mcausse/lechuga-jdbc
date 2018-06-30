@@ -9,24 +9,22 @@ import org.lechuga.mapper.handler.Handler;
 
 public class Column {
 
-    final boolean id;
-    final String columnName;
+    protected final boolean id;
+    protected final String columnName;
 
-    final Class<?> entityClass;
-    final MetaField<?, ?> metafield;
+    protected final MetaField<?, ?> metafield;
 
-    final Accessor accessor;
+    protected final Accessor accessor;
 
-    final Handler handler;
-    final Generator generator;
+    protected final Handler handler;
+    protected final Generator generator;
 
-    public Column(boolean id, String columnName, Class<?> entityClass, MetaField<?, ?> metafield, Accessor accessor,
-            Handler handler, Generator generator) {
+    public Column(boolean id, String columnName, MetaField<?, ?> metafield, Accessor accessor, Handler handler,
+            Generator generator) {
         super();
         this.id = id;
         this.columnName = columnName;
 
-        this.entityClass = entityClass;
         this.metafield = metafield;
         this.accessor = accessor;
 

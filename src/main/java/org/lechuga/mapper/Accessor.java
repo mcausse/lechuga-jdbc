@@ -9,11 +9,11 @@ import java.util.List;
 
 public class Accessor {
 
-    final Class<?> beanClass;
+    protected final Class<?> beanClass;
     // id.login
-    final String propertyName;
-    final String[] propertyNameParts;
-    final List<PropertyDescriptor> propertyPath = new ArrayList<>();
+    protected final String propertyName;
+    protected final String[] propertyNameParts;
+    protected final List<PropertyDescriptor> propertyPath = new ArrayList<>();
 
     public Accessor(Class<?> beanClass, String propertyName) {
         super();
@@ -71,7 +71,8 @@ public class Accessor {
             }
             return o;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(this.beanClass.getName() + "#" + this.propertyName + " for instance: " + bean,
+                    e);
         }
     }
 

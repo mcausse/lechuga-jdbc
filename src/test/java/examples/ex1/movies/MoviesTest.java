@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.lechuga.annotated.EntityManagerFactory;
 import org.lechuga.annotated.HsqldbDDLGenerator;
 import org.lechuga.annotated.IEntityManagerFactory;
+import org.lechuga.annotated.ManyToMany;
 import org.lechuga.annotated.ManyToOne;
 import org.lechuga.annotated.MetaField;
 import org.lechuga.annotated.OneToMany;
@@ -91,15 +92,8 @@ public class MoviesTest {
                 "[{ID=100, NAME=CWALKEN, NUM_FILMS=3}, {ID=102, NAME=CPENN, NUM_FILMS=2}, {ID=101, NAME=SPENN, NUM_FILMS=1}]",
                 r.toString());
 
-        // TODO comparar amb ManyToMany
         facade.begin();
         try {
-
-            // select r.id_film,r.id_actor from film_actor r where r.id_film=? -- [10(Long)]
-            //
-            // select e.id_film,e.id_actor,r.id,r.name from film_actor e join actors r on
-            // e.id_actor=r.id where r.id=? or r.id=? or r.id=? -- [100(Integer),
-            // 101(Integer), 102(Integer)]
 
             List<FilmActor> closeRangeFilmActors = Film_.filmActors.load(emf, closeRange);
 
@@ -115,15 +109,13 @@ public class MoviesTest {
                             + "Pair [left=FilmActor [id=FilmActorId [idFilm=10, idActor=102]], right=Actor [id=102, name=CPENN]]]",
                     actorsAtCloseRange.toString());
 
-            // [Pair [left=FilmActor [id=FilmActorId [idFilm=10, idActor=100]], right=Actor
-            // [id=100, name=CWALKEN]], Pair [left=FilmActor [id=FilmActorId [idFilm=11,
-            // idActor=100]], right=Actor [id=100, name=CWALKEN]], Pair [left=FilmActor
-            // [id=FilmActorId [idFilm=12, idActor=100]], right=Actor [id=100,
-            // name=CWALKEN]], Pair [left=FilmActor [id=FilmActorId [idFilm=10,
-            // idActor=101]], right=Actor [id=101, name=SPENN]], Pair [left=FilmActor
-            // [id=FilmActorId [idFilm=10, idActor=102]], right=Actor [id=102, name=CPENN]],
-            // Pair [left=FilmActor [id=FilmActorId [idFilm=13, idActor=102]], right=Actor
-            // [id=102, name=CPENN]]]
+            List<Actor> actorsAtCloseRange2 = Film_.actors.load(emf, closeRange);
+            assertEquals("[Actor [id=100, name=CWALKEN], Actor [id=101, name=SPENN], Actor [id=102, name=CPENN]]",
+                    actorsAtCloseRange2.toString());
+
+            List<Actor> actorsAtWarDogs = Film_.actors.load(emf, warDogs);
+            assertEquals("[Actor [id=100, name=CWALKEN]]", actorsAtWarDogs.toString());
+
         } finally {
             facade.rollback();
         }
@@ -224,32 +216,11 @@ public class MoviesTest {
                 Film.class, FilmActor.class, //
                 new PropPair<>(Film_.idFilm, FilmActor_.idFilm));
 
-        // TODO
-        // public static final ManyToMany<Film, FilmActor, Actor> actors = new
-        // ManyToMany<>(Film_.filmActors,
-        // FilmActor_.actors);
+        // XXX ManyToMany !!!
+        public static final ManyToMany<Film, FilmActor, Actor> actors = new ManyToMany<>(Film_.filmActors,
+                FilmActor_.actors);
 
     }
-
-    // // TODO
-    // public static class ManyToMany<E, I, R> {
-    //
-    // final OneToMany<E, I> oneToMany;
-    // final ManyToOne<I, R> manyToOne;
-    //
-    // public ManyToMany(OneToMany<E, I> oneToMany, ManyToOne<I, R> manyToOne) {
-    // super();
-    // this.oneToMany = oneToMany;
-    // this.manyToOne = manyToOne;
-    // }
-    //
-    // public List<R> load(IEntityManagerFactory emf, E entity) {
-    // List<I> is = oneToMany.load(emf, entity);
-    //
-    // return manyToOne.load(emf, is);
-    // }
-    //
-    // }
 
     @Entity(entity = FilmActor.class, table = "film_actor")
     public static interface FilmActor_ {

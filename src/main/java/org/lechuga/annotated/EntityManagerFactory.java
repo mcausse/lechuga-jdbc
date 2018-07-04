@@ -18,6 +18,7 @@ import org.lechuga.annotated.criteria.CriteriaBuilder;
 import org.lechuga.annotated.criteria.Restrictions;
 import org.lechuga.jdbc.DataAccesFacade;
 import org.lechuga.jdbc.exception.LechugaException;
+import org.lechuga.jdbc.util.Pair;
 import org.lechuga.mapper.Accessor;
 import org.lechuga.mapper.Column;
 import org.lechuga.mapper.EntityManager;
@@ -82,7 +83,8 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
     @Override
     public <E> TableModel<E> getModelByEntityClass(Class<E> entityClass) {
         if (!entityModels.containsKey(entityClass)) {
-            throw new RuntimeException("entity not registered: " + entityClass.getName());
+            throw new LechugaException(
+                    "entity not registered: " + entityClass.getName() + "; registered= " + entityModels.keySet());
         }
         TableModel<E> model = (TableModel<E>) entityModels.get(entityClass);
         return model;
@@ -92,7 +94,9 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
     @Override
     public <E> TableModel<E> getModelByMetaClass(Class<?> metaClass) {
         if (!metaModels.containsKey(metaClass)) {
-            throw new RuntimeException("meta-entity not registered: " + metaClass.getName());
+            throw new LechugaException(
+                    "meta-entity not registered: " + metaClass.getName() + "; registered= " + metaModels.keySet());
+
         }
         TableModel<E> model = (TableModel<E>) metaModels.get(metaClass);
         return model;
@@ -101,47 +105,55 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
     @SuppressWarnings("unchecked")
     protected <E> TableModel<E> buildEntityModel(Class<E> metaEntityClass) {
 
-        LOG.info(metaEntityClass.getName());
-        Class<E> entityClass;
-        String tableName;
-        {
-            Entity annoEntity = metaEntityClass.getAnnotation(Entity.class);
-            if (annoEntity == null) {
-                throw new RuntimeException("expectad a meta-model Class (@" + Entity.class.getName()
-                        + "-annotated), but received: " + metaEntityClass);
-            }
-            entityClass = (Class<E>) annoEntity.entity();
+        try {
 
-            if (annoEntity.table().isEmpty()) {
-                tableName = conventions.tableNameOf(entityClass);
-            } else {
-                tableName = annoEntity.table();
+            LOG.info(metaEntityClass.getName());
+            Class<E> entityClass;
+            String tableName;
+            {
+                Entity annoEntity = metaEntityClass.getAnnotation(Entity.class);
+                if (annoEntity == null) {
+                    throw new LechugaException("expectad a meta-model Class (@" + Entity.class.getName()
+                            + "-annotated), but received: " + metaEntityClass);
+                }
+                entityClass = (Class<E>) annoEntity.entity();
+
+                if (annoEntity.table().isEmpty()) {
+                    tableName = conventions.tableNameOf(entityClass);
+                } else {
+                    tableName = annoEntity.table();
+                }
             }
+
+            List<Column> cs = new ArrayList<>();
+            for (Field f : metaEntityClass.getFields()) {
+                if (MetaField.class.isAssignableFrom(f.getType())) {
+                    MetaField<?, ?> col;
+                    try {
+                        col = (MetaField<?, ?>) f.get(null);
+                    } catch (Exception e) {
+                        throw new LechugaException(
+                                "reading static field: " + metaEntityClass.getName() + "#" + f.getName(), e);
+                    }
+
+                    if (col == null) {
+                        continue;
+                    }
+
+                    Column c = buildPropertyModel(entityClass, col, f);
+                    LOG.info(entityClass.getName() + ": " + c);
+                    cs.add(c);
+                }
+            }
+
+            TableModel<E> r = new TableModel<>(entityClass, metaEntityClass, tableName, cs);
+            LOG.info(entityClass.getName() + ": " + r);
+            return r;
+
+        } catch (Exception e) {
+            throw new LechugaException("building model for: " + metaEntityClass.getName(), e);
         }
 
-        List<Column> cs = new ArrayList<>();
-        for (Field f : metaEntityClass.getFields()) {
-            if (MetaField.class.isAssignableFrom(f.getType())) {
-                MetaField<?, ?> col;
-                try {
-                    col = (MetaField<?, ?>) f.get(null);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
-                if (col == null) {
-                    continue;
-                }
-
-                Column c = buildPropertyModel(entityClass, col, f);
-                LOG.info(entityClass.getName() + ": " + c);
-                cs.add(c);
-            }
-        }
-
-        TableModel<E> r = new TableModel<>(entityClass, metaEntityClass, tableName, cs);
-        LOG.info(entityClass.getName() + ": " + r);
-        return r;
     }
 
     protected Column buildPropertyModel(Class<?> entityClass, MetaField<?, ?> metaField, Field metaFieldField) {
@@ -203,6 +215,17 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
         }
 
         return new Column(isPk, columnName, metaField, accessor, handler, generator);
+    }
+
+    @Override
+    public <E, I, R> List<R> loadManyToMany(OneToMany<E, I> oneToMany, ManyToOne<I, R> manyToOne, E entity) {
+        return new ManyToMany<>(oneToMany, manyToOne).load(this, entity);
+    }
+
+    @Override
+    public <E, I, R> List<Pair<E, List<R>>> loadManyToMany(OneToMany<E, I> oneToMany, ManyToOne<I, R> manyToOne,
+            List<E> entities) {
+        return new ManyToMany<>(oneToMany, manyToOne).load(this, entities);
     }
 
 }

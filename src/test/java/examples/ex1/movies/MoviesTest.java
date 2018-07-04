@@ -13,7 +13,6 @@ import org.junit.Test;
 import org.lechuga.annotated.EntityManagerFactory;
 import org.lechuga.annotated.HsqldbDDLGenerator;
 import org.lechuga.annotated.IEntityManagerFactory;
-import org.lechuga.annotated.ManyToMany;
 import org.lechuga.annotated.ManyToOne;
 import org.lechuga.annotated.MetaField;
 import org.lechuga.annotated.OneToMany;
@@ -109,12 +108,26 @@ public class MoviesTest {
                             + "Pair [left=FilmActor [id=FilmActorId [idFilm=10, idActor=102]], right=Actor [id=102, name=CPENN]]]",
                     actorsAtCloseRange.toString());
 
-            List<Actor> actorsAtCloseRange2 = Film_.actors.load(emf, closeRange);
+            System.out.println("==============================================================================");
+
+            List<Actor> actorsAtCloseRange2 = emf.loadManyToMany(Film_.filmActors, FilmActor_.actors, closeRange);
             assertEquals("[Actor [id=100, name=CWALKEN], Actor [id=101, name=SPENN], Actor [id=102, name=CPENN]]",
                     actorsAtCloseRange2.toString());
 
-            List<Actor> actorsAtWarDogs = Film_.actors.load(emf, warDogs);
+            System.out.println("==============================================================================");
+
+            List<Actor> actorsAtWarDogs = emf.loadManyToMany(Film_.filmActors, FilmActor_.actors, warDogs);
             assertEquals("[Actor [id=100, name=CWALKEN]]", actorsAtWarDogs.toString());
+
+            System.out.println("==============================================================================");
+
+            List<Pair<Film, List<Actor>>> all = emf.loadManyToMany(Film_.filmActors, FilmActor_.actors,
+                    Arrays.asList(warDogs, reservoirDogs));
+            assertEquals("[Pair [left=Film [id=11, title=War Dogs, year=1983], right=[Actor [id=100, name=CWALKEN]]], "
+                    + "Pair [left=Film [id=13, title=Reservoir Dogs, year=1992], right=[Actor [id=102, name=CPENN]]]]",
+                    all.toString());
+
+            System.out.println("==============================================================================");
 
         } finally {
             facade.rollback();
@@ -216,11 +229,9 @@ public class MoviesTest {
                 Film.class, FilmActor.class, //
                 new PropPair<>(Film_.idFilm, FilmActor_.idFilm));
 
-        // XXX ManyToMany !!!
-        public static final ManyToMany<Film, FilmActor, Actor> actors = new ManyToMany<>(Film_.filmActors,
-                FilmActor_.actors);
-
     }
+
+    // TODO i com fer herència de meta-entities?
 
     @Entity(entity = FilmActor.class, table = "film_actor")
     public static interface FilmActor_ {

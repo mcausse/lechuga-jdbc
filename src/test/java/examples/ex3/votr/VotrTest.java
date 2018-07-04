@@ -439,7 +439,7 @@ public class VotrTest {
         public static final MetaField<Usuari, String> email = new MetaField<>("email");
         public static final MetaField<Usuari, String> alias = new MetaField<>("alias");
 
-        public static final MetaField<Usuari, String> idOpcioVotada = new MetaField<>("idOpcioVotada");
+        public static final MetaField<Usuari, Long> idOpcioVotada = new MetaField<>("idOpcioVotada");
         public static final MetaField<Usuari, Date> dataVotacio = new MetaField<>("dataVotacio");
 
         public static final ManyToOne<Usuari, Votacio> votacio = new ManyToOne<>( //

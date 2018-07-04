@@ -1,6 +1,7 @@
 package org.lechuga.annotated;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -16,10 +17,10 @@ public class OneToMany<E, R> {
 
     protected final Class<E> selfEntityClass;
     protected final Class<R> refEntityClass;
-    protected final PropPair<E, R>[] mappings;
+    protected final PropPair<E, R, ?>[] mappings;
 
     @SafeVarargs
-    public OneToMany(Class<E> selfEntityClass, Class<R> refEntityClass, PropPair<E, R>... mappings) {
+    public OneToMany(Class<E> selfEntityClass, Class<R> refEntityClass, PropPair<E, R, ?>... mappings) {
         super();
         this.selfEntityClass = selfEntityClass;
         this.refEntityClass = refEntityClass;
@@ -50,7 +51,7 @@ public class OneToMany<E, R> {
         List<Criterion> wheres = new ArrayList<>();
         EntityManager<E, Object> selfEm = emf.getEntityManager(selfEntityClass);
 
-        for (PropPair<E, R> m : mappings) {
+        for (PropPair<E, R, ?> m : mappings) {
             Column selfColumn = selfEm.getModel().findColumnByMetaField(m.left);
             Object selfValue = selfColumn.getValueForJdbc(entity);
             wheres.add(rr.eq((MetaField<R, Object>) m.right, selfValue));
@@ -63,6 +64,12 @@ public class OneToMany<E, R> {
         }
 
         return c.getExecutor(refEntityClass).load();
+    }
+
+    @Override
+    public String toString() {
+        return "OneToMany [" + selfEntityClass.getName() + " => " + refEntityClass.getName() + ", mappings="
+                + Arrays.toString(mappings) + "]";
     }
 
 }

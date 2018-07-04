@@ -13,4 +13,9 @@ public class CriterionImpl extends Query implements Criterion {
         super.addArgs(values);
     }
 
+    @Override
+    public String toString() {
+        return super.toString();
+    }
+
 }

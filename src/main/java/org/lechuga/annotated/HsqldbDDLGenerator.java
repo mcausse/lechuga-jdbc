@@ -102,7 +102,7 @@ public class HsqldbDDLGenerator {
 
                 StringJoiner selfj = new StringJoiner(",");
                 StringJoiner refj = new StringJoiner(",");
-                for (PropPair<?, ?> m : mto.mappings) {
+                for (PropPair<?, ?, ?> m : mto.mappings) {
                     Column selfc = self.findColumnByMetaField(m.left);
                     Column refc = ref.findColumnByMetaField(m.right);
                     selfj.add(selfc.getColumnName());
@@ -149,7 +149,7 @@ public class HsqldbDDLGenerator {
 
                 StringJoiner selfj = new StringJoiner(",");
                 StringJoiner refj = new StringJoiner(",");
-                for (PropPair<?, ?> m : mto.mappings) {
+                for (PropPair<?, ?, ?> m : mto.mappings) {
                     Column selfc = self.findColumnByMetaField(m.left);
                     Column refc = ref.findColumnByMetaField(m.right);
                     selfj.add(selfc.getColumnName());

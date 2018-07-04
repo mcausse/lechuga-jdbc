@@ -53,11 +53,6 @@ public class CriteriaBuilder implements QueryObject {
         return q.getArgsList();
     }
 
-    @Override
-    public String toString() {
-        return q.toString();
-    }
-
     public <E> CriteriaExecutor<E> getExecutor(RowMapper<E> rowMapper) {
         return new CriteriaExecutor<E>(facade, rowMapper, q);
     }
@@ -69,6 +64,11 @@ public class CriteriaBuilder implements QueryObject {
 
     public <T> T extract(ResultSetExtractor<T> extractor) {
         return facade.extract(q, extractor);
+    }
+
+    @Override
+    public String toString() {
+        return q.toString();
     }
 
 }

@@ -1,6 +1,9 @@
 package org.lechuga.mapper;
 
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
+
+import org.lechuga.jdbc.exception.LechugaException;
 
 public class ReflectUtils {
 
@@ -9,7 +12,7 @@ public class ReflectUtils {
         try {
             entity = beanClass.newInstance();
         } catch (final Exception e) {
-            throw new RuntimeException(e);
+            throw new LechugaException("instancing: " + beanClass.getName(), e);
         }
         return entity;
     }
@@ -25,7 +28,7 @@ public class ReflectUtils {
             final Constructor<T> ctor = beanClass.getDeclaredConstructor(argTypes);
             return ctor.newInstance((Object[]) args);
         } catch (final Exception e) {
-            throw new RuntimeException(e);
+            throw new LechugaException("instancing: " + beanClass.getName() + "[" + Arrays.toString(argTypes) + "]", e);
         }
     }
 

@@ -3,6 +3,7 @@ package org.lechuga.annotated;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,10 +20,10 @@ public class ManyToOne<E, R> {
 
     protected final Class<E> selfEntityClass;
     protected final Class<R> refEntityClass;
-    protected final PropPair<E, R>[] mappings;
+    protected final PropPair<E, R, ?>[] mappings;
 
     @SafeVarargs
-    public ManyToOne(Class<E> selfEntityClass, Class<R> refEntityClass, PropPair<E, R>... mappings) {
+    public ManyToOne(Class<E> selfEntityClass, Class<R> refEntityClass, PropPair<E, R, ?>... mappings) {
         super();
         this.selfEntityClass = selfEntityClass;
         this.refEntityClass = refEntityClass;
@@ -50,7 +51,7 @@ public class ManyToOne<E, R> {
 
         {
             List<Criterion> ons = new ArrayList<>();
-            for (PropPair<E, R> m : mappings) {
+            for (PropPair<E, R, ?> m : mappings) {
                 Column selfColumn = selfEm.getModel().findColumnByMetaField(m.left);
                 Column refColumn = refEm.getModel().findColumnByMetaField(m.right);
                 MetaField<E, ?> selfMeta = (MetaField<E, ?>) selfColumn.getMetafield();
@@ -104,7 +105,7 @@ public class ManyToOne<E, R> {
         List<Criterion> wheres = new ArrayList<>();
         EntityManager<E, Object> selfEm = emf.getEntityManager(selfEntityClass);
 
-        for (PropPair<E, R> m : mappings) {
+        for (PropPair<E, R, ?> m : mappings) {
             Column selfColumn = selfEm.getModel().findColumnByMetaField(m.left);
             Object selfValue = selfColumn.getValueForJdbc(entity);
             wheres.add(rr.eq((MetaField<R, Object>) m.right, selfValue));
@@ -113,6 +114,12 @@ public class ManyToOne<E, R> {
         c.append("where {} ", Restrictions.and(wheres));
 
         return c.getExecutor(refEntityClass).loadUnique();
+    }
+
+    @Override
+    public String toString() {
+        return "ManyToOne [" + selfEntityClass.getName() + " => " + refEntityClass.getName() + ", mappings="
+                + Arrays.toString(mappings) + "]";
     }
 
 }

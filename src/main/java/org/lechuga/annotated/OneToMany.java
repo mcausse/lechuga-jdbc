@@ -27,10 +27,12 @@ public class OneToMany<E, R> {
         this.mappings = mappings;
     }
 
+    // TODO Order?
     public List<R> load(IEntityManagerFactory emf, E entity) {
         return load(emf, entity, null);
     }
 
+    // TODO Order?
     public List<Pair<E, List<R>>> load(IEntityManagerFactory emf, Collection<E> entities) {
         List<Pair<E, List<R>>> r = new ArrayList<>();
         for (E entity : entities) {
@@ -40,6 +42,7 @@ public class OneToMany<E, R> {
         return r;
     }
 
+    // TODO Order?
     @SuppressWarnings("unchecked")
     public List<R> load(IEntityManagerFactory emf, E entity, List<Order<R>> orders) {
 

@@ -54,68 +54,68 @@ public class EmpresasTest {
     @Test
     public void testName() throws Exception {
 
-        IEntityManagerFactory emf = new EntityManagerFactory(facade, Empresa_.class, Empleado_.class,
-                EmpresaEmpleado_.class);
+        IEntityManagerFactory emf = new EntityManagerFactory(facade, Empresa_.class, Direccion_.class,
+                EmpresaDireccion_.class);
 
         Service service = TransactionalServiceProxyfier.proxyfy(facade, new ServiceImpl(emf), Service.class);
 
         Empresa aedea = new Empresa(null, "AEDEA");
         Empresa lifting = new Empresa(null, "LIFTING");
 
-        Empleado serr = new Empleado(null, "SERR");
-        Empleado ross = new Empleado(null, "ROSS");
+        Direccion serr = new Direccion(null, "SERR");
+        Direccion ross = new Direccion(null, "ROSS");
 
-        Empleado ilus = new Empleado(null, "ILUS");
+        Direccion ilus = new Direccion(null, "ILUS");
 
-        List<Triad<Empresa, ERolEmpleado, Empleado>> d = new ArrayList<>();
-        d.add(new Triad<>(aedea, ERolEmpleado.ABRILLANTADOR, serr));
-        d.add(new Triad<>(aedea, ERolEmpleado.PULIDOR, ross));
-        d.add(new Triad<>(lifting, ERolEmpleado.PULIDOR, ilus));
+        List<Triad<Empresa, ETipoDireccion, Direccion>> d = new ArrayList<>();
+        d.add(new Triad<>(aedea, ETipoDireccion.FISCAL, serr));
+        d.add(new Triad<>(aedea, ETipoDireccion.POSTAL, ross));
+        d.add(new Triad<>(lifting, ETipoDireccion.POSTAL, ilus));
 
         service.store(d);
     }
 
     @Test
     public void testGen() throws Exception {
-        String s = HsqldbDDLGenerator.generateScript(Empresa_.class, Empleado_.class, EmpresaEmpleado_.class);
+        String s = HsqldbDDLGenerator.generateScript(Empresa_.class, Direccion_.class, EmpresaDireccion_.class);
         System.err.println(s);
     }
 
     public static interface Service {
 
         @TransactionalMethod
-        void store(List<Triad<Empresa, ERolEmpleado, Empleado>> d);
+        void store(List<Triad<Empresa, ETipoDireccion, Direccion>> d);
 
     }
 
     public static class ServiceImpl implements Service {
 
         final EntityManager<Empresa, Short> empresaEm;
-        final EntityManager<EmpresaEmpleado, EmpresaEmpleadoId> empresaEmpleadoEm;
-        final EntityManager<Empleado, Long> empleadoEm;
+        final EntityManager<EmpresaDireccion, EmpresaEmpleadoId> empresaEmpleadoEm;
+        final EntityManager<Direccion, Long> empleadoEm;
 
         public ServiceImpl(IEntityManagerFactory emf) {
             super();
             this.empresaEm = emf.getEntityManager(Empresa.class);
-            this.empresaEmpleadoEm = emf.getEntityManager(EmpresaEmpleado.class);
-            this.empleadoEm = emf.getEntityManager(Empleado.class);
+            this.empresaEmpleadoEm = emf.getEntityManager(EmpresaDireccion.class);
+            this.empleadoEm = emf.getEntityManager(Direccion.class);
         }
 
         @Override
-        public void store(List<Triad<Empresa, ERolEmpleado, Empleado>> d) {
+        public void store(List<Triad<Empresa, ETipoDireccion, Direccion>> d) {
             d.forEach(p -> {
                 Empresa empresa = p.getA();
-                ERolEmpleado rolEmpleado = p.getB();
-                Empleado empleado = p.getC();
+                ETipoDireccion tipoDireccion = p.getB();
+                Direccion direccion = p.getC();
 
                 if (empresa.getIdEmpresa() == null) {
                     empresaEm.insert(empresa);
                 }
-                if (empleado.getIdEmpleado() == null) {
-                    empleadoEm.insert(empleado);
+                if (direccion.getIdDireccion() == null) {
+                    empleadoEm.insert(direccion);
                 }
-                empresaEmpleadoEm.store(new EmpresaEmpleado(
-                        new EmpresaEmpleadoId(empresa.getIdEmpresa(), empleado.getIdEmpleado()), rolEmpleado));
+                empresaEmpleadoEm.store(new EmpresaDireccion(
+                        new EmpresaEmpleadoId(empresa.getIdEmpresa(), direccion.getIdDireccion()), tipoDireccion));
             });
         }
 
@@ -129,39 +129,40 @@ public class EmpresasTest {
         public static final MetaField<Empresa, Long> idEmpresa = new MetaField<>("idEmpresa");
         public static final MetaField<Empresa, String> nombre = new MetaField<>("nombre");
 
-        public static final OneToMany<Empresa, EmpresaEmpleado> empresaEmpleados = new OneToMany<>(Empresa.class,
-                EmpresaEmpleado.class, new PropPair<>(Empresa_.idEmpresa, EmpresaEmpleado_.idEmpresa));
+        public static final OneToMany<Empresa, EmpresaDireccion> empresaEmpleados = new OneToMany<>(Empresa.class,
+                EmpresaDireccion.class, new PropPair<>(Empresa_.idEmpresa, EmpresaDireccion_.idEmpresa));
     }
 
-    @Entity(entity = EmpresaEmpleado.class)
-    public static interface EmpresaEmpleado_ {
+    @Entity(entity = EmpresaDireccion.class)
+    public static interface EmpresaDireccion_ {
 
         @Id
-        public static final MetaField<EmpresaEmpleado, Long> idEmpresa = new MetaField<>("id.idEmpresa");
+        public static final MetaField<EmpresaDireccion, Long> idEmpresa = new MetaField<>("id.idEmpresa");
         @Id
-        public static final MetaField<EmpresaEmpleado, Integer> idEmpleado = new MetaField<>("id.idEmpleado");
+        public static final MetaField<EmpresaDireccion, Integer> idDireccion = new MetaField<>("id.idDireccion");
 
         @EnumHandler
-        public static final MetaField<EmpresaEmpleado, ERolEmpleado> rolEmpleado = new MetaField<>("rolEmpleado");
+        public static final MetaField<EmpresaDireccion, ETipoDireccion> tipoDireccion = new MetaField<>(
+                "tipoDireccion");
 
-        public static final ManyToOne<EmpresaEmpleado, Empresa> empresas = new ManyToOne<>(EmpresaEmpleado.class,
-                Empresa.class, new PropPair<>(EmpresaEmpleado_.idEmpresa, Empresa_.idEmpresa));
+        public static final ManyToOne<EmpresaDireccion, Empresa> empresas = new ManyToOne<>(EmpresaDireccion.class,
+                Empresa.class, new PropPair<>(EmpresaDireccion_.idEmpresa, Empresa_.idEmpresa));
 
-        public static final ManyToOne<EmpresaEmpleado, Empleado> empleados = new ManyToOne<>(EmpresaEmpleado.class,
-                Empleado.class, new PropPair<>(EmpresaEmpleado_.idEmpleado, Empleado_.idEmpleado));
+        public static final ManyToOne<EmpresaDireccion, Direccion> direccion = new ManyToOne<>(EmpresaDireccion.class,
+                Direccion.class, new PropPair<>(EmpresaDireccion_.idDireccion, Direccion_.idDireccion));
 
     }
 
-    @Entity(entity = Empleado.class, table = "empleados")
-    public static interface Empleado_ {
+    @Entity(entity = Direccion.class, table = "empleados")
+    public static interface Direccion_ {
 
         @Id
         @Generated(value = HsqldbSequence.class, args = "seq_empleados")
-        public static final MetaField<Empleado, Integer> idEmpleado = new MetaField<>("idEmpleado");
-        public static final MetaField<Empleado, String> nombre = new MetaField<>("nombre");
+        public static final MetaField<Direccion, Integer> idDireccion = new MetaField<>("idDireccion");
+        public static final MetaField<Direccion, String> nombre = new MetaField<>("nombre");
 
-        public static final OneToMany<Empleado, EmpresaEmpleado> empresaEmpleados = new OneToMany<>(Empleado.class,
-                EmpresaEmpleado.class, new PropPair<>(Empleado_.idEmpleado, EmpresaEmpleado_.idEmpleado));
+        public static final OneToMany<Direccion, EmpresaDireccion> empresaEmpleados = new OneToMany<>(Direccion.class,
+                EmpresaDireccion.class, new PropPair<>(Direccion_.idDireccion, EmpresaDireccion_.idDireccion));
 
     }
 
@@ -204,16 +205,16 @@ public class EmpresasTest {
 
     public static class EmpresaEmpleadoId {
         Long idEmpresa;
-        Integer idEmpleado;
+        Integer idDireccion;
 
         public EmpresaEmpleadoId() {
             super();
         }
 
-        public EmpresaEmpleadoId(Long idEmpresa, Integer idEmpleado) {
+        public EmpresaEmpleadoId(Long idEmpresa, Integer idDireccion) {
             super();
             this.idEmpresa = idEmpresa;
-            this.idEmpleado = idEmpleado;
+            this.idDireccion = idDireccion;
         }
 
         public Long getIdEmpresa() {
@@ -224,33 +225,33 @@ public class EmpresasTest {
             this.idEmpresa = idEmpresa;
         }
 
-        public Integer getIdEmpleado() {
-            return idEmpleado;
+        public Integer getIdDireccion() {
+            return idDireccion;
         }
 
-        public void setIdEmpleado(Integer idEmpleado) {
-            this.idEmpleado = idEmpleado;
+        public void setIdDireccion(Integer idDireccion) {
+            this.idDireccion = idDireccion;
         }
 
         @Override
         public String toString() {
-            return "EmpresaEmpleadoId [idEmpresa=" + idEmpresa + ", idEmpleado=" + idEmpleado + "]";
+            return "EmpresaEmpleadoId [idEmpresa=" + idEmpresa + ", idDireccion=" + idDireccion + "]";
         }
 
     }
 
-    public static class EmpresaEmpleado {
+    public static class EmpresaDireccion {
         EmpresaEmpleadoId id;
-        ERolEmpleado rolEmpleado;
+        ETipoDireccion tipoDireccion;
 
-        public EmpresaEmpleado() {
+        public EmpresaDireccion() {
             super();
         }
 
-        public EmpresaEmpleado(EmpresaEmpleadoId id, ERolEmpleado rolEmpleado) {
+        public EmpresaDireccion(EmpresaEmpleadoId id, ETipoDireccion tipoDireccion) {
             super();
             this.id = id;
-            this.rolEmpleado = rolEmpleado;
+            this.tipoDireccion = tipoDireccion;
         }
 
         public EmpresaEmpleadoId getId() {
@@ -261,41 +262,41 @@ public class EmpresasTest {
             this.id = id;
         }
 
-        public ERolEmpleado getRolEmpleado() {
-            return rolEmpleado;
+        public ETipoDireccion getTipoDireccion() {
+            return tipoDireccion;
         }
 
-        public void setRolEmpleado(ERolEmpleado rolEmpleado) {
-            this.rolEmpleado = rolEmpleado;
+        public void setTipoDireccion(ETipoDireccion tipoDireccion) {
+            this.tipoDireccion = tipoDireccion;
         }
 
         @Override
         public String toString() {
-            return "EmpresaEmpleado [id=" + id + ", rolEmpleado=" + rolEmpleado + "]";
+            return "EmpresaDireccion [id=" + id + ", tipoDireccion=" + tipoDireccion + "]";
         }
 
     }
 
-    public static class Empleado {
-        Integer idEmpleado;
+    public static class Direccion {
+        Integer idDireccion;
         String nombre;
 
-        public Empleado() {
+        public Direccion() {
             super();
         }
 
-        public Empleado(Integer idEmpleado, String nombre) {
+        public Direccion(Integer idDireccion, String nombre) {
             super();
-            this.idEmpleado = idEmpleado;
+            this.idDireccion = idDireccion;
             this.nombre = nombre;
         }
 
-        public Integer getIdEmpleado() {
-            return idEmpleado;
+        public Integer getIdDireccion() {
+            return idDireccion;
         }
 
-        public void setIdEmpleado(Integer idEmpleado) {
-            this.idEmpleado = idEmpleado;
+        public void setIdDireccion(Integer idDireccion) {
+            this.idDireccion = idDireccion;
         }
 
         public String getNombre() {
@@ -308,13 +309,13 @@ public class EmpresasTest {
 
         @Override
         public String toString() {
-            return "Empleado [idEmpleado=" + idEmpleado + ", nombre=" + nombre + "]";
+            return "Direccion [idDireccion=" + idDireccion + ", nombre=" + nombre + "]";
         }
 
     }
 
-    public static enum ERolEmpleado {
-        PULIDOR, ABRILLANTADOR;
+    public static enum ETipoDireccion {
+        POSTAL, FISCAL;
     }
 
 }

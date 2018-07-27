@@ -16,6 +16,7 @@ public class ManyToMany<E, I, R> {
         this.manyToOne = manyToOne;
     }
 
+    // TODO Order?
     public List<Pair<E, List<R>>> load(IEntityManagerFactory emf, List<E> entities) {
         List<Pair<E, List<R>>> r = new ArrayList<>();
         for (E entity : entities) {
@@ -24,6 +25,7 @@ public class ManyToMany<E, I, R> {
         return r;
     }
 
+    // TODO Order?
     public List<R> load(IEntityManagerFactory emf, E entity) {
         List<I> is = oneToMany.load(emf, entity);
         List<Pair<I, R>> pairs = manyToOne.load(emf, is);

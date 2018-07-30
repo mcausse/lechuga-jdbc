@@ -4,11 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.junit.Test;
@@ -18,11 +20,11 @@ public class ZZZZZ {
     @Test
     public void testName() throws Exception {
 
-        int N = 299;
+        int N = 200;
         Random rnd = new Random(0L);
-        long[] nums = new long[N];
+        List<Long> nums = new ArrayList<>();
         for (int i = 0; i < N; i++) {
-            nums[i] = Math.abs(rnd.nextLong() % N);
+            nums.add(Math.abs(rnd.nextLong() % (N / 2)));
         }
 
         MockFileManager fm = new MockFileManager();
@@ -30,11 +32,14 @@ public class ZZZZZ {
 
         System.out.println(ix);
         for (long i : nums) {
-            ix.put("" + i, i);
+            ix.put("" + i / 3, i);
         }
 
         for (long i : nums) {
-            assertEquals(i, ix.get("" + i));
+            Set<Long> ks = ix.get("" + i / 3);
+            for (long k : ks) {
+                assertEquals(i / 3, k / 3);
+            }
         }
 
         fm.storeIndex(ix);
@@ -56,13 +61,15 @@ public class ZZZZZ {
         }
 
         for (long i = 0; i < N; i++) {
-            assertEquals(i, ix.get("" + i));
+            assertEquals("[" + i + "]", ix.get("" + i).toString());
         }
 
-        assertEquals("{2=2, 20=20, 21=21, 22=22, 23=23, 24=24, 25=25, 26=26, 27=27, 28=28, 29=29, 3=3}",
+        assertEquals(
+                "{2=[2], 20=[20], 21=[21], 22=[22], 23=[23], 24=[24], 25=[25], 26=[26], 27=[27], 28=[28], 29=[29], 3=[3]}",
                 ix.getIn("2", "3").toString());
-        ix.remove("25");
-        assertEquals("{2=2, 20=20, 21=21, 22=22, 23=23, 24=24, 26=26, 27=27, 28=28, 29=29, 3=3}",
+        ix.remove("25", 25);
+        assertEquals(
+                "{2=[2], 20=[20], 21=[21], 22=[22], 23=[23], 24=[24], 25=[], 26=[26], 27=[27], 28=[28], 29=[29], 3=[3]}",
                 ix.getIn("2", "3").toString());
 
         fm.storeIndex(ix);
@@ -260,17 +267,21 @@ public class ZZZZZ {
             return r;
         }
 
-        public void remove(K key) {
+        public void remove(K key, long value) {
             int numChunk = find(key);
             IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
-            chunk.remove(key);
+            chunk.get(key).remove(value);
         }
 
         public void put(K key, long value) {
             int numChunk = find(key);
             IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
 
-            chunk.put(key, value);
+            if (!chunk.entries.containsKey(key)) {
+                chunk.entries.put(key, new HashSet<Long>());
+            }
+            chunk.get(key).add(value);
+
             if (chunk.getSize() <= this.maxEntriesPerChunk) {
                 fileManager.storeIndexChunk(numChunk, chunk);
             } else {
@@ -283,7 +294,7 @@ public class ZZZZZ {
                 K kmed = null;
 
                 int c = 0;
-                for (Entry<K, Long> e : chunk.getEntries().entrySet()) {
+                for (Entry<K, Set<Long>> e : chunk.getEntries().entrySet()) {
 
                     if (c < med) {
                         chunk1.put(e.getKey(), e.getValue());
@@ -315,7 +326,7 @@ public class ZZZZZ {
 
         }
 
-        public long get(K key) {
+        public Set<Long> get(K key) {
             int numChunk = find(key);
             IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
             if (!chunk.getEntries().containsKey(key)) {
@@ -324,12 +335,12 @@ public class ZZZZZ {
             return chunk.get(key);
         }
 
-        public Map<K, Long> getIn(K fromKey, K toKey) {
-            Map<K, Long> r = new TreeMap<>();
+        public Map<K, Set<Long>> getIn(K fromKey, K toKey) {
+            Map<K, Set<Long>> r = new TreeMap<>();
             List<Integer> numChunks = find(fromKey, toKey);
             for (int numChunk : numChunks) {
                 IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
-                for (Entry<K, Long> e : chunk.getEntries().entrySet()) {
+                for (Entry<K, Set<Long>> e : chunk.getEntries().entrySet()) {
 
                     int c = 0;
                     K key = e.getKey();
@@ -367,7 +378,7 @@ public class ZZZZZ {
 
     public static class IndexChunk<K extends Comparable<K>> {
 
-        final Map<K, Long> entries;
+        final Map<K, Set<Long>> entries;
         boolean pristine = true;
 
         public IndexChunk() {
@@ -379,7 +390,7 @@ public class ZZZZZ {
             return entries.size();
         }
 
-        public void put(K key, long value) {
+        public void put(K key, Set<Long> value) {
             entries.put(key, value);
             pristine = false;
         }
@@ -389,11 +400,11 @@ public class ZZZZZ {
             pristine = false;
         }
 
-        public long get(K key) {
+        public Set<Long> get(K key) {
             return entries.get(key);
         }
 
-        public Map<K, Long> getEntries() {
+        public Map<K, Set<Long>> getEntries() {
             return entries;
         }
 

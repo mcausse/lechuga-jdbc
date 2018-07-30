@@ -3,6 +3,7 @@ package udb2019;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,13 +32,14 @@ public class ZZZZZ {
         for (long i : nums) {
             ix.put("" + i, i);
         }
-        System.out.println(ix);
 
         for (long i : nums) {
             assertEquals(i, ix.get("" + i));
         }
 
         fm.storeIndex(ix);
+
+        System.out.println(ix);
     }
 
     @Test
@@ -52,19 +54,20 @@ public class ZZZZZ {
         for (long i = 0; i < N; i++) {
             ix.put("" + i, i);
         }
-        System.out.println(ix);
 
         for (long i = 0; i < N; i++) {
             assertEquals(i, ix.get("" + i));
         }
 
-        assertEquals("{3=3, 2=2, 20=20, 21=21, 22=22, 23=23, 24=24, 25=25, 26=26, 27=27, 28=28, 29=29}",
+        assertEquals("{2=2, 20=20, 21=21, 22=22, 23=23, 24=24, 25=25, 26=26, 27=27, 28=28, 29=29, 3=3}",
                 ix.getIn("2", "3").toString());
         ix.remove("25");
-        assertEquals("{3=3, 2=2, 20=20, 21=21, 22=22, 23=23, 24=24, 26=26, 27=27, 28=28, 29=29}",
+        assertEquals("{2=2, 20=20, 21=21, 22=22, 23=23, 24=24, 26=26, 27=27, 28=28, 29=29, 3=3}",
                 ix.getIn("2", "3").toString());
 
         fm.storeIndex(ix);
+
+        System.out.println(ix);
     }
 
     public static interface FileManager<K extends Comparable<K>> {
@@ -98,6 +101,7 @@ public class ZZZZZ {
 
         @Override
         public void storeIndex(Index<String> index) {
+            Collections.sort(index.entries);
             this.index = index;
         }
 
@@ -113,6 +117,72 @@ public class ZZZZZ {
 
     }
 
+    public static class IndexEntry<K extends Comparable<K>> implements Comparable<IndexEntry<K>> {
+
+        /**
+         * si val {@code null} val -INF
+         */
+        K minKey;
+        /**
+         * si val {@code null} val +INF
+         */
+        K maxKey;
+
+        int numChunk;
+
+        public IndexEntry() {
+            super();
+        }
+
+        public IndexEntry(K minKey, K maxKey, int numChunk) {
+            super();
+            this.minKey = minKey;
+            this.maxKey = maxKey;
+            this.numChunk = numChunk;
+        }
+
+        public K getMinKey() {
+            return minKey;
+        }
+
+        public void setMinKey(K minKey) {
+            this.minKey = minKey;
+        }
+
+        public K getMaxKey() {
+            return maxKey;
+        }
+
+        public void setMaxKey(K maxKey) {
+            this.maxKey = maxKey;
+        }
+
+        public int getNumChunk() {
+            return numChunk;
+        }
+
+        public void setNumChunk(int numChunk) {
+            this.numChunk = numChunk;
+        }
+
+        @Override
+        public int compareTo(IndexEntry<K> o) {
+            if (this.minKey == null) {
+                return -1;
+            }
+            if (o.minKey == null) {
+                return 1;
+            }
+            return this.minKey.compareTo(o.minKey);
+        }
+
+        @Override
+        public String toString() {
+            return "IndexEntry [minKey=" + minKey + ", maxKey=" + maxKey + ", numChunk=" + numChunk + "]";
+        }
+
+    }
+
     /**
      * @param <K>
      *            tipus de la clau
@@ -122,32 +192,23 @@ public class ZZZZZ {
         final int maxEntriesPerChunk;
         final FileManager<K> fileManager;
 
-        /**
-         * si val {@code null} val -INF
-         */
-        final List<K> minKeys;
-        /**
-         * si val {@code null} val +INF
-         */
-        final List<K> maxKeys;
+        final List<IndexEntry<K>> entries;
 
         public Index(int maxEntriesPerChunk, FileManager<K> fileManager) {
             super();
             this.maxEntriesPerChunk = maxEntriesPerChunk;
             this.fileManager = fileManager;
 
-            this.minKeys = new ArrayList<>();
-            this.maxKeys = new ArrayList<>();
+            this.entries = new ArrayList<>();
+            this.entries.add(new IndexEntry<K>(null, null, 0));
 
-            this.minKeys.add(null);
-            this.maxKeys.add(null);
         }
 
         protected int find(K key) {
-            for (int i = 0; i < minKeys.size(); i++) {
+            for (IndexEntry<K> entry : entries) {
 
-                K minkey = minKeys.get(i);
-                K maxkey = maxKeys.get(i);
+                K minkey = entry.getMinKey();
+                K maxkey = entry.getMaxKey();
 
                 int c = 0;
                 if (minkey == null || ComparableUtils.le(minkey, key)) {
@@ -157,7 +218,7 @@ public class ZZZZZ {
                     c++;
                 }
                 if (c == 2) {
-                    return i;
+                    return entry.getNumChunk();
                 }
             }
             throw new RuntimeException(
@@ -165,10 +226,13 @@ public class ZZZZZ {
         }
 
         protected List<Integer> find(K fromKey, K toKey) {
+
             List<Integer> r = new ArrayList<>();
-            for (int i = 0; i < minKeys.size(); i++) {
-                K minkey = minKeys.get(i);
-                K maxkey = maxKeys.get(i);
+
+            for (IndexEntry<K> entry : entries) {
+
+                K minkey = entry.getMinKey();
+                K maxkey = entry.getMaxKey();
 
                 int c = 0;
                 if ((minkey == null || ComparableUtils.le(minkey, fromKey)) &&
@@ -190,7 +254,7 @@ public class ZZZZZ {
                 }
 
                 if (c > 0) {
-                    r.add(i);
+                    r.add(entry.getNumChunk());
                 }
             }
             return r;
@@ -236,18 +300,17 @@ public class ZZZZZ {
                     throw new RuntimeException();
                 }
 
-                K minKey1 = minKeys.get(numChunk);
+                K minKey1 = entries.get(numChunk).getMinKey();
                 K maxKey1 = kmed;
                 K minKey2 = kmed;
-                K maxKey2 = maxKeys.get(numChunk);
+                K maxKey2 = entries.get(numChunk).getMaxKey();
 
                 fileManager.storeIndexChunk(numChunk, chunk1);
-                minKeys.set(numChunk, minKey1);
-                maxKeys.set(numChunk, maxKey1);
+                entries.get(numChunk).setMinKey(minKey1);
+                entries.get(numChunk).setMaxKey(maxKey1);
 
-                fileManager.storeIndexChunk(minKeys.size(), chunk2);
-                minKeys.add(minKey2);
-                maxKeys.add(maxKey2);
+                fileManager.storeIndexChunk(entries.size(), chunk2);
+                entries.add(new IndexEntry<K>(minKey2, maxKey2, entries.size()));
             }
 
         }
@@ -262,7 +325,7 @@ public class ZZZZZ {
         }
 
         public Map<K, Long> getIn(K fromKey, K toKey) {
-            Map<K, Long> r = new LinkedHashMap<>();
+            Map<K, Long> r = new TreeMap<>();
             List<Integer> numChunks = find(fromKey, toKey);
             for (int numChunk : numChunks) {
                 IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
@@ -288,13 +351,13 @@ public class ZZZZZ {
         @Override
         public String toString() {
             StringBuilder s = new StringBuilder();
-            for (int i = 0; i < minKeys.size(); i++) {
-                s.append("chunk #" + i + ": ");
-                s.append(minKeys.get(i));
+            for (IndexEntry<K> entry : entries) {
+                s.append("chunk #" + entry.getNumChunk() + ": ");
+                s.append(entry.getMinKey());
                 s.append("..");
-                s.append(maxKeys.get(i));
+                s.append(entry.getMaxKey());
                 s.append(": \t");
-                IndexChunk<K> chunk = fileManager.loadIndexChunk(i);
+                IndexChunk<K> chunk = fileManager.loadIndexChunk(entry.getNumChunk());
                 s.append(chunk);
                 s.append("\n");
             }

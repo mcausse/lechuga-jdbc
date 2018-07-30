@@ -3,7 +3,6 @@ package udb2019;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.junit.Test;
 
@@ -108,7 +108,7 @@ public class ZZZZZ {
 
         @Override
         public void storeIndex(Index<String> index) {
-            Collections.sort(index.entries);
+            // Collections.sort(index.entries);
             this.index = index;
         }
 
@@ -199,19 +199,20 @@ public class ZZZZZ {
         final int maxEntriesPerChunk;
         final FileManager<K> fileManager;
 
-        final List<IndexEntry<K>> entries;
+        final Set<IndexEntry<K>> entries;
 
         public Index(int maxEntriesPerChunk, FileManager<K> fileManager) {
             super();
             this.maxEntriesPerChunk = maxEntriesPerChunk;
             this.fileManager = fileManager;
 
-            this.entries = new ArrayList<>();
+            this.entries = new TreeSet<>();
             this.entries.add(new IndexEntry<K>(null, null, 0));
-
         }
 
-        protected int find(K key) {
+        protected IndexEntry<K> find(K key) {
+
+            // TODO si esta ordenat, fer cerca binària
             for (IndexEntry<K> entry : entries) {
 
                 K minkey = entry.getMinKey();
@@ -225,7 +226,7 @@ public class ZZZZZ {
                     c++;
                 }
                 if (c == 2) {
-                    return entry.getNumChunk();
+                    return entry;
                 }
             }
             throw new RuntimeException(
@@ -236,6 +237,7 @@ public class ZZZZZ {
 
             List<Integer> r = new ArrayList<>();
 
+            // TODO si esta ordenat, fer cerca binària
             for (IndexEntry<K> entry : entries) {
 
                 K minkey = entry.getMinKey();
@@ -268,13 +270,14 @@ public class ZZZZZ {
         }
 
         public void remove(K key, long value) {
-            int numChunk = find(key);
+            int numChunk = find(key).getNumChunk();
             IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
             chunk.get(key).remove(value);
         }
 
         public void put(K key, long value) {
-            int numChunk = find(key);
+            IndexEntry<K> entry = find(key);
+            int numChunk = entry.getNumChunk();
             IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
 
             if (!chunk.entries.containsKey(key)) {
@@ -311,14 +314,14 @@ public class ZZZZZ {
                     throw new RuntimeException();
                 }
 
-                K minKey1 = entries.get(numChunk).getMinKey();
+                K minKey1 = entry.getMinKey();
                 K maxKey1 = kmed;
                 K minKey2 = kmed;
-                K maxKey2 = entries.get(numChunk).getMaxKey();
+                K maxKey2 = entry.getMaxKey();
 
                 fileManager.storeIndexChunk(numChunk, chunk1);
-                entries.get(numChunk).setMinKey(minKey1);
-                entries.get(numChunk).setMaxKey(maxKey1);
+                entry.setMinKey(minKey1);
+                entry.setMaxKey(maxKey1);
 
                 fileManager.storeIndexChunk(entries.size(), chunk2);
                 entries.add(new IndexEntry<K>(minKey2, maxKey2, entries.size()));
@@ -327,8 +330,8 @@ public class ZZZZZ {
         }
 
         public Set<Long> get(K key) {
-            int numChunk = find(key);
-            IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
+            IndexEntry<K> entry = find(key);
+            IndexChunk<K> chunk = fileManager.loadIndexChunk(entry.getNumChunk());
             if (!chunk.getEntries().containsKey(key)) {
                 throw new RuntimeException(String.valueOf(key));
             }

@@ -17,7 +17,7 @@ public class ZZZZZ {
     @Test
     public void testName() throws Exception {
 
-        int N = 50;
+        int N = 299;
         Random rnd = new Random(0L);
         long[] nums = new long[N];
         for (int i = 0; i < N; i++) {
@@ -189,7 +189,6 @@ public class ZZZZZ {
                     c++;
                 }
 
-                System.out.println("=> " + i + ": " + c);
                 if (c > 0) {
                     r.add(i);
                 }
@@ -265,7 +264,6 @@ public class ZZZZZ {
         public Map<K, Long> getIn(K fromKey, K toKey) {
             Map<K, Long> r = new LinkedHashMap<>();
             List<Integer> numChunks = find(fromKey, toKey);
-            System.out.println("=> " + numChunks);
             for (int numChunk : numChunks) {
                 IndexChunk<K> chunk = fileManager.loadIndexChunk(numChunk);
                 for (Entry<K, Long> e : chunk.getEntries().entrySet()) {

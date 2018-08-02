@@ -27,6 +27,7 @@ import org.lechuga.jdbc.util.SqlScriptExecutor;
 import org.lechuga.mapper.EntityManager;
 import org.lechuga.mapper.GenericDao;
 import org.lechuga.mapper.Order;
+import org.lechuga.mapper.Sort;
 
 import typesafecriteria.ent.Department;
 import typesafecriteria.ent.Department_;
@@ -199,8 +200,7 @@ public class TypeSafeCriteriaTest {
             }
 
             {
-                List<Employee> es = empMan.loadByProp(Employee_.sex, ESex.MALE,
-                        Arrays.asList(Order.asc(Employee_.birthDate)));
+                List<Employee> es = empMan.loadByProp(Employee_.sex, ESex.MALE, Sort.singleAsc(Employee_.birthDate));
                 assertEquals(
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
                         es.toString());
@@ -213,8 +213,11 @@ public class TypeSafeCriteriaTest {
             }
 
             {
-                List<Employee> es = empMan
-                        .loadAll(Arrays.asList(Order.asc(Employee_.birthDate), Order.desc(Employee_.dni)));
+                Sort<Employee> sort = new Sort<>();
+                sort.asc(Employee_.birthDate);
+                sort.desc(Employee_.dni);
+
+                List<Employee> es = empMan.loadAll(sort);
                 assertEquals(
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
                         es.toString());
@@ -227,7 +230,7 @@ public class TypeSafeCriteriaTest {
                                 r.isNotNull(Employee_.name), //
                                 r.between(Employee_.birthDate, "01/01/1800", "01/01/1900") //
                         ) //
-                        , Arrays.asList(Order.asc(Employee_.salary)));
+                        , Sort.singleAsc(Employee_.salary));
 
                 assertEquals(
                         "[Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]]",
@@ -240,7 +243,7 @@ public class TypeSafeCriteriaTest {
                                 r.isNotNull(Employee_.name), //
                                 r.between(Employee_.birthDate, "01/01/1800", "01/01/1900") //
                         ) //
-                        , Arrays.asList(Order.asc(Employee_.salary)));
+                        , Sort.singleAsc(Employee_.salary));
 
                 assertEquals(
                         "Employee [id=EmployeeId [idDepartment=100, dni=8P], name=jbm, salary=38000.0, birthDate=22/05/1837, sex=MALE]",

@@ -217,15 +217,25 @@ public class EntityManagerFactory implements IEntityManagerFactory {// implement
         return new Column(isPk, columnName, metaField, accessor, handler, generator);
     }
 
+    // TODO Order?
     @Override
     public <E, I, R> List<R> loadManyToMany(OneToMany<E, I> oneToMany, ManyToOne<I, R> manyToOne, E entity) {
-        return new ManyToMany<>(oneToMany, manyToOne).load(this, entity);
+        List<I> is = oneToMany.load(this, entity);
+        List<Pair<I, R>> pairs = manyToOne.load(this, is);
+        List<R> r = new ArrayList<>();
+        pairs.forEach(p -> r.add(p.getRight()));
+        return r;
     }
 
+    // TODO Order?
     @Override
     public <E, I, R> List<Pair<E, List<R>>> loadManyToMany(OneToMany<E, I> oneToMany, ManyToOne<I, R> manyToOne,
             List<E> entities) {
-        return new ManyToMany<>(oneToMany, manyToOne).load(this, entities);
+        List<Pair<E, List<R>>> r = new ArrayList<>();
+        for (E entity : entities) {
+            r.add(new Pair<>(entity, loadManyToMany(oneToMany, manyToOne, entity)));
+        }
+        return r;
     }
 
 }

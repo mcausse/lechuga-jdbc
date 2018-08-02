@@ -51,20 +51,20 @@ public class GenericDao<E, ID> {
         return em.loadUniqueBy(c);
     }
 
-    public List<E> loadBy(Criterion c, List<Order<E>> orders) {
-        return em.loadBy(c, orders);
+    public List<E> loadBy(Criterion c, Sort<E> sort) {
+        return em.loadBy(c, sort);
     }
 
-    public E loadUniqueBy(Criterion c, List<Order<E>> orders) {
-        return em.loadUniqueBy(c, orders);
+    public E loadUniqueBy(Criterion c, Sort<E> sort) {
+        return em.loadUniqueBy(c, sort);
     }
 
     public E loadById(ID idValue) throws EmptyResultException {
         return em.loadById(idValue);
     }
 
-    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, List<Order<E>> orders) {
-        return em.loadByProp(metaField, value, orders);
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, Sort<E> sort) {
+        return em.loadByProp(metaField, value, sort);
     }
 
     public <T> List<E> loadByProp(MetaField<E, T> metaField, T value) {
@@ -75,8 +75,8 @@ public class GenericDao<E, ID> {
         return em.loadUniqueByProp(metaField, value);
     }
 
-    public List<E> loadAll(List<Order<E>> orders) {
-        return em.loadAll(orders);
+    public List<E> loadAll(Sort<E> sort) {
+        return em.loadAll(sort);
     }
 
     public List<E> loadAll() {

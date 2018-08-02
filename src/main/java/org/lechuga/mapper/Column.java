@@ -41,6 +41,10 @@ public class Column {
         return metafield;
     }
 
+    public Object getPropertyValue(Object targetBean) {
+        return accessor.get(targetBean);
+    }
+
     public Object getValueForJdbc(Object entity) {
         Object javaValue = accessor.get(entity);
         return convertValueForJdbc(javaValue);

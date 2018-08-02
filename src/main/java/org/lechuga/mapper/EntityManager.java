@@ -1,7 +1,6 @@
 package org.lechuga.mapper;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.lechuga.annotated.IEntityManagerFactory;
@@ -60,24 +59,24 @@ public class EntityManager<E, ID> {
         return loadUniqueBy(c, null);
     }
 
-    public List<E> loadBy(Criterion c, List<Order<E>> orders) {
-        CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
+    public List<E> loadBy(Criterion c, Sort<E> sort) {
+        CriteriaBuilder criteria = createCriteriaTemplate(c, sort);
         return criteria.getExecutor(model.getEntityClass()).load();
     }
 
-    public E loadUniqueBy(Criterion c, List<Order<E>> orders) {
-        CriteriaBuilder criteria = createCriteriaTemplate(c, orders);
+    public E loadUniqueBy(Criterion c, Sort<E> sort) {
+        CriteriaBuilder criteria = createCriteriaTemplate(c, sort);
         return criteria.getExecutor(model.getEntityClass()).loadUnique();
     }
 
-    protected CriteriaBuilder createCriteriaTemplate(Criterion c, List<Order<E>> orders) {
+    protected CriteriaBuilder createCriteriaTemplate(Criterion c, Sort<E> sort) {
         CriteriaBuilder criteria = emf.createCriteria();
         Restrictions<E> r = emf.getRestrictions(model.getEntityClass());
         criteria.append("select {} ", r.all());
         criteria.append("from {} ", r.table());
         criteria.append("where {} ", c);
-        if (orders != null && !orders.isEmpty()) {
-            criteria.append("order by {} ", r.orderBy(orders));
+        if (sort != null && !sort.getOrders().isEmpty()) {
+            criteria.append("order by {} ", r.orderBy(sort.getOrders()));
         }
         return criteria;
     }
@@ -88,6 +87,24 @@ public class EntityManager<E, ID> {
     //
     // ==============================================
 
+    // // TODO falten mètodes similars, i els corresponents testos
+    // @SuppressWarnings("unchecked")
+    // public List<E> loadByExample(E example, Sort<E> sort) {
+    //
+    // List<Criterion> cs = new ArrayList<>();
+    // Restrictions<E> r = emf.getRestrictions(model.getEntityClass());
+    // for (Column column : this.model.getAllColumns()) {
+    // if (column.getPropertyValue(example) != null) {
+    // cs.add(r.eq((MetaField<E, Object>) column.getMetafield(), (Object)
+    // column.getPropertyValue(example)));
+    // }
+    // }
+    // Criterion c = Restrictions.and(cs); // TODO o or?
+    //
+    // CriteriaBuilder criteria = createCriteriaTemplate(c, sort);
+    // return criteria.getExecutor(model.getEntityClass()).load();
+    // }
+
     public E loadById(ID idValue) throws EmptyResultException {
         QueryObject q = model.queryForLoadById(idValue);
         try {
@@ -97,8 +114,8 @@ public class EntityManager<E, ID> {
         }
     }
 
-    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, List<Order<E>> orders) {
-        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, orders);
+    public <T> List<E> loadByProp(MetaField<E, T> metaField, T value, Sort<E> sort) {
+        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, sort);
         return facade.load(q, model.getRowMapper());
     }
 
@@ -107,12 +124,12 @@ public class EntityManager<E, ID> {
     }
 
     public <T> E loadUniqueByProp(MetaField<E, T> metaField, T value) throws UnexpectedResultException {
-        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, Collections.emptyList());
+        QueryObject q = model.queryForLoadByProp(metaField.getPropertyName(), value, null);
         return facade.loadUnique(q, model.getRowMapper());
     }
 
-    public List<E> loadAll(List<Order<E>> orders) {
-        QueryObject q = model.queryForLoadAll(orders);
+    public List<E> loadAll(Sort<E> sort) {
+        QueryObject q = model.queryForLoadAll(sort);
         return facade.load(q, model.getRowMapper());
     }
 

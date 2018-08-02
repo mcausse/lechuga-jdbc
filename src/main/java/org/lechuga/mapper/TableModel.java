@@ -96,9 +96,9 @@ public class TableModel<E> {
         return col;
     }
 
-    protected String orderBy(List<Order<E>> orders) {
+    protected String orderBy(Sort<E> sort) {
         StringJoiner r = new StringJoiner(",");
-        for (Order<E> o : orders) {
+        for (Order<E> o : sort.getOrders()) {
             Column c = findColumnByName(o.getMetaField().getPropertyName());
             r.add(c.getColumnName() + o.getOrder());
         }
@@ -129,7 +129,7 @@ public class TableModel<E> {
         return q;
     }
 
-    public QueryObject queryForLoadAll(List<Order<E>> orders) {
+    public QueryObject queryForLoadAll(Sort<E> sort) {
         Query q = new Query();
         q.append("select ");
         {
@@ -141,8 +141,8 @@ public class TableModel<E> {
         }
         q.append(" from ");
         q.append(tableName);
-        if (orders != null && !orders.isEmpty()) {
-            q.append(orderBy(orders));
+        if (sort != null && !sort.getOrders().isEmpty()) {
+            q.append(orderBy(sort));
         }
         return q;
     }
@@ -258,7 +258,7 @@ public class TableModel<E> {
         return q;
     }
 
-    public QueryObject queryForLoadByProp(String propertyName, Object value, List<Order<E>> orders) {
+    public QueryObject queryForLoadByProp(String propertyName, Object value, Sort<E> sort) {
         Query q = new Query();
         q.append("select ");
         {
@@ -278,8 +278,8 @@ public class TableModel<E> {
 
         q.addArg(c.convertValueForJdbc(value));
 
-        if (orders != null && !orders.isEmpty()) {
-            q.append(orderBy(orders));
+        if (sort != null && !sort.getOrders().isEmpty()) {
+            q.append(orderBy(sort));
         }
         return q;
     }

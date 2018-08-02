@@ -21,6 +21,7 @@ public class ComparableUtils {
             return a;
         }
     }
+
     public static <K extends Comparable<K>> K min(K a, K b) {
         if (gt(a, b)) {
             return b;

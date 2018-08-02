@@ -199,7 +199,7 @@ public class ZZZZZ {
         final int maxEntriesPerChunk;
         final FileManager<K> fileManager;
 
-        final Set<IndexEntry<K>> entries;
+        final TreeSet<IndexEntry<K>> entries;
 
         public Index(int maxEntriesPerChunk, FileManager<K> fileManager) {
             super();
@@ -213,6 +213,13 @@ public class ZZZZZ {
         protected IndexEntry<K> find(K key) {
 
             // TODO si esta ordenat, fer cerca binària
+            // List<IndexEntry<K>> l = new ArrayList<>(entries);
+            // Collections.sort(l);
+            // int i = l.size()/2;
+            // while(true) {
+            //
+            // }
+
             for (IndexEntry<K> entry : entries) {
 
                 K minkey = entry.getMinKey();

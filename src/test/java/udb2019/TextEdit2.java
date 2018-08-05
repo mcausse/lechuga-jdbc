@@ -39,7 +39,6 @@ import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Formatter;
@@ -53,8 +52,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
+import javax.swing.text.BadLocationException;
 
 public class TextEdit2 extends JFrame implements ActionListener {
 
@@ -160,41 +158,52 @@ public class TextEdit2 extends JFrame implements ActionListener {
                         this.shiftPressed = true;
                         break;
                     case KeyEvent.VK_LEFT:
-                        if (textArea.getCaretPosition() > 0)
+                        if (textArea.getCaretPosition() > 0) {
                             textArea.setCaretPosition(textArea.getCaretPosition() - 1);
+                        }
                         break;
                     case KeyEvent.VK_RIGHT:
-                        if (textArea.getCaretPosition() < textArea.getText().length())
+                        if (textArea.getCaretPosition() < textArea.getText().length()) {
                             textArea.setCaretPosition(textArea.getCaretPosition() + 1);
+                        }
                         break;
                     case KeyEvent.VK_HOME:
                         if (this.controlPressed) {
                             textArea.setCaretPosition(0);
                         } else {
-                            int c = textArea.getCaretPosition();
-                            while (textArea.getText().charAt(c) != '\n') {
-                                c--;
+                            try {
+                                int caretpos = textArea.getCaretPosition();
+                                int linenum = textArea.getLineOfOffset(caretpos);
+                                textArea.setCaretPosition(textArea.getLineStartOffset(linenum));
+                            } catch (BadLocationException ex) {
+                                throw new RuntimeException(ex);
                             }
-                            textArea.setCaretPosition(c + 1);
                         }
                         break;
                     case KeyEvent.VK_END:
                         if (this.controlPressed) {
                             textArea.setCaretPosition(textArea.getText().length());
                         } else {
-                            int c = textArea.getCaretPosition();
-                            while (textArea.getText().charAt(c) != '\n') {
-                                c++;
+                            try {
+                                int caretpos = textArea.getCaretPosition();
+                                int linenum = textArea.getLineOfOffset(caretpos);
+                                int c = textArea.getLineEndOffset(linenum) - 1;
+                                if (c >= 0) {
+                                    textArea.setCaretPosition(c);
+                                }
+                            } catch (BadLocationException ex) {
+                                throw new RuntimeException(ex);
                             }
-                            textArea.setCaretPosition(c);
                         }
                         break;
+                    default:
                     }
                     e.consume();
-                }
-                if (e.getID() == KeyEvent.KEY_TYPED)
+                } else if (e.getID() == KeyEvent.KEY_TYPED) {
+                    System.out.println(e.getKeyChar());
+                    textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
                     e.consume();
-                if (e.getID() == KeyEvent.KEY_RELEASED) {
+                } else if (e.getID() == KeyEvent.KEY_RELEASED) {
 
                     int key = e.getKeyCode();
 
@@ -212,6 +221,8 @@ public class TextEdit2 extends JFrame implements ActionListener {
                     e.consume();
                 }
             }
+
+            System.out.println(this.controlPressed + "-" + this.altPressed + "-" + this.shiftPressed);
             return false;
         }
 

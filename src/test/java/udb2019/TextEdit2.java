@@ -118,13 +118,13 @@ public class TextEdit2 extends JFrame implements ActionListener {
 
         textArea.setSelectionColor(Color.BLUE);
         textArea.setSelectedTextColor(Color.WHITE);
-        textArea.setCaretColor(Color.BLACK);
 
         loadFile("/home/mhoms/tableman.properties");
 
         textArea.setCaret(new MyCaret666());
         textArea.getCaret().setVisible(true);
         textArea.getCaret().setBlinkRate(500);
+        textArea.setCaretColor(Color.BLACK);
         textArea.setCaretPosition(0);
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new MyKeyEventDispatcher(textArea));
@@ -210,10 +210,79 @@ public class TextEdit2 extends JFrame implements ActionListener {
     static class MyKeyEventDispatcher implements KeyEventDispatcher {
 
         final JTextArea textArea;
+        final JTextAreaCursorUtils utils;
+
+        static class JTextAreaCursorUtils {
+
+            final JTextArea textArea;
+
+            public JTextAreaCursorUtils(JTextArea textArea) {
+                super();
+                this.textArea = textArea;
+            }
+
+            public int getLineNum() {
+                try {
+                    return textArea.getLineOfOffset(textArea.getCaretPosition());
+                } catch (BadLocationException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            public int getColumnNum() {
+                try {
+                    return textArea.getCaretPosition() - textArea.getLineStartOffset(getLineNum());
+                } catch (BadLocationException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            public int getLineLength() {
+                try {
+                    return textArea.getLineEndOffset(getLineNum()) - 1 - textArea.getLineStartOffset(getLineNum());
+                } catch (BadLocationException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            public void gotoLineBegin() {
+                try {
+                    textArea.setCaretPosition(textArea.getLineStartOffset(getLineNum()));
+                } catch (BadLocationException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            public void gotoLineEnd() {
+                try {
+                    textArea.setCaretPosition(textArea.getLineEndOffset(getLineNum()) - 1);
+                } catch (BadLocationException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            public void dec() {
+                textArea.setCaretPosition(textArea.getCaretPosition() - 1);
+            }
+
+            public void inc() {
+                textArea.setCaretPosition(textArea.getCaretPosition() + 1);
+            }
+
+            public void inc(int n) {
+                textArea.setCaretPosition(textArea.getCaretPosition() + n);
+            }
+
+            public int getLineCount() {
+                // -1 pq és 1-based
+                return textArea.getLineCount() - 1;
+            }
+        }
 
         public MyKeyEventDispatcher(JTextArea textArea) {
             super();
             this.textArea = textArea;
+            this.utils = new JTextAreaCursorUtils(textArea);
         }
 
         boolean controlPressed = false;
@@ -227,6 +296,8 @@ public class TextEdit2 extends JFrame implements ActionListener {
 
                     int key = e.getKeyCode();
 
+                    // XXX https://docs.oracle.com/javase/tutorial/uiswing/components/textarea.html
+
                     // System.err.println("OOO " +key);
 
                     switch (key) {
@@ -239,51 +310,106 @@ public class TextEdit2 extends JFrame implements ActionListener {
                     case KeyEvent.VK_SHIFT:
                         this.shiftPressed = true;
                         break;
+
                     case KeyEvent.VK_LEFT:
                         if (textArea.getCaretPosition() > 0) {
-                            textArea.setCaretPosition(textArea.getCaretPosition() - 1);
+                            if (this.controlPressed) {
+                                while (textArea.getCaretPosition() > 0 && !Character
+                                        .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                                    utils.dec();
+                                }
+                                while (textArea.getCaretPosition() > 0 && Character
+                                        .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                                    utils.dec();
+                                }
+                            } else {
+                                utils.dec();
+                            }
                         }
                         break;
                     case KeyEvent.VK_RIGHT:
                         if (textArea.getCaretPosition() < textArea.getText().length()) {
-                            textArea.setCaretPosition(textArea.getCaretPosition() + 1);
+
+                            if (this.controlPressed) {
+                                while (textArea.getCaretPosition() < textArea.getText().length() && !Character
+                                        .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                                    utils.inc();
+                                }
+                                while (textArea.getCaretPosition() < textArea.getText().length() && Character
+                                        .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                                    utils.inc();
+                                }
+                            } else {
+                                utils.inc();
+                            }
                         }
                         break;
+                    case KeyEvent.VK_DOWN: {
+
+                        if (utils.getLineNum() >= utils.getLineCount() - 1) {
+                            utils.gotoLineEnd();
+                            utils.inc();
+                            System.out.println("jou");
+                            break;
+                        }
+
+                        int cols = utils.getColumnNum();
+                        utils.gotoLineEnd();
+                        utils.inc();
+                        // utils.gotoLineBegin();
+                        utils.inc(Math.min(cols, utils.getLineLength()));
+                        break;
+                    }
+                    case KeyEvent.VK_UP: {
+                        if (utils.getLineNum() == 0) {
+                            break;
+                        }
+
+                        int cols = utils.getColumnNum();
+                        utils.gotoLineBegin();
+                        utils.dec();
+                        utils.gotoLineBegin();
+                        utils.inc(Math.min(cols, utils.getLineLength()));
+                        break;
+                    }
                     case KeyEvent.VK_HOME:
                         if (this.controlPressed) {
                             textArea.setCaretPosition(0);
                         } else {
-                            try {
-                                int caretpos = textArea.getCaretPosition();
-                                int linenum = textArea.getLineOfOffset(caretpos);
-                                textArea.setCaretPosition(textArea.getLineStartOffset(linenum));
-                            } catch (BadLocationException ex) {
-                                throw new RuntimeException(ex);
-                            }
+                            utils.gotoLineBegin();
                         }
                         break;
                     case KeyEvent.VK_END:
                         if (this.controlPressed) {
                             textArea.setCaretPosition(textArea.getText().length());
                         } else {
-                            try {
-                                int caretpos = textArea.getCaretPosition();
-                                int linenum = textArea.getLineOfOffset(caretpos);
-                                int c = textArea.getLineEndOffset(linenum) - 1;
-                                if (c >= 0) {
-                                    textArea.setCaretPosition(c);
-                                }
-                            } catch (BadLocationException ex) {
-                                throw new RuntimeException(ex);
-                            }
+                            utils.gotoLineEnd();
                         }
                         break;
+                    case KeyEvent.VK_DELETE: {
+                        int pos = textArea.getCaretPosition();
+                        if (pos >= textArea.getText().length()) {
+                            break;
+                        }
+                        textArea.replaceRange("", pos, pos + 1);
+                        break;
+                    }
+                    case KeyEvent.VK_BACK_SPACE: {
+                        int pos = textArea.getCaretPosition();
+                        if (pos <= 0) {
+                            break;
+                        }
+                        textArea.replaceRange("", pos - 1, pos);
+                        break;
+                    }
                     default:
                     }
                     e.consume();
                 } else if (e.getID() == KeyEvent.KEY_TYPED) {
-                    System.out.println(e.getKeyChar());
-                    textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
+                    System.out.println((int) e.getKeyChar());
+                    if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE) {
+                        textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
+                    }
                     e.consume();
                 } else if (e.getID() == KeyEvent.KEY_RELEASED) {
 
@@ -304,7 +430,8 @@ public class TextEdit2 extends JFrame implements ActionListener {
                 }
             }
 
-            System.out.println(this.controlPressed + "-" + this.altPressed + "-" + this.shiftPressed);
+            // System.out.println(this.controlPressed + "-" + this.altPressed + "-" +
+            // this.shiftPressed);
             return false;
         }
 

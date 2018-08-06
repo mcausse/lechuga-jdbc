@@ -174,56 +174,56 @@ public class TextEdit extends JFrame implements ActionListener {
 
     }
 
-//    // https://www.javalobby.org/java/forums/t19898.html
-//    static class MyCaret extends DefaultCaret {
-//
-//        /**
-//         *
-//         */
-//        private static final long serialVersionUID = -6947016439837399863L;
-//
-//        @Override
-//        public void paint(Graphics g) {
-//            // if(mode == TypingMode.INSERT) {
-//            // super.paint(g);
-//            // return;
-//            // }
-//            JTextComponent comp = getComponent();
-//
-//            int dot = getDot();
-//            Rectangle r = null;
-//            char c;
-//            try {
-//                r = comp.modelToView(dot);
-//                if (r == null) {
-//                    return;
-//                }
-//                c = comp.getText(dot, 1).charAt(0);
-//            } catch (BadLocationException e) {
-//                return;
-//            }
-//
-//            // erase provious caret
-//            if (x != r.x || y != r.y) {
-//                repaint();
-//                x = r.x;
-//                y = r.y;
-//                height = r.height;
-//            }
-//
-//            g.setColor(comp.getCaretColor());
-//            g.setXORMode(comp.getBackground());
-//
-//            width = g.getFontMetrics().charWidth(c);
-//            if (c == '\t' || c == '\n') {
-//                width = g.getFontMetrics().charWidth(' ');
-//            }
-//            System.out.println(width);
-//            if (isVisible()) {
-//                g.fillRect(r.x, r.y, width, r.height);
-//            }
-//        }
-//    };
+    // https://www.javalobby.org/java/forums/t19898.html
+    static class MyCaret extends DefaultCaret {
+
+        /**
+         *
+         */
+        private static final long serialVersionUID = -6947016439837399863L;
+
+        @Override
+        public void paint(Graphics g) {
+            // if(mode == TypingMode.INSERT) {
+            // super.paint(g);
+            // return;
+            // }
+            JTextComponent comp = getComponent();
+
+            int dot = getDot();
+            Rectangle r = null;
+            char c;
+            try {
+                r = comp.modelToView(dot);
+                if (r == null) {
+                    return;
+                }
+                c = comp.getText(dot, 1).charAt(0);
+            } catch (BadLocationException e) {
+                return;
+            }
+
+            // erase provious caret
+            if (x != r.x || y != r.y) {
+                repaint();
+                x = r.x;
+                y = r.y;
+                height = r.height;
+            }
+
+            g.setColor(comp.getCaretColor());
+            g.setXORMode(comp.getBackground());
+
+            width = g.getFontMetrics().charWidth(c);
+            if (c == '\t' || c == '\n') {
+                width = g.getFontMetrics().charWidth(' ');
+            }
+            System.out.println(width);
+            if (isVisible()) {
+                g.fillRect(r.x, r.y, width, r.height);
+            }
+        }
+    };
 
     // class MacroEvent {
     //

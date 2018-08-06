@@ -32,6 +32,7 @@ if it has been modified since the last "Save" or "Save As" operation.
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -53,6 +54,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.JTextComponent;
 
 public class TextEdit2 extends JFrame implements ActionListener {
 
@@ -119,11 +122,90 @@ public class TextEdit2 extends JFrame implements ActionListener {
 
         loadFile("/home/mhoms/tableman.properties");
 
+        textArea.setCaret(new MyCaret666());
         textArea.getCaret().setVisible(true);
+        textArea.getCaret().setBlinkRate(500);
         textArea.setCaretPosition(0);
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new MyKeyEventDispatcher(textArea));
     }
+
+    /**
+     * A customized caret appearance can be achieved by reimplementing the paint
+     * method. If the paint method is changed, the damage method should also be
+     * reimplemented to cause a repaint for the area needed to render the caret. The
+     * caret extends the Rectangle class which is used to hold the bounding box for
+     * where the caret was last rendered. This enables the caret to repaint in a
+     * thread-safe manner when the caret moves without making a call to modelToView
+     * which is unstable between model updates and view repair (i.e. the order of
+     * delivery to DocumentListeners is not guaranteed).
+     *
+     * @see bad example: https://www.javalobby.org/java/forums/t19898.html
+     */
+    static class MyCaret666 extends DefaultCaret {
+
+        private static final long serialVersionUID = -6947016439837399863L;
+
+        @Override
+        public void paint(Graphics g) {
+            // if(mode == TypingMode.INSERT) {
+            // super.paint(g);
+            // return;
+            // }
+            JTextComponent comp = getComponent();
+
+            int dot = getDot();
+            Rectangle r = null;
+            char c;
+            try {
+                r = comp.modelToView(dot);
+                if (r == null) {
+                    return;
+                }
+                c = comp.getText(dot, 1).charAt(0);
+            } catch (BadLocationException e) {
+                return;
+            }
+
+            // erase previous caret
+            if (x != r.x || y != r.y) {
+                repaint();
+                x = r.x;
+                y = r.y;
+                height = r.height;
+            }
+
+            g.setColor(comp.getCaretColor());
+            g.setXORMode(comp.getBackground());
+
+            if (c == '\t' || c == '\n') {
+                width = g.getFontMetrics().charWidth(' ');
+            } else {
+                width = g.getFontMetrics().charWidth(c);
+            }
+            if (isVisible()) {
+                g.fillRect(r.x, r.y, width, r.height);
+            }
+        }
+
+        /**
+         * Damages the area surrounding the caret to cause it to be repainted in a new
+         * location. If paint() is reimplemented, this method should also be
+         * reimplemented. This method should update the caret bounds (x, y, width, and
+         * height).
+         *
+         * @param r
+         *            the current location of the caret
+         * @see #paint
+         */
+        @Override
+        protected synchronized void damage(Rectangle r) {
+            x = r.x;
+            y = r.y;
+            height = r.height;
+            repaint();
+        }
+    };
 
     static class MyKeyEventDispatcher implements KeyEventDispatcher {
 

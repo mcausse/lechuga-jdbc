@@ -53,6 +53,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.JTextComponent;
@@ -102,7 +104,59 @@ public class TextEdit2 extends JFrame implements ActionListener {
         }
 
         // Create and display rest of GUI
-        add(new JScrollPane(textArea));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+
+        scrollPane.getViewport().addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                // TODO Auto-generated method stub
+                textArea.repaint();
+                textArea.getCaret().setVisible(true);
+                System.out.println("ch");
+                
+                textArea.revalidate();
+                textArea.repaint();
+                
+                textArea.getCaret().setBlinkRate(500);
+                textArea.setCaretColor(Color.BLACK);
+//                textArea.setCaretPosition(0);
+
+            }
+        });
+        // scrollPane.addFocusListener(new FocusListener() {
+        // @Override
+        // public void focusGained(FocusEvent e) {
+        // // textArea.requestFocus();
+        // // textArea.repaint();
+        // System.out.println("*");
+        // }
+        //
+        // @Override
+        // public void focusLost(FocusEvent e) {
+        // // textArea.requestFocus();
+        // // textArea.repaint();
+        // System.out.println("+");
+        // }
+        // });
+        // textArea.addFocusListener(new FocusListener() {
+        // @Override
+        // public void focusGained(FocusEvent e) {
+        // // textArea.requestFocus();
+        // // textArea.repaint();
+        // System.out.println("*2");
+        // }
+        //
+        // @Override
+        // public void focusLost(FocusEvent e) {
+        // // textArea.requestFocus();
+        // // textArea.repaint();
+        // System.out.println("+2");
+        // }
+        // });
+
+        add(scrollPane);
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // setSize(300, 300);
         {
@@ -119,7 +173,8 @@ public class TextEdit2 extends JFrame implements ActionListener {
         textArea.setSelectionColor(Color.BLUE);
         textArea.setSelectedTextColor(Color.WHITE);
 
-        loadFile("/home/mhoms/tableman.properties");
+        // loadFile("/home/mhoms/tableman.properties");
+        loadFile("/home/mhoms/dbman.script");
 
         textArea.setCaret(new MyCaret666());
         textArea.getCaret().setVisible(true);
@@ -314,6 +369,9 @@ public class TextEdit2 extends JFrame implements ActionListener {
                     case KeyEvent.VK_LEFT:
                         if (textArea.getCaretPosition() > 0) {
                             if (this.controlPressed) {
+                                if (textArea.getCaretPosition() > 0) {
+                                    utils.dec();
+                                }
                                 while (textArea.getCaretPosition() > 0 && !Character
                                         .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
                                     utils.dec();
@@ -331,11 +389,11 @@ public class TextEdit2 extends JFrame implements ActionListener {
                         if (textArea.getCaretPosition() < textArea.getText().length()) {
 
                             if (this.controlPressed) {
-                                while (textArea.getCaretPosition() < textArea.getText().length() && !Character
+                                while (textArea.getCaretPosition() < textArea.getText().length() - 1 && !Character
                                         .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
                                     utils.inc();
                                 }
-                                while (textArea.getCaretPosition() < textArea.getText().length() && Character
+                                while (textArea.getCaretPosition() < textArea.getText().length() - 1 && Character
                                         .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
                                     utils.inc();
                                 }
@@ -356,7 +414,6 @@ public class TextEdit2 extends JFrame implements ActionListener {
                         int cols = utils.getColumnNum();
                         utils.gotoLineEnd();
                         utils.inc();
-                        // utils.gotoLineBegin();
                         utils.inc(Math.min(cols, utils.getLineLength()));
                         break;
                     }

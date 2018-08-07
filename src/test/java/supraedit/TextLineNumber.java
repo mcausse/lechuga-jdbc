@@ -1,5 +1,5 @@
 
-package udb2019;
+package supraedit;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -280,7 +280,7 @@ public class TextLineNumber extends JPanel implements CaretListener, DocumentLis
 
                 // TODO sombra del # de fila actual
                 if (isCurrentLine(rowStartOffset)) {
-                    g.setColor(Color.GRAY);
+                    g.setColor(Color.RED);
                     g.fillRect(x, y - fontMetrics.getHeight() + fontMetrics.getHeight() / 4, stringWidth,
                             fontMetrics.getHeight());
                     g.setColor(Color.WHITE);

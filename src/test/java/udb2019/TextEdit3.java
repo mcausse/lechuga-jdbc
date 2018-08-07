@@ -60,6 +60,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.JTextComponent;
 
+import supraedit.TextLineNumber;
+
 public class TextEdit3 extends JFrame implements ActionListener {
 
     private static final long serialVersionUID = 2054269406974939700L;

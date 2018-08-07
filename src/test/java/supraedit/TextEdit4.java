@@ -1,5 +1,5 @@
 
-package udb2019;
+package supraedit;
 /* TextEdit.java - a simple text editor - Matt Mahoney
 
 This program demonstrates simple text editing, menus, and load/save
@@ -38,6 +38,10 @@ import java.awt.Insets;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -60,6 +64,11 @@ import javax.swing.UIManager;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 
+/**
+ * moviment de cursor complet, amb selecció. Accés a clipboard de sistema.
+ * Eliminació en ambdós sentits, inserció.
+ *
+ */
 public class TextEdit4 extends JFrame implements ActionListener {
 
     private static final long serialVersionUID = 2054269406974939700L;
@@ -212,6 +221,39 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 textArea.setCaretPosition(selectionStart);
                 textArea.moveCaretPosition(selectionEnd);
             }
+        }
+
+        public void copySelection() {
+            if (selection) {
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                StringSelection selection = new StringSelection(textArea.getSelectedText());
+                clipboard.setContents(selection, null);
+            }
+        }
+
+        public void cutSelection() {
+            if (selection) {
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                StringSelection selection = new StringSelection(textArea.getSelectedText());
+                clipboard.setContents(selection, null);
+
+                delete();
+            }
+        }
+
+        public void paste() {
+            if (selection) {
+                delete();
+            }
+
+            String content;
+            try {
+                content = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            textArea.insert(content, textArea.getCaretPosition());
         }
 
         /////////////////
@@ -489,7 +531,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                     case KeyEvent.VK_SHIFT:
                         if (!shiftPressed) {
                             utils.shiftPressed();
-                            System.out.println("+sel");
+                            // System.out.println("+sel");
                         }
                         this.shiftPressed = true;
                         break;
@@ -547,6 +589,34 @@ public class TextEdit4 extends JFrame implements ActionListener {
                         utils.backSpace();
                         break;
                     }
+
+                    case KeyEvent.VK_C: {
+                        if (controlPressed) {
+                            utils.copySelection();
+                        }
+                        break;
+                    }
+                    case KeyEvent.VK_INSERT: {
+                        if (controlPressed) {
+                            utils.copySelection();
+                        } else if (shiftPressed) {
+                            utils.paste();
+                        }
+                        break;
+                    }
+                    case KeyEvent.VK_X: {
+                        if (controlPressed) {
+                            utils.cutSelection();
+                        }
+                        break;
+                    }
+                    case KeyEvent.VK_V: {
+                        if (controlPressed) {
+                            utils.paste();
+                        }
+                        break;
+                    }
+
                     default:
                     }
 
@@ -554,7 +624,9 @@ public class TextEdit4 extends JFrame implements ActionListener {
                     e.consume();
 
                 } else if (e.getID() == KeyEvent.KEY_TYPED) {
-                    // System.out.println((int) e.getKeyChar());
+
+                    // System.out.println(e.getKeyChar()+"--"+KeyEvent.VK_C);
+
                     if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE
                             && e.getKeyChar() != KeyEvent.VK_ESCAPE && !controlPressed) {
                         // textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
@@ -576,7 +648,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                     case KeyEvent.VK_SHIFT:
                         if (shiftPressed) {
                             utils.shiftReleased();
-                            System.out.println("-sel");
+                            // System.out.println("-sel");
                         }
                         this.shiftPressed = false;
                         break;

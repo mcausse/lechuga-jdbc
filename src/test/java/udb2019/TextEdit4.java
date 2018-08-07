@@ -160,77 +160,199 @@ public class TextEdit4 extends JFrame implements ActionListener {
         });
     }
 
+    static class JTextAreaCursorUtils {
+
+        final JTextArea textArea;
+
+        public JTextAreaCursorUtils(JTextArea textArea) {
+            super();
+            this.textArea = textArea;
+        }
+
+        private int getLineNum() {
+            try {
+                return textArea.getLineOfOffset(textArea.getCaretPosition());
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private int getColumnNum() {
+            try {
+                return textArea.getCaretPosition() - textArea.getLineStartOffset(getLineNum());
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private int getLineLength() {
+            try {
+                return textArea.getLineEndOffset(getLineNum()) - 1 - textArea.getLineStartOffset(getLineNum());
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private void gotoLineBegin() {
+            try {
+                textArea.setCaretPosition(textArea.getLineStartOffset(getLineNum()));
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private void gotoLineEnd() {
+            try {
+                textArea.setCaretPosition(textArea.getLineEndOffset(getLineNum()) - 1);
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private void dec() {
+            textArea.setCaretPosition(textArea.getCaretPosition() - 1);
+        }
+
+        private void inc() {
+            textArea.setCaretPosition(textArea.getCaretPosition() + 1);
+        }
+
+        private void inc(int n) {
+            textArea.setCaretPosition(textArea.getCaretPosition() + n);
+        }
+
+        private int getLineCount() {
+            // -1 pq és 1-based
+            return textArea.getLineCount() - 1;
+        }
+
+        /////////////////
+
+        public void moveLeft(int n) {
+            for (int i = 0; i < n; i++) {
+                if (textArea.getCaretPosition() > 0) {
+                    dec();
+                }
+            }
+        }
+
+        public void moveRight(int n) {
+            for (int i = 0; i < n; i++) {
+                if (textArea.getCaretPosition() < textArea.getText().length()) {
+                    inc();
+                }
+            }
+        }
+
+        public void moveLeftWords(int n) {
+            for (int i = 0; i < n; i++) {
+                if (textArea.getCaretPosition() > 0) {
+                    dec();
+                    while (textArea.getCaretPosition() > 0
+                            && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                        dec();
+                    }
+                    while (textArea.getCaretPosition() > 0
+                            && Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                        dec();
+                    }
+                    inc();
+                }
+            }
+        }
+
+        public void moveRightWords(int n) {
+            for (int i = 0; i < n; i++) {
+                if (textArea.getCaretPosition() < textArea.getText().length()) {
+                    while (textArea.getCaretPosition() < textArea.getText().length() - 1
+                            && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                        inc();
+                    }
+                    while (textArea.getCaretPosition() < textArea.getText().length() - 1
+                            && Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                        inc();
+                    }
+                }
+            }
+        }
+
+        public void moveDown() {
+            if (getLineNum() >= getLineCount() - 1) {
+                gotoLineEnd();
+                inc();
+                return;
+            }
+            int cols = getColumnNum();
+            gotoLineEnd();
+            inc();
+            inc(Math.min(cols, getLineLength()));
+        }
+
+        public void moveUp() {
+            if (getLineNum() == 0) {
+                return;
+            }
+            int cols = getColumnNum();
+            gotoLineBegin();
+            dec();
+            gotoLineBegin();
+            inc(Math.min(cols, getLineLength()));
+        }
+
+        public void pageUp(int n) {
+            for (int i = 0; i < n; i++) {
+                moveUp();
+            }
+        }
+
+        public void pageDown(int n) {
+            for (int i = 0; i < n; i++) {
+                moveDown();
+            }
+        }
+
+        public void bufferHome() {
+            textArea.setCaretPosition(0);
+        }
+
+        public void bufferEnd() {
+            textArea.setCaretPosition(textArea.getText().length());
+        }
+
+        public void lineHome() {
+            gotoLineBegin();
+        }
+
+        public void lineEnd() {
+            gotoLineEnd();
+        }
+
+        public void delete(int n) {
+            for (int i = 0; i < n; i++) {
+                int pos = textArea.getCaretPosition();
+                if (pos >= textArea.getText().length()) {
+                    break;
+                }
+                textArea.replaceRange("", pos, pos + 1);
+            }
+        }
+
+        public void backSpace(int n) {
+            for (int i = 0; i < n; i++) {
+                int pos = textArea.getCaretPosition();
+                if (pos <= 0) {
+                    break;
+                }
+                textArea.replaceRange("", pos - 1, pos);
+            }
+        }
+
+    }
+
     static class MyKeyEventDispatcher implements KeyEventDispatcher {
 
         final JTextArea textArea;
         final JTextAreaCursorUtils utils;
-
-        static class JTextAreaCursorUtils {
-
-            final JTextArea textArea;
-
-            public JTextAreaCursorUtils(JTextArea textArea) {
-                super();
-                this.textArea = textArea;
-            }
-
-            public int getLineNum() {
-                try {
-                    return textArea.getLineOfOffset(textArea.getCaretPosition());
-                } catch (BadLocationException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            public int getColumnNum() {
-                try {
-                    return textArea.getCaretPosition() - textArea.getLineStartOffset(getLineNum());
-                } catch (BadLocationException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            public int getLineLength() {
-                try {
-                    return textArea.getLineEndOffset(getLineNum()) - 1 - textArea.getLineStartOffset(getLineNum());
-                } catch (BadLocationException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            public void gotoLineBegin() {
-                try {
-                    textArea.setCaretPosition(textArea.getLineStartOffset(getLineNum()));
-                } catch (BadLocationException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            public void gotoLineEnd() {
-                try {
-                    textArea.setCaretPosition(textArea.getLineEndOffset(getLineNum()) - 1);
-                } catch (BadLocationException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            public void dec() {
-                textArea.setCaretPosition(textArea.getCaretPosition() - 1);
-            }
-
-            public void inc() {
-                textArea.setCaretPosition(textArea.getCaretPosition() + 1);
-            }
-
-            public void inc(int n) {
-                textArea.setCaretPosition(textArea.getCaretPosition() + n);
-            }
-
-            public int getLineCount() {
-                // -1 pq és 1-based
-                return textArea.getLineCount() - 1;
-            }
-        }
 
         public MyKeyEventDispatcher(JTextArea textArea) {
             super();
@@ -265,129 +387,56 @@ public class TextEdit4 extends JFrame implements ActionListener {
                         break;
 
                     case KeyEvent.VK_LEFT:
-                        if (textArea.getCaretPosition() > 0) {
-                            if (this.controlPressed) {
-                                if (textArea.getCaretPosition() > 0) {
-                                    utils.dec();
-                                }
-                                while (textArea.getCaretPosition() > 0 && !Character
-                                        .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                                    utils.dec();
-                                }
-                                while (textArea.getCaretPosition() > 0 && Character
-                                        .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                                    utils.dec();
-                                }
-                            } else {
-                                utils.dec();
-                            }
+                        if (this.controlPressed) {
+                            utils.moveLeftWords(1);
+                        } else {
+                            utils.moveLeft(1);
                         }
                         break;
                     case KeyEvent.VK_RIGHT:
-                        if (textArea.getCaretPosition() < textArea.getText().length()) {
-
-                            if (this.controlPressed) {
-                                while (textArea.getCaretPosition() < textArea.getText().length() - 1 && !Character
-                                        .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                                    utils.inc();
-                                }
-                                while (textArea.getCaretPosition() < textArea.getText().length() - 1 && Character
-                                        .isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                                    utils.inc();
-                                }
-                            } else {
-                                utils.inc();
-                            }
+                        if (this.controlPressed) {
+                            utils.moveRightWords(1);
+                        } else {
+                            utils.moveRight(1);
                         }
                         break;
                     case KeyEvent.VK_DOWN: {
-
-                        if (utils.getLineNum() >= utils.getLineCount() - 1) {
-                            utils.gotoLineEnd();
-                            utils.inc();
-                            break;
-                        }
-
-                        int cols = utils.getColumnNum();
-                        utils.gotoLineEnd();
-                        utils.inc();
-                        utils.inc(Math.min(cols, utils.getLineLength()));
+                        utils.moveDown();
                         break;
                     }
                     case KeyEvent.VK_UP: {
-                        if (utils.getLineNum() == 0) {
-                            break;
-                        }
-
-                        int cols = utils.getColumnNum();
-                        utils.gotoLineBegin();
-                        utils.dec();
-                        utils.gotoLineBegin();
-                        utils.inc(Math.min(cols, utils.getLineLength()));
+                        utils.moveUp();
                         break;
                     }
 
                     case KeyEvent.VK_PAGE_UP: {
-                        for (int i = 0; i < 20; i++) {
-
-                            // TODO
-                            if (utils.getLineNum() == 0) {
-                                break;
-                            }
-
-                            int cols = utils.getColumnNum();
-                            utils.gotoLineBegin();
-                            utils.dec();
-                            utils.gotoLineBegin();
-                            utils.inc(Math.min(cols, utils.getLineLength()));
-                        }
+                        utils.pageUp(20);
                         break;
                     }
                     case KeyEvent.VK_PAGE_DOWN: {
-                        for (int i = 0; i < 20; i++) {
-
-                            // TODO
-                            if (utils.getLineNum() >= utils.getLineCount() - 1) {
-                                utils.gotoLineEnd();
-                                utils.inc();
-                                break;
-                            }
-
-                            int cols = utils.getColumnNum();
-                            utils.gotoLineEnd();
-                            utils.inc();
-                            utils.inc(Math.min(cols, utils.getLineLength()));
-                        }
+                        utils.pageDown(20);
                         break;
                     }
                     case KeyEvent.VK_HOME:
                         if (this.controlPressed) {
-                            textArea.setCaretPosition(0);
+                            utils.bufferHome();
                         } else {
-                            utils.gotoLineBegin();
+                            utils.lineHome();
                         }
                         break;
                     case KeyEvent.VK_END:
                         if (this.controlPressed) {
-                            textArea.setCaretPosition(textArea.getText().length());
+                            utils.bufferEnd();
                         } else {
-                            utils.gotoLineEnd();
+                            utils.lineEnd();
                         }
                         break;
                     case KeyEvent.VK_DELETE: {
-                        int pos = textArea.getCaretPosition();
-                        if (pos >= textArea.getText().length()) {
-                            break;
-                        }
-                        textArea.replaceRange("", pos, pos + 1);
+                        utils.delete(1);
                         break;
                     }
                     case KeyEvent.VK_BACK_SPACE: {
-                        int pos = textArea.getCaretPosition();
-                        if (pos <= 0) {
-                            break;
-                        }
-                        textArea.replaceRange("", pos - 1, pos);
+                        utils.backSpace(1);
                         break;
                     }
                     default:

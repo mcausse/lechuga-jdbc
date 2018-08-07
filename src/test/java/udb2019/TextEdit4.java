@@ -167,10 +167,79 @@ public class TextEdit4 extends JFrame implements ActionListener {
 
         final JTextArea textArea;
 
+        boolean shift = false;
+        boolean selection = false;
+
+        Integer selectionStart = null;
+        Integer selectionEnd = null;
+
         public JTextAreaActionsManager(JTextArea textArea) {
             super();
             this.textArea = textArea;
         }
+
+        /////////////////
+
+        public void shiftPressed() {
+            shift = true;
+        }
+
+        public void shiftReleased() {
+            shift = false;
+        }
+
+        public void beforeCursorMoves() {
+            if (shift) {
+                if (!selection) {
+                    selection = true;
+                    selectionStart = textArea.getCaretPosition();
+                    selectionEnd = textArea.getCaretPosition();
+
+                    textArea.setCaretPosition(selectionStart);
+                    textArea.moveCaretPosition(selectionEnd);
+                }
+            } else {
+                selection = false;
+            }
+        }
+
+        public void afterCursorMoves() {
+            if (selection) {
+                selectionEnd = textArea.getCaretPosition();
+
+                textArea.setCaretPosition(selectionStart);
+                textArea.moveCaretPosition(selectionEnd);
+            }
+        }
+
+        // public void updateSelection(boolean textChanged) {
+        // if(shift) {
+        // selectionEnd = textArea.getCaretPosition();
+        // }
+        // }
+        //
+        // public void invalidateSelection() {
+        // if (selectionStart != null && selectionEnd != null) {
+        // textArea.setCaretPosition(selectionEnd);
+        // textArea.moveCaretPosition(selectionEnd);
+        // }
+        // selectionStart = null;
+        // selectionEnd = null;
+        // }
+        //
+        // public void updateSelection() {
+        // if (shift) {
+        // this.selectionEnd = textArea.getCaretPosition();
+        // if (selectionStart != null && selectionEnd != null) {
+        // textArea.setCaretPosition(selectionStart);
+        // textArea.moveCaretPosition(selectionEnd);
+        // }
+        // } else {
+        // invalidateSelection();
+        // }
+        // }
+
+        /////////////////
 
         private int getLineNum() {
             try {
@@ -232,22 +301,27 @@ public class TextEdit4 extends JFrame implements ActionListener {
         /////////////////
 
         public void moveLeft(int n) {
+            beforeCursorMoves();
             for (int i = 0; i < n; i++) {
                 if (textArea.getCaretPosition() > 0) {
                     dec();
                 }
             }
+            afterCursorMoves();
         }
 
         public void moveRight(int n) {
+            beforeCursorMoves();
             for (int i = 0; i < n; i++) {
                 if (textArea.getCaretPosition() < textArea.getText().length()) {
                     inc();
                 }
             }
+            afterCursorMoves();
         }
 
         public void moveLeftWords(int n) {
+            beforeCursorMoves();
             for (int i = 0; i < n; i++) {
                 if (textArea.getCaretPosition() > 0) {
                     dec();
@@ -262,9 +336,11 @@ public class TextEdit4 extends JFrame implements ActionListener {
                     inc();
                 }
             }
+            afterCursorMoves();
         }
 
         public void moveRightWords(int n) {
+            beforeCursorMoves();
             for (int i = 0; i < n; i++) {
                 if (textArea.getCaretPosition() < textArea.getText().length()) {
                     while (textArea.getCaretPosition() < textArea.getText().length() - 1
@@ -277,9 +353,11 @@ public class TextEdit4 extends JFrame implements ActionListener {
                     }
                 }
             }
+            afterCursorMoves();
         }
 
         public void moveDown() {
+            beforeCursorMoves();
             if (getLineNum() >= getLineCount() - 1) {
                 gotoLineEnd();
                 inc();
@@ -289,9 +367,11 @@ public class TextEdit4 extends JFrame implements ActionListener {
             gotoLineEnd();
             inc();
             inc(Math.min(cols, getLineLength()));
+            afterCursorMoves();
         }
 
         public void moveUp() {
+            beforeCursorMoves();
             if (getLineNum() == 0) {
                 return;
             }
@@ -300,53 +380,87 @@ public class TextEdit4 extends JFrame implements ActionListener {
             dec();
             gotoLineBegin();
             inc(Math.min(cols, getLineLength()));
+            afterCursorMoves();
         }
 
         public void pageUp(int n) {
+            beforeCursorMoves();
             for (int i = 0; i < n; i++) {
                 moveUp();
             }
+            afterCursorMoves();
         }
 
         public void pageDown(int n) {
+            beforeCursorMoves();
             for (int i = 0; i < n; i++) {
                 moveDown();
             }
+            afterCursorMoves();
         }
 
         public void bufferHome() {
+            beforeCursorMoves();
             textArea.setCaretPosition(0);
+            afterCursorMoves();
         }
 
         public void bufferEnd() {
+            beforeCursorMoves();
             textArea.setCaretPosition(textArea.getText().length());
+            afterCursorMoves();
         }
 
         public void lineHome() {
+            beforeCursorMoves();
             gotoLineBegin();
+            afterCursorMoves();
         }
 
         public void lineEnd() {
+            beforeCursorMoves();
             gotoLineEnd();
+            afterCursorMoves();
         }
 
-        public void delete(int n) {
-            for (int i = 0; i < n; i++) {
+        public void delete() {
+            if (selection) {
+                int min = Math.min(selectionStart, selectionEnd);
+                int max = Math.max(selectionStart, selectionEnd);
+                textArea.replaceRange("", min, max);
+                textArea.setCaretPosition(min);
+            } else {
                 int pos = textArea.getCaretPosition();
                 if (pos >= textArea.getText().length()) {
-                    break;
+                    return;
                 }
                 textArea.replaceRange("", pos, pos + 1);
             }
         }
 
-        public void backSpace(int n) {
-            for (int i = 0; i < n; i++) {
+        public void backSpace() {
+            if (selection) {
+                int min = Math.min(selectionStart, selectionEnd);
+                int max = Math.max(selectionStart, selectionEnd);
+                textArea.replaceRange("", min, max);
+                textArea.setCaretPosition(min);
+            } else {
                 int pos = textArea.getCaretPosition();
                 if (pos <= 0) {
-                    break;
+                    return;
                 }
                 textArea.replaceRange("", pos - 1, pos);
+            }
+        }
+
+        public void insert(String text, int atPosition) {
+            if (selection) {
+                int min = Math.min(selectionStart, selectionEnd);
+                int max = Math.max(selectionStart, selectionEnd);
+                textArea.replaceRange(text, min, max);
+                textArea.setCaretPosition(min + text.length());
+            } else {
+                textArea.insert(text, atPosition);
             }
         }
 
@@ -366,9 +480,6 @@ public class TextEdit4 extends JFrame implements ActionListener {
         boolean controlPressed = false;
         boolean altPressed = false;
         boolean shiftPressed = false;
-
-        Integer selectionStart = null;
-        Integer selectionEnd = null;
 
         @Override
         public boolean dispatchKeyEvent(KeyEvent e) {
@@ -390,8 +501,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                         break;
                     case KeyEvent.VK_SHIFT:
                         if (!shiftPressed) {
-                            selectionStart = textArea.getCaretPosition();
-                            selectionEnd = textArea.getCaretPosition();
+                            utils.shiftPressed();
                             System.out.println("+sel");
                         }
                         this.shiftPressed = true;
@@ -443,18 +553,14 @@ public class TextEdit4 extends JFrame implements ActionListener {
                         }
                         break;
                     case KeyEvent.VK_DELETE: {
-                        utils.delete(1);
+                        utils.delete();
                         break;
                     }
                     case KeyEvent.VK_BACK_SPACE: {
-                        utils.backSpace(1);
+                        utils.backSpace();
                         break;
                     }
                     default:
-                    }
-
-                    if (shiftPressed) {
-                        selectionEnd = textArea.getCaretPosition();
                     }
 
                     // if(key!=KeyEvent.VK_SHIFT)
@@ -464,8 +570,10 @@ public class TextEdit4 extends JFrame implements ActionListener {
                     // System.out.println((int) e.getKeyChar());
                     if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE
                             && !controlPressed) {
-                        textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
+                        // textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
+                        utils.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
                     }
+
                     e.consume();
                 } else if (e.getID() == KeyEvent.KEY_RELEASED) {
 
@@ -480,8 +588,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                         break;
                     case KeyEvent.VK_SHIFT:
                         if (shiftPressed) {
-                            selectionStart = null;
-                            selectionEnd = null;
+                            utils.shiftReleased();
                             System.out.println("-sel");
                         }
                         this.shiftPressed = false;
@@ -491,28 +598,6 @@ public class TextEdit4 extends JFrame implements ActionListener {
                     // if(key!=KeyEvent.VK_SHIFT)
                     e.consume();
                 }
-            }
-
-            if (selectionStart != null && selectionEnd != null) {
-                // int min;
-                // int max;
-                //
-                // if (selectionStart < selectionEnd) {
-                // min = selectionStart;
-                // max = selectionEnd;
-                // } else {
-                // min = selectionEnd;
-                // max = selectionStart;
-                // }
-
-                // textArea.setCaretPosition(selectionEnd);
-                // textArea.getCaret().setVisible(false);
-                // textArea.setSelectionStart(min);
-                // textArea.setSelectionEnd(max);
-                // textArea.getCaret().setVisible(true);
-                // textArea.select(min, max);
-                textArea.setCaretPosition(selectionStart);
-                textArea.moveCaretPosition(selectionEnd);
             }
 
             // System.out.println(this.controlPressed + "-" + this.altPressed + "-" +

@@ -49,6 +49,11 @@ public class CaretShape extends JEditorPane {
 
         Keymap kMap = this.getKeymap();
         Action a = new AbstractAction() {
+            /**
+             *
+             */
+            private static final long serialVersionUID = -2384700975480276882L;
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 setInsertMode(!isInsertMode());

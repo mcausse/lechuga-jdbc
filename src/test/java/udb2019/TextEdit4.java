@@ -121,6 +121,9 @@ public class TextEdit4 extends JFrame implements ActionListener {
         add(scrollPane);
 
         TextLineNumber tln = new TextLineNumber(textArea);
+        // tln.setBorder(10);
+        // tln.setBorderGap(0);
+        tln.setMinimumDisplayDigits(1);
         scrollPane.setRowHeaderView(tln);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -147,7 +150,6 @@ public class TextEdit4 extends JFrame implements ActionListener {
         textArea.setCaret(c);
 
         textArea.getCaret().setBlinkRate(500);
-
         textArea.setCaretColor(cursorColor);
         textArea.setCaretPosition(0);
 
@@ -411,6 +413,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 int max = Math.max(selectionStart, selectionEnd);
                 textArea.replaceRange("", min, max);
                 textArea.setCaretPosition(min);
+                selection = false;
             } else {
                 int pos = textArea.getCaretPosition();
                 if (pos >= textArea.getText().length()) {
@@ -426,6 +429,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 int max = Math.max(selectionStart, selectionEnd);
                 textArea.replaceRange("", min, max);
                 textArea.setCaretPosition(min);
+                selection = false;
             } else {
                 int pos = textArea.getCaretPosition();
                 if (pos <= 0) {
@@ -441,6 +445,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 int max = Math.max(selectionStart, selectionEnd);
                 textArea.replaceRange(text, min, max);
                 textArea.setCaretPosition(min + text.length());
+                selection = false;
             } else {
                 textArea.insert(text, atPosition);
             }
@@ -551,7 +556,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 } else if (e.getID() == KeyEvent.KEY_TYPED) {
                     // System.out.println((int) e.getKeyChar());
                     if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE
-                            && !controlPressed) {
+                            && e.getKeyChar() != KeyEvent.VK_ESCAPE && !controlPressed) {
                         // textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
                         utils.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
                     }

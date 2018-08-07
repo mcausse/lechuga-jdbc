@@ -68,6 +68,10 @@ import javax.swing.text.DefaultCaret;
 /**
  * moviment de cursor complet, amb selecció. Accés a clipboard de sistema.
  * Eliminació en ambdós sentits, inserció.
+ * 
+ * //TODO selecció per mouse
+ * 
+ * //TODO undo
  *
  */
 public class TextEdit4 extends JFrame implements ActionListener {
@@ -154,6 +158,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
         // loadFile("/home/mhoms/tableman.properties");
         // loadFile("d:/c.properties");
         loadFile("/home/mhoms/dbman.script");
+        // loadFile("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
 
         UIManager.put("Caret.width", 3);
         DefaultCaret c = new DefaultCaret();
@@ -200,7 +205,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
             shift = false;
         }
 
-        public void beforeCursorMoves() {
+        private void beforeCursorMoves() {
             if (shift) {
                 if (!selection) {
                     selection = true;
@@ -215,7 +220,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
             }
         }
 
-        public void afterCursorMoves() {
+        private void afterCursorMoves() {
             if (selection) {
                 selectionEnd = textArea.getCaretPosition();
 

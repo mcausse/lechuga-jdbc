@@ -403,6 +403,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
             if (getLineNum() >= getLineCount() - 1) {
                 gotoLineEnd();
                 inc();
+                afterCursorMoves();
                 return;
             }
             int cols = getColumnNum();
@@ -415,6 +416,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
         public void moveUp() {
             beforeCursorMoves();
             if (getLineNum() == 0) {
+                afterCursorMoves();
                 return;
             }
             int cols = getColumnNum();

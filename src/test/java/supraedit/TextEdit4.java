@@ -42,6 +42,7 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -246,14 +247,15 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 delete();
             }
 
-            String content;
             try {
-                content = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+                String content = (String) Toolkit.getDefaultToolkit().getSystemClipboard()
+                        .getData(DataFlavor.stringFlavor);
+                textArea.insert(content, textArea.getCaretPosition());
+            } catch (UnsupportedFlavorException e) {
+                // there is nothing in the clipboard
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
-            textArea.insert(content, textArea.getCaretPosition());
         }
 
         /////////////////
@@ -292,10 +294,20 @@ public class TextEdit4 extends JFrame implements ActionListener {
 
         private void gotoLineEnd() {
             try {
-                int pos = textArea.getLineEndOffset(getLineNum()) - 1;
+
+                int pos;
+
+                if (getLineNum() == getLineCount()) {
+                    pos = getTextLength() - 1;
+                } else {
+                    pos = textArea.getLineEndOffset(getLineNum()) - 1;
+                }
                 if (pos > 0) {
                     textArea.setCaretPosition(pos);
                 }
+
+                textArea.setCaretPosition(pos);
+
             } catch (BadLocationException e) {
                 throw new RuntimeException(e);
             }
@@ -308,7 +320,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
         }
 
         private void inc() {
-            if (textArea.getCaretPosition() + 1 < textArea.getText().length()) {
+            if (textArea.getCaretPosition() + 1 < getTextLength()) {
                 textArea.setCaretPosition(textArea.getCaretPosition() + 1);
             }
         }
@@ -322,6 +334,10 @@ public class TextEdit4 extends JFrame implements ActionListener {
         private int getLineCount() {
             // -1 pq és 1-based
             return textArea.getLineCount() - 1;
+        }
+
+        private int getTextLength() {
+            return textArea.getDocument().getLength() + 1;
         }
 
         /////////////////
@@ -339,7 +355,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
         public void moveRight(int n) {
             beforeCursorMoves();
             for (int i = 0; i < n; i++) {
-                if (textArea.getCaretPosition() < textArea.getText().length()) {
+                if (textArea.getCaretPosition() < getTextLength()) {
                     inc();
                 }
             }
@@ -368,12 +384,12 @@ public class TextEdit4 extends JFrame implements ActionListener {
         public void moveRightWords(int n) {
             beforeCursorMoves();
             for (int i = 0; i < n; i++) {
-                if (textArea.getCaretPosition() < textArea.getText().length()) {
-                    while (textArea.getCaretPosition() < textArea.getText().length() - 1
+                if (textArea.getCaretPosition() < getTextLength()) {
+                    while (textArea.getCaretPosition() < getTextLength() - 1
                             && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
                         inc();
                     }
-                    while (textArea.getCaretPosition() < textArea.getText().length() - 1
+                    while (textArea.getCaretPosition() < getTextLength() - 1
                             && Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
                         inc();
                     }
@@ -433,7 +449,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
 
         public void bufferEnd() {
             beforeCursorMoves();
-            textArea.setCaretPosition(textArea.getText().length());
+            textArea.setCaretPosition(getTextLength() - 1);
             afterCursorMoves();
         }
 
@@ -458,7 +474,7 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 selection = false;
             } else {
                 int pos = textArea.getCaretPosition();
-                if (pos >= textArea.getText().length()) {
+                if (pos + 1 >= getTextLength()) {
                     return;
                 }
                 textArea.replaceRange("", pos, pos + 1);

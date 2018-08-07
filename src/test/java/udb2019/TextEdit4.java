@@ -156,15 +156,18 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 setVisible(true);
                 textArea.getCaret().setVisible(true);
                 textArea.requestFocus();
+
+                // textArea.setSelectionStart(10);
+                // textArea.setSelectionEnd(20);
             }
         });
     }
 
-    static class JTextAreaCursorUtils {
+    static class JTextAreaActionsManager {
 
         final JTextArea textArea;
 
-        public JTextAreaCursorUtils(JTextArea textArea) {
+        public JTextAreaActionsManager(JTextArea textArea) {
             super();
             this.textArea = textArea;
         }
@@ -352,17 +355,20 @@ public class TextEdit4 extends JFrame implements ActionListener {
     static class MyKeyEventDispatcher implements KeyEventDispatcher {
 
         final JTextArea textArea;
-        final JTextAreaCursorUtils utils;
+        final JTextAreaActionsManager utils;
 
         public MyKeyEventDispatcher(JTextArea textArea) {
             super();
             this.textArea = textArea;
-            this.utils = new JTextAreaCursorUtils(textArea);
+            this.utils = new JTextAreaActionsManager(textArea);
         }
 
         boolean controlPressed = false;
         boolean altPressed = false;
         boolean shiftPressed = false;
+
+        Integer selectionStart = null;
+        Integer selectionEnd = null;
 
         @Override
         public boolean dispatchKeyEvent(KeyEvent e) {
@@ -383,6 +389,11 @@ public class TextEdit4 extends JFrame implements ActionListener {
                         this.altPressed = true;
                         break;
                     case KeyEvent.VK_SHIFT:
+                        if (!shiftPressed) {
+                            selectionStart = textArea.getCaretPosition();
+                            selectionEnd = textArea.getCaretPosition();
+                            System.out.println("+sel");
+                        }
                         this.shiftPressed = true;
                         break;
 
@@ -441,10 +452,18 @@ public class TextEdit4 extends JFrame implements ActionListener {
                     }
                     default:
                     }
+
+                    if (shiftPressed) {
+                        selectionEnd = textArea.getCaretPosition();
+                    }
+
+                    // if(key!=KeyEvent.VK_SHIFT)
                     e.consume();
+
                 } else if (e.getID() == KeyEvent.KEY_TYPED) {
                     // System.out.println((int) e.getKeyChar());
-                    if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE) {
+                    if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE
+                            && !controlPressed) {
                         textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
                     }
                     e.consume();
@@ -460,11 +479,40 @@ public class TextEdit4 extends JFrame implements ActionListener {
                         this.altPressed = false;
                         break;
                     case KeyEvent.VK_SHIFT:
+                        if (shiftPressed) {
+                            selectionStart = null;
+                            selectionEnd = null;
+                            System.out.println("-sel");
+                        }
                         this.shiftPressed = false;
                         break;
                     }
+
+                    // if(key!=KeyEvent.VK_SHIFT)
                     e.consume();
                 }
+            }
+
+            if (selectionStart != null && selectionEnd != null) {
+                // int min;
+                // int max;
+                //
+                // if (selectionStart < selectionEnd) {
+                // min = selectionStart;
+                // max = selectionEnd;
+                // } else {
+                // min = selectionEnd;
+                // max = selectionStart;
+                // }
+
+                // textArea.setCaretPosition(selectionEnd);
+                // textArea.getCaret().setVisible(false);
+                // textArea.setSelectionStart(min);
+                // textArea.setSelectionEnd(max);
+                // textArea.getCaret().setVisible(true);
+                // textArea.select(min, max);
+                textArea.setCaretPosition(selectionStart);
+                textArea.moveCaretPosition(selectionEnd);
             }
 
             // System.out.println(this.controlPressed + "-" + this.altPressed + "-" +

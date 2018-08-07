@@ -3,7 +3,7 @@ package udb2019;
 Java Swing, 2nd Edition
 By Marc Loy, Robert Eckstein, Dave Wood, James Elliott, Brian Cole
 ISBN: 0-596-00408-7
-Publisher: O'Reilly 
+Publisher: O'Reilly
 */
 
 // CornerCaret.java
@@ -23,25 +23,34 @@ import javax.swing.text.JTextComponent;
 
 public class CornerCaret extends DefaultCaret {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = -2872048343566694260L;
+
     public CornerCaret() {
         setBlinkRate(500); // half a second
     }
 
+    @Override
     protected synchronized void damage(Rectangle r) {
-        if (r == null)
+        if (r == null) {
             return;
+        }
         // give values to x,y,width,height (inherited from java.awt.Rectangle)
         x = r.x;
-        y = r.y + (r.height * 4 / 5 - 3);
+        y = r.y + r.height * 4 / 5 - 3;
         width = 5;
         height = 5;
         repaint(); // calls getComponent().repaint(x, y, width, height)
     }
 
+    @Override
     public void paint(Graphics g) {
         JTextComponent comp = getComponent();
-        if (comp == null)
+        if (comp == null) {
             return;
+        }
 
         int dot = getDot();
         Rectangle r = null;
@@ -50,14 +59,15 @@ public class CornerCaret extends DefaultCaret {
         } catch (BadLocationException e) {
             return;
         }
-        if (r == null)
+        if (r == null) {
             return;
+        }
 
-//        int caretWidth=textArea.getFontMetrics(textArea.getFont()).charWidth(' ');
-        
+        // int caretWidth=textArea.getFontMetrics(textArea.getFont()).charWidth(' ');
+
         int dist = r.height * 4 / 5 - 3; // will be distance from r.y to top
 
-        if ((x != r.x) || (y != r.y + dist)) {
+        if (x != r.x || y != r.y + dist) {
             // paint() has been called directly, without a previous call to
             // damage(), so do some cleanup. (This happens, for example, when
             // the
@@ -75,7 +85,7 @@ public class CornerCaret extends DefaultCaret {
             // pixels
             g.drawLine(r.x, r.y + dist + 4, r.x + 4, r.y + dist + 4); // 5 horiz
             // px
-            
+
             g.setXORMode(comp.getBackground());
             g.fillRect(r.x, r.y + dist, r.x + 4, r.y + dist + 4);
         }

@@ -1,3 +1,4 @@
+
 package udb2019;
 /* TextEdit.java - a simple text editor - Matt Mahoney
 
@@ -34,6 +35,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
@@ -45,6 +47,7 @@ import java.io.FileNotFoundException;
 import java.util.Formatter;
 import java.util.Scanner;
 
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -57,7 +60,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.JTextComponent;
 
-public class TextEdit2 extends JFrame implements ActionListener {
+public class TextEdit3 extends JFrame implements ActionListener {
 
     private static final long serialVersionUID = 2054269406974939700L;
 
@@ -69,15 +72,18 @@ public class TextEdit2 extends JFrame implements ActionListener {
     private final JMenuItem saveItem = new JMenuItem("Save");
     private final JMenuItem saveAsItem = new JMenuItem("Save As");
     private final JMenuItem exitItem = new JMenuItem("Exit");
+
+    JButton lineWrapButton;
+
     private String filename = null; // set by "Open" or "Save As"
 
     public static void main(String args[]) {
         JFrame.setDefaultLookAndFeelDecorated(true);
-        new TextEdit2();
+        new TextEdit3();
     }
 
     // Constructor: create a text editor with a menu
-    public TextEdit2() {
+    public TextEdit3() {
         super("Text Editor");
 
         // Create menu and add listeners
@@ -94,6 +100,11 @@ public class TextEdit2 extends JFrame implements ActionListener {
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
+        lineWrapButton = new JButton("Line wrap");
+        lineWrapButton.setMargin(new Insets(0, 0, 0, 0));
+        lineWrapButton.addActionListener(this);
+        menuBar.add(lineWrapButton);
+
         {
             textArea.setLineWrap(true);
             Font font = new Font("Monospaced", Font.BOLD, 14);
@@ -104,38 +115,29 @@ public class TextEdit2 extends JFrame implements ActionListener {
         // Create and display rest of GUI
         JScrollPane scrollPane = new JScrollPane(textArea);
 
-        // scrollPane.addFocusListener(new FocusListener() {
-        // @Override
-        // public void focusGained(FocusEvent e) {
-        // // textArea.requestFocus();
-        // // textArea.repaint();
-        // System.out.println("*");
-        // }
+        // scrollPane.getViewport().addChangeListener(new ChangeListener() {
         //
         // @Override
-        // public void focusLost(FocusEvent e) {
-        // // textArea.requestFocus();
-        // // textArea.repaint();
-        // System.out.println("+");
-        // }
-        // });
-        // textArea.addFocusListener(new FocusListener() {
-        // @Override
-        // public void focusGained(FocusEvent e) {
-        // // textArea.requestFocus();
-        // // textArea.repaint();
-        // System.out.println("*2");
-        // }
+        // public void stateChanged(ChangeEvent e) {
+        // // TODO Auto-generated method stub
+        // textArea.repaint();
+        // textArea.getCaret().setVisible(true);
+        // System.out.println("ch");
         //
-        // @Override
-        // public void focusLost(FocusEvent e) {
-        // // textArea.requestFocus();
-        // // textArea.repaint();
-        // System.out.println("+2");
+        // textArea.revalidate();
+        // textArea.repaint();
+        //
+        // textArea.getCaret().setBlinkRate(500);
+        // textArea.setCaretColor(Color.BLACK);
+        //// textArea.setCaretPosition(0);
+        //
         // }
         // });
 
         add(scrollPane);
+
+        TextLineNumber tln = new TextLineNumber(textArea);
+        scrollPane.setRowHeaderView(tln);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // setSize(300, 300);
@@ -146,8 +148,6 @@ public class TextEdit2 extends JFrame implements ActionListener {
             setSize(new Dimension(bounds.width / 2/* FIXME */, bounds.height / 2/* FIXME */));
         }
 
-        setVisible(true);
-
         textArea.setEditable(true);
 
         textArea.setSelectionColor(Color.BLUE);
@@ -155,42 +155,114 @@ public class TextEdit2 extends JFrame implements ActionListener {
 
         // loadFile("/home/mhoms/tableman.properties");
         loadFile("/home/mhoms/dbman.script");
+        // loadFile("d:/c.properties");
 
-        textArea.setCaret(new MyCaret666());// FIXME
-        textArea.getCaret().setVisible(true);
+        // textArea.setCaret(new MyCaret666());
+        textArea.setCaret(new FancyCaret());
+
         textArea.getCaret().setBlinkRate(500);
         textArea.setCaretColor(Color.BLACK);
         textArea.setCaretPosition(0);
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new MyKeyEventDispatcher(textArea));
 
-        // scrollPane.getViewport().addChangeListener(new ChangeListener() {
-        //
-        // @Override
-        // public void stateChanged(ChangeEvent e) {
-        // // TODO Auto-generated method stub
-        // textArea.repaint();
-        // textArea.getCaret().setVisible(true);
-        // System.out.println("ch");
-        //
-        //
-        // textArea.getCaret().setBlinkRate(500);
-        // textArea.setCaretColor(Color.BLACK);
-        //// textArea.setCaretPosition(0);
-        // textArea.requestDefaultFocus();
-        // textArea.requestFocus();
-        //
-        //// textArea.setCaret(new MyCaret666());
-        // textArea.getCaret().setVisible(true);
-        // textArea.getCaret().setBlinkRate(500);
-        // textArea.setCaretColor(Color.BLACK);
-        //// textArea.setCaretPosition(0);
-        //
-        // textArea.revalidate();
-        // textArea.repaint();
-        //
-        // }
-        // });
+        setVisible(true);
+        textArea.getCaret().setVisible(true);
+        textArea.requestFocus();
+    }
+
+    public class FancyCaret extends DefaultCaret {
+
+        private static final long serialVersionUID = -1109348979634712465L;
+
+        @Override
+        protected synchronized void damage(Rectangle r) {
+            if (r == null) {
+                return;
+            }
+
+            // give values to x,y,width,height (inherited from java.awt.Rectangle)
+            x = r.x;
+            y = r.y;
+            height = r.height;
+            // A value for width was probably set by paint(), which we leave alone.
+            // But the first call to damage() precedes the first call to paint(), so
+            // in this case we must be prepared to set a valid width, or else
+            // paint()
+            // will receive a bogus clip area and caret will not get drawn properly.
+            if (width <= 0) {
+                width = getComponent().getWidth();
+            }
+
+            repaint(); // calls getComponent().repaint(x, y, width, height)
+        }
+
+        @Override
+        public void paint(Graphics g) {
+            JTextComponent comp = getComponent();
+            if (comp == null) {
+                return;
+            }
+
+            int dot = getDot();
+            Rectangle r = null;
+            char dotChar;
+            try {
+                r = comp.modelToView(dot);
+                if (r == null) {
+                    return;
+                }
+                dotChar = comp.getText(dot, 1).charAt(0);
+            } catch (BadLocationException e) {
+                return;
+            }
+
+            if (x != r.x || y != r.y) {
+                // paint() has been called directly, without a previous call to
+                // damage(), so do some cleanup. (This happens, for example, when
+                // the
+                // text component is resized.)
+                repaint(); // erase previous location of caret
+                x = r.x; // Update dimensions (width gets set later in this method)
+                y = r.y;
+                height = r.height;
+            }
+
+            g.setColor(comp.getCaretColor());
+            g.setXORMode(comp.getBackground()); // do this to draw in XOR mode
+
+            if (dotChar == '\n') {
+                int diam = r.height;
+                if (isVisible()) {
+                    g.drawArc(r.x - diam / 2, r.y, diam, diam, 270, 180); // half
+                }
+                // circle
+                width = diam / 2 + 2;
+                return;
+            }
+
+            if (dotChar == '\t') {
+                try {
+                    Rectangle nextr = comp.modelToView(dot + 1);
+                    if (r.y == nextr.y && r.x < nextr.x) {
+                        width = nextr.x - r.x;
+                        if (isVisible()) {
+                            g.drawRect(r.x, r.y, width - 1, r.height - 1);
+                        }
+                        return;
+                    } else {
+                        dotChar = ' ';
+                    }
+                } catch (BadLocationException e) {
+                    dotChar = ' ';
+                }
+            }
+
+            width = g.getFontMetrics().charWidth(dotChar);
+            if (isVisible()) {
+                g.fillRect(r.x, r.y, width, r.height);
+            }
+        }
     }
 
     /**
@@ -246,6 +318,7 @@ public class TextEdit2 extends JFrame implements ActionListener {
             } else {
                 width = g.getFontMetrics().charWidth(c);
             }
+            System.out.println(width);
             if (isVisible()) {
                 g.fillRect(r.x, r.y, width, r.height);
             }
@@ -415,7 +488,6 @@ public class TextEdit2 extends JFrame implements ActionListener {
                         if (utils.getLineNum() >= utils.getLineCount() - 1) {
                             utils.gotoLineEnd();
                             utils.inc();
-                            System.out.println("jou");
                             break;
                         }
 
@@ -435,6 +507,40 @@ public class TextEdit2 extends JFrame implements ActionListener {
                         utils.dec();
                         utils.gotoLineBegin();
                         utils.inc(Math.min(cols, utils.getLineLength()));
+                        break;
+                    }
+
+                    case KeyEvent.VK_PAGE_UP: {
+                        for (int i = 0; i < 20; i++) {
+
+                            // TODO
+                            if (utils.getLineNum() == 0) {
+                                break;
+                            }
+
+                            int cols = utils.getColumnNum();
+                            utils.gotoLineBegin();
+                            utils.dec();
+                            utils.gotoLineBegin();
+                            utils.inc(Math.min(cols, utils.getLineLength()));
+                        }
+                        break;
+                    }
+                    case KeyEvent.VK_PAGE_DOWN: {
+                        for (int i = 0; i < 20; i++) {
+
+                            // TODO
+                            if (utils.getLineNum() >= utils.getLineCount() - 1) {
+                                utils.gotoLineEnd();
+                                utils.inc();
+                                break;
+                            }
+
+                            int cols = utils.getColumnNum();
+                            utils.gotoLineEnd();
+                            utils.inc();
+                            utils.inc(Math.min(cols, utils.getLineLength()));
+                        }
                         break;
                     }
                     case KeyEvent.VK_HOME:
@@ -502,8 +608,6 @@ public class TextEdit2 extends JFrame implements ActionListener {
 
     }
 
-    // class Mac
-
     // Handle menu events
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -517,6 +621,9 @@ public class TextEdit2 extends JFrame implements ActionListener {
             saveFile(null);
         } else if (e.getSource() == exitItem) {
             System.exit(0);
+        } else if (e.getSource() == lineWrapButton) {
+            textArea.setLineWrap(!textArea.getLineWrap());
+            textArea.requestFocus();
         }
     }
 

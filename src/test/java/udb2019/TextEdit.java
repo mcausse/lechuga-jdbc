@@ -57,7 +57,6 @@ import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.JTextComponent;
-import javax.swing.text.Keymap;
 
 public class TextEdit extends JFrame implements ActionListener {
 
@@ -99,8 +98,7 @@ public class TextEdit extends JFrame implements ActionListener {
             textArea.setLineWrap(true);
             Font font = new Font("Monospaced", Font.BOLD, 14);
             textArea.setFont(font);
-            
-            
+
         }
 
         // Create and display rest of GUI
@@ -135,16 +133,16 @@ public class TextEdit extends JFrame implements ActionListener {
 
         // textArea.getCaret().addChangeListener();
         // textArea.append("aló\n");
-        loadFile("/home/mhoms/tableman.properties");
+        // loadFile("/home/mhoms/tableman.properties");
+        loadFile("/home/mhoms/dbman.script");
 
         textArea.getCaret().setVisible(true);
         textArea.setCaretPosition(0);
-        
-        
-//        Keymap kMap = this.getKeymap();
-        
-//        int caretWidth=textArea.getFontMetrics(textArea.getFont()).charWidth(' ');
-//        textArea.putClientProperty("caretWidth", caretWidth);
+
+        // Keymap kMap = this.getKeymap();
+
+        // int caretWidth=textArea.getFontMetrics(textArea.getFont()).charWidth(' ');
+        // textArea.putClientProperty("caretWidth", caretWidth);
 
         // textArea.addCaretListener(new CaretListener() {
         // public void caretUpdate(CaretEvent e) {
@@ -170,7 +168,7 @@ public class TextEdit extends JFrame implements ActionListener {
         // }
         // }
         // });
-//        textArea.setCaret(new MyCaret());
+        // textArea.setCaret(new MyCaret());
 
     }
 

@@ -1,18 +1,32 @@
 package udb2019;
 
-import javax.swing.*;
-import javax.swing.plaf.TextUI;
-import javax.swing.event.CaretListener;
-import javax.swing.event.CaretEvent;
-import javax.swing.text.*;
-import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.geom.AffineTransform;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.Keymap;
 
 public class CaretShape extends JEditorPane {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = -4433998522177633990L;
     private boolean isInsertMode = false;
     Color oldCaretColor;
     Color insertCaretColor = new Color(254, 254, 254);
@@ -25,6 +39,7 @@ public class CaretShape extends JEditorPane {
         setCaret(c);
         oldCaretColor = getCaretColor();
         addCaretListener(new CaretListener() {
+            @Override
             public void caretUpdate(CaretEvent e) {
                 if (isInsertMode()) {
                     processCaretWidth();
@@ -34,6 +49,7 @@ public class CaretShape extends JEditorPane {
 
         Keymap kMap = this.getKeymap();
         Action a = new AbstractAction() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 setInsertMode(!isInsertMode());
             }
@@ -51,6 +67,7 @@ public class CaretShape extends JEditorPane {
         fr.setLocationRelativeTo(null);
         fr.setVisible(true);
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 cs.setInsertMode(true);
             }
@@ -98,6 +115,7 @@ public class CaretShape extends JEditorPane {
         }
     }
 
+    @Override
     public void replaceSelection(String content) {
         if (isEditable() && isInsertMode() && getSelectionStart() == getSelectionEnd()) {
             int pos = getCaretPosition();
@@ -109,6 +127,12 @@ public class CaretShape extends JEditorPane {
 
     class MyCaret extends DefaultCaret {
 
+        /**
+         *
+         */
+        private static final long serialVersionUID = -2663986207122182832L;
+
+        @Override
         public void paint(Graphics g) {
             if (isInsertMode()) {
                 // we should shift to half width because of DefaultCaret rendering algorithm
@@ -125,11 +149,12 @@ public class CaretShape extends JEditorPane {
 
         }
 
+        @Override
         protected synchronized void damage(Rectangle r) {
             if (isInsertMode()) {
                 if (r != null) {
                     int damageWidth = (Integer) getClientProperty("caretWidth");
-                    x = r.x - 4 - (damageWidth / 2);
+                    x = r.x - 4 - damageWidth / 2;
                     y = r.y;
                     width = 9 + 3 * damageWidth / 2;
                     height = r.height;

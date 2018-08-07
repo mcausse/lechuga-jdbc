@@ -1,10 +1,22 @@
 package udb2019;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.KeyEvent;
+
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 class Testing extends JFrame {
+    /**
+     *
+     */
+    private static final long serialVersionUID = -4458611843539210650L;
     JTextArea ta = new JTextArea(5, 10);
     boolean arrowKey;
 
@@ -18,9 +30,11 @@ class Testing extends JFrame {
         getContentPane().add(panel, BorderLayout.CENTER);
         getContentPane().add(new JComboBox(new String[] { "a", "b", "c" }), BorderLayout.SOUTH);
         pack();
-        for (int x = 0; x < 25; x++)
+        for (int x = 0; x < 25; x++) {
             ta.append(x + "\n");
+        }
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+            @Override
             public boolean dispatchKeyEvent(KeyEvent ke) {
                 if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() instanceof JTextArea) {
                     if (ke.getID() == KeyEvent.KEY_PRESSED) {
@@ -30,10 +44,12 @@ class Testing extends JFrame {
                             ke.consume();
                         }
                     }
-                    if (ke.getID() == KeyEvent.KEY_TYPED && arrowKey)
+                    if (ke.getID() == KeyEvent.KEY_TYPED && arrowKey) {
                         ke.consume();
-                    if (ke.getID() == KeyEvent.KEY_RELEASED)
+                    }
+                    if (ke.getID() == KeyEvent.KEY_RELEASED) {
                         arrowKey = false;
+                    }
                 }
                 return false;
             }

@@ -5,11 +5,16 @@ import java.awt.Color;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Element;
 
 public class LineNumbering extends JFrame {
+    /**
+     *
+     */
+    private static final long serialVersionUID = -3176362945334500812L;
     private static JTextArea jta;
     private static JTextArea lines;
 
@@ -58,7 +63,7 @@ public class LineNumbering extends JFrame {
 
         jsp.getViewport().add(jta);
         jsp.setRowHeaderView(lines);
-        jsp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        jsp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
         frame.add(jsp);
         frame.pack();
@@ -68,6 +73,7 @@ public class LineNumbering extends JFrame {
 
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 createAndShowGUI();
             }

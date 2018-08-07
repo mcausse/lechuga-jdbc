@@ -1,8 +1,15 @@
 package udb2019;
 
-import java.awt.*;
-import java.io.*;
-import javax.swing.*;
+import java.awt.EventQueue;
+import java.io.FileReader;
+import java.io.IOException;
+
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
 
 public class Test {
     public static void main(String[] args) throws IOException {
@@ -17,6 +24,7 @@ public class Test {
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.getContentPane().add(scrollPane);
         EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 f.pack();
                 f.setLocationRelativeTo(null);
@@ -27,7 +35,8 @@ public class Test {
 
     static void disableArrowKeys(InputMap im) {
         String[] keystrokeNames = { "UP", "DOWN", "LEFT", "RIGHT" };
-        for (int i = 0; i < keystrokeNames.length; ++i)
-            im.put(KeyStroke.getKeyStroke(keystrokeNames[i]), "none");
+        for (String keystrokeName : keystrokeNames) {
+            im.put(KeyStroke.getKeyStroke(keystrokeName), "none");
+        }
     }
 }

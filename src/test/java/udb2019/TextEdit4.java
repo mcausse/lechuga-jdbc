@@ -67,6 +67,8 @@ public class TextEdit4 extends JFrame implements ActionListener {
     final Color fontColor = Color.BLACK;
     final Color cursorColor = Color.RED;
     final Color backgroundColor = Color.WHITE;
+    final Color selectionBackgroundColor = Color.BLUE;
+    final Color selectionColor = Color.WHITE;
 
     private final JTextArea textArea = new JTextArea();
     private final JMenu fileMenu = new JMenu("File");
@@ -131,13 +133,14 @@ public class TextEdit4 extends JFrame implements ActionListener {
 
         textArea.setEditable(true);
 
-        // textArea.setSelectionColor(Color.BLUE);
-        // textArea.setSelectedTextColor(Color.GREEN);
+        textArea.setSelectionColor(selectionBackgroundColor);
+        textArea.setSelectedTextColor(selectionColor);
+
         textArea.setBackground(backgroundColor);
 
         // loadFile("/home/mhoms/tableman.properties");
-        loadFile("/home/mhoms/dbman.script");
         // loadFile("d:/c.properties");
+        loadFile("/home/mhoms/dbman.script");
 
         UIManager.put("Caret.width", 3);
         DefaultCaret c = new DefaultCaret();
@@ -156,9 +159,6 @@ public class TextEdit4 extends JFrame implements ActionListener {
                 setVisible(true);
                 textArea.getCaret().setVisible(true);
                 textArea.requestFocus();
-
-                // textArea.setSelectionStart(10);
-                // textArea.setSelectionEnd(20);
             }
         });
     }
@@ -212,33 +212,6 @@ public class TextEdit4 extends JFrame implements ActionListener {
             }
         }
 
-        // public void updateSelection(boolean textChanged) {
-        // if(shift) {
-        // selectionEnd = textArea.getCaretPosition();
-        // }
-        // }
-        //
-        // public void invalidateSelection() {
-        // if (selectionStart != null && selectionEnd != null) {
-        // textArea.setCaretPosition(selectionEnd);
-        // textArea.moveCaretPosition(selectionEnd);
-        // }
-        // selectionStart = null;
-        // selectionEnd = null;
-        // }
-        //
-        // public void updateSelection() {
-        // if (shift) {
-        // this.selectionEnd = textArea.getCaretPosition();
-        // if (selectionStart != null && selectionEnd != null) {
-        // textArea.setCaretPosition(selectionStart);
-        // textArea.moveCaretPosition(selectionEnd);
-        // }
-        // } else {
-        // invalidateSelection();
-        // }
-        // }
-
         /////////////////
 
         private int getLineNum() {
@@ -275,22 +248,31 @@ public class TextEdit4 extends JFrame implements ActionListener {
 
         private void gotoLineEnd() {
             try {
-                textArea.setCaretPosition(textArea.getLineEndOffset(getLineNum()) - 1);
+                int pos = textArea.getLineEndOffset(getLineNum()) - 1;
+                if (pos > 0) {
+                    textArea.setCaretPosition(pos);
+                }
             } catch (BadLocationException e) {
                 throw new RuntimeException(e);
             }
         }
 
         private void dec() {
-            textArea.setCaretPosition(textArea.getCaretPosition() - 1);
+            if (textArea.getCaretPosition() - 1 >= 0) {
+                textArea.setCaretPosition(textArea.getCaretPosition() - 1);
+            }
         }
 
         private void inc() {
-            textArea.setCaretPosition(textArea.getCaretPosition() + 1);
+            if (textArea.getCaretPosition() + 1 < textArea.getText().length()) {
+                textArea.setCaretPosition(textArea.getCaretPosition() + 1);
+            }
         }
 
         private void inc(int n) {
-            textArea.setCaretPosition(textArea.getCaretPosition() + n);
+            for (int i = 0; i < n; i++) {
+                inc();
+            }
         }
 
         private int getLineCount() {

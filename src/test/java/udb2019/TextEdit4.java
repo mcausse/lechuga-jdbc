@@ -1,5 +1,5 @@
 
-package supraedit;
+package udb2019;
 /* TextEdit.java - a simple text editor - Matt Mahoney
 
 This program demonstrates simple text editing, menus, and load/save
@@ -64,6 +64,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
+
+import supraedit.TextLineNumber;
 
 /**
  * moviment de cursor complet, amb selecció. Accés a clipboard de sistema.

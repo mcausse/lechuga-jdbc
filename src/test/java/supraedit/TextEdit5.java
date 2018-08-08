@@ -45,14 +45,15 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileNotFoundException;
-
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -62,6 +63,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.text.BadLocationException;
@@ -71,10 +73,19 @@ import javax.swing.text.DefaultCaret;
  * moviment de cursor complet, amb selecció. Accés a clipboard de sistema.
  * Eliminació en ambdós sentits Inserció de tota classe de caràcters regionals
  * (accents, etc)
+ * 
+ * // XXX MACROS
  *
- * //TODO selecció per mouse
+ * // TODO selecció per mouse
  *
- * //TODO undo
+ * // TODO undo
+ * 
+ * // TODO pestanyes
+ * 
+ * // TODO find text/regexp in/sensitive wrap forward/backward + replace (amb
+ * grouping si regexp=true)
+ * 
+ * // TODO comandos inline (per input)
  *
  */
 public class TextEdit5 extends JFrame implements ActionListener {
@@ -87,7 +98,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
     final Color selectionBackgroundColor = Color.BLUE;
     final Color selectionColor = Color.WHITE;
 
-    private final JTextAreaActionsManager editorManager;
+    private final EditorManager editorManager;
 
     private final JTextArea textArea = new JTextArea();
     private final JMenu fileMenu = new JMenu("File");
@@ -102,11 +113,19 @@ public class TextEdit5 extends JFrame implements ActionListener {
     JButton recordMacroButton;
     JButton playMacroButton;
 
+    JTextField cmdTextField;
+    // JButton cmdButton;
+
     private String filename = null; // set by "Open" or "Save As"
 
     public static void main(String args[]) {
         JFrame.setDefaultLookAndFeelDecorated(true);
-        new TextEdit5();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new TextEdit5();
+            }
+        });
     }
 
     // Constructor: create a text editor with a menu
@@ -127,7 +146,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
-        lineWrapButton = new JButton("Line wrap");
+        lineWrapButton = new JButton("wrap");
         lineWrapButton.setMargin(new Insets(0, 0, 0, 0));
         lineWrapButton.addActionListener(this);
         menuBar.add(lineWrapButton);
@@ -144,8 +163,11 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
         {
             textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(textArea.getLineWrap());
+
             Font font = new Font("Monospaced", Font.BOLD, 12);
             textArea.setFont(font);
+
         }
 
         JScrollPane scrollPane = new JScrollPane(textArea);
@@ -168,6 +190,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
         textArea.setSelectedTextColor(selectionColor);
 
         textArea.setBackground(backgroundColor);
+        textArea.setBorder(BorderFactory.createMatteBorder(0, 5, 0, 0, textArea.getBackground()));
 
         // loadFile("/home/mhoms/tableman.properties");
         // loadFile("d:/c.properties");
@@ -183,21 +206,44 @@ public class TextEdit5 extends JFrame implements ActionListener {
         textArea.setCaretColor(cursorColor);
         textArea.setCaretPosition(0);
 
-        this.editorManager = new JTextAreaActionsManager(textArea);
+        this.editorManager = new EditorManager(textArea);
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
                 .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager));
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                setVisible(true);
-                textArea.getCaret().setVisible(true);
-                textArea.requestFocus();
-            }
-        });
+        {
+            this.cmdTextField = new JTextField(50);
+            cmdTextField.addActionListener(this);
+            cmdTextField.addKeyListener(new KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent e) {
+                }
+
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+                        textArea.requestFocus();
+                        e.consume();
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                }
+            });
+            menuBar.add(cmdTextField);
+
+            // cmdButton = new JButton(">");
+            // cmdButton.setMargin(new Insets(0, 0, 0, 0));
+            // cmdButton.addActionListener(this);
+            // menuBar.add(cmdButton);
+        }
+
+        setVisible(true);
+        textArea.getCaret().setVisible(true);
+        textArea.requestFocus();
     }
 
-    static class JTextAreaActionsManager {
+    static class EditorManager {
 
         final JTextArea textArea;
 
@@ -210,7 +256,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
         boolean isRecording = false;
         List<String> commandsRecord = new ArrayList<>();
 
-        public JTextAreaActionsManager(JTextArea textArea) {
+        public EditorManager(JTextArea textArea) {
             super();
             this.textArea = textArea;
         }
@@ -630,11 +676,11 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
     }
 
-    static class MyKeyEventDispatcher implements KeyEventDispatcher {
+    class MyKeyEventDispatcher implements KeyEventDispatcher {
 
-        final JTextAreaActionsManager utils;
+        final EditorManager utils;
 
-        public MyKeyEventDispatcher(JTextAreaActionsManager utils) {
+        public MyKeyEventDispatcher(EditorManager utils) {
             super();
             this.utils = utils;
         }
@@ -790,7 +836,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
                     }
 
                     case KeyEvent.VK_ESCAPE: {
-                        utils.playMacro();
+                        cmdTextField.requestFocus();
                         e.consume();
                         break;
                     }
@@ -859,6 +905,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
             System.exit(0);
         } else if (e.getSource() == lineWrapButton) {
             textArea.setLineWrap(!textArea.getLineWrap());
+            textArea.setWrapStyleWord(textArea.getLineWrap());
             textArea.requestFocus();
         } else if (e.getSource() == recordMacroButton) {
             if (editorManager.isRecording()) {
@@ -871,6 +918,10 @@ public class TextEdit5 extends JFrame implements ActionListener {
             textArea.requestFocus();
         } else if (e.getSource() == playMacroButton) {
             editorManager.playMacro();
+            textArea.requestFocus();
+        } else if (e.getSource() == cmdTextField) {
+            System.out.println(cmdTextField.getText());
+            editorManager.interpret(cmdTextField.getText());
             textArea.requestFocus();
         }
     }

@@ -87,6 +87,8 @@ public class TextEdit5 extends JFrame implements ActionListener {
     final Color selectionBackgroundColor = Color.BLUE;
     final Color selectionColor = Color.WHITE;
 
+    private final JTextAreaActionsManager editorManager;
+
     private final JTextArea textArea = new JTextArea();
     private final JMenu fileMenu = new JMenu("File");
     private final JMenuBar menuBar = new JMenuBar();
@@ -97,6 +99,8 @@ public class TextEdit5 extends JFrame implements ActionListener {
     private final JMenuItem exitItem = new JMenuItem("Exit");
 
     JButton lineWrapButton;
+    JButton recordMacroButton;
+    JButton playMacroButton;
 
     private String filename = null; // set by "Open" or "Save As"
 
@@ -128,6 +132,16 @@ public class TextEdit5 extends JFrame implements ActionListener {
         lineWrapButton.addActionListener(this);
         menuBar.add(lineWrapButton);
 
+        recordMacroButton = new JButton("Rec");
+        recordMacroButton.setMargin(new Insets(0, 0, 0, 0));
+        recordMacroButton.addActionListener(this);
+        menuBar.add(recordMacroButton);
+
+        playMacroButton = new JButton("Play");
+        playMacroButton.setMargin(new Insets(0, 0, 0, 0));
+        playMacroButton.addActionListener(this);
+        menuBar.add(playMacroButton);
+
         {
             textArea.setLineWrap(true);
             Font font = new Font("Monospaced", Font.BOLD, 12);
@@ -158,8 +172,8 @@ public class TextEdit5 extends JFrame implements ActionListener {
         // loadFile("/home/mhoms/tableman.properties");
         // loadFile("d:/c.properties");
         // loadFile("/home/mhoms/dbman.script");
-         loadFile("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
-//        loadFile("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit4.java");
+        loadFile("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
+        // loadFile("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit4.java");
 
         UIManager.put("Caret.width", 3);
         DefaultCaret c = new DefaultCaret();
@@ -169,7 +183,9 @@ public class TextEdit5 extends JFrame implements ActionListener {
         textArea.setCaretColor(cursorColor);
         textArea.setCaretPosition(0);
 
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new MyKeyEventDispatcher(textArea));
+        this.editorManager = new JTextAreaActionsManager(textArea);
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager));
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -191,6 +207,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
         Integer selectionStart = null;
         Integer selectionEnd = null;
 
+        boolean isRecording = false;
         List<String> commandsRecord = new ArrayList<>();
 
         public JTextAreaActionsManager(JTextArea textArea) {
@@ -198,19 +215,34 @@ public class TextEdit5 extends JFrame implements ActionListener {
             this.textArea = textArea;
         }
 
-        public void play() {
+        public boolean isRecording() {
+            return isRecording;
+        }
+
+        public void recordMacroStart() {
+            isRecording = true;
+            commandsRecord.clear();
+        }
+
+        public void recordMacroStop() {
+            isRecording = false;
+            System.out.println("recorded macro: " + commandsRecord);
+        }
+
+        public void playMacro() {
+            isRecording = false;
             for (String c : commandsRecord) {
-                interpret(c, false);
+                interpret(c);
             }
         }
 
-        public void interpret(String cmd) {
-            interpret(cmd, true);
+        public JTextArea getTextArea() {
+            return textArea;
         }
 
-        private void interpret(String cmd, boolean recording) {
+        private void interpret(String cmd) {
 
-            if (recording) {
+            if (isRecording) {
                 this.commandsRecord.add(cmd);
                 System.out.print(cmd);
             }
@@ -318,7 +350,8 @@ public class TextEdit5 extends JFrame implements ActionListener {
             }
 
             try {
-                String content = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+                String content = (String) Toolkit.getDefaultToolkit().getSystemClipboard()
+                        .getData(DataFlavor.stringFlavor);
                 textArea.insert(content, textArea.getCaretPosition());
             } catch (UnsupportedFlavorException e) {
                 // there is nothing in the clipboard
@@ -461,13 +494,16 @@ public class TextEdit5 extends JFrame implements ActionListener {
             for (int i = 0; i < n; i++) {
                 if (textArea.getCaretPosition() > 0) {
                     dec();
-                    while (textArea.getCaretPosition() > 0 && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                    while (textArea.getCaretPosition() > 0
+                            && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
                         dec();
                     }
-                    while (textArea.getCaretPosition() > 0 && Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                    while (textArea.getCaretPosition() > 0
+                            && Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
                         dec();
                     }
-                    while (textArea.getCaretPosition() > 0 && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
+                    while (textArea.getCaretPosition() > 0
+                            && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
                         dec();
                     }
                     if (textArea.getCaretPosition() > 0) {
@@ -596,13 +632,11 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
     static class MyKeyEventDispatcher implements KeyEventDispatcher {
 
-        final JTextArea textArea;
         final JTextAreaActionsManager utils;
 
-        public MyKeyEventDispatcher(JTextArea textArea) {
+        public MyKeyEventDispatcher(JTextAreaActionsManager utils) {
             super();
-            this.textArea = textArea;
-            this.utils = new JTextAreaActionsManager(textArea);
+            this.utils = utils;
         }
 
         boolean controlPressed = false;
@@ -611,7 +645,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
         @Override
         public boolean dispatchKeyEvent(KeyEvent e) {
-            if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == textArea) {
+            if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == utils.getTextArea()) {
                 if (e.getID() == KeyEvent.KEY_PRESSED) {
 
                     int key = e.getKeyCode();
@@ -756,7 +790,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
                     }
 
                     case KeyEvent.VK_ESCAPE: {
-                        utils.play();
+                        utils.playMacro();
                         e.consume();
                         break;
                     }
@@ -769,8 +803,8 @@ public class TextEdit5 extends JFrame implements ActionListener {
                 } else if (e.getID() == KeyEvent.KEY_TYPED) {
 
                     // System.out.println(e.getKeyChar() + "--" + KeyEvent.VK_C);
-                    if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE && e.getKeyChar() != KeyEvent.VK_ESCAPE
-                            && !controlPressed) {
+                    if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE
+                            && e.getKeyChar() != KeyEvent.VK_ESCAPE && !controlPressed) {
                         // textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
                         // utils.insert(e.getKeyChar(), textArea.getCaretPosition());
                         utils.interpret("~" + e.getKeyChar());
@@ -826,6 +860,18 @@ public class TextEdit5 extends JFrame implements ActionListener {
         } else if (e.getSource() == lineWrapButton) {
             textArea.setLineWrap(!textArea.getLineWrap());
             textArea.requestFocus();
+        } else if (e.getSource() == recordMacroButton) {
+            if (editorManager.isRecording()) {
+                editorManager.recordMacroStop();
+                recordMacroButton.setText("Rec");
+            } else {
+                editorManager.recordMacroStart();
+                recordMacroButton.setText("Recording");
+            }
+            textArea.requestFocus();
+        } else if (e.getSource() == playMacroButton) {
+            editorManager.playMacro();
+            textArea.requestFocus();
         }
     }
 
@@ -876,7 +922,8 @@ public class TextEdit5 extends JFrame implements ActionListener {
                 out.close();
                 JOptionPane.showMessageDialog(null, "Saved to " + filename, "Save File", JOptionPane.PLAIN_MESSAGE);
             } catch (FileNotFoundException e) {
-                JOptionPane.showMessageDialog(null, "Cannot write to file: " + name, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Cannot write to file: " + name, "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }

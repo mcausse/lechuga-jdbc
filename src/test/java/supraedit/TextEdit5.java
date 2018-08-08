@@ -62,6 +62,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -73,18 +74,18 @@ import javax.swing.text.DefaultCaret;
  * moviment de cursor complet, amb selecció. Accés a clipboard de sistema.
  * Eliminació en ambdós sentits Inserció de tota classe de caràcters regionals
  * (accents, etc)
- * 
+ *
  * // XXX MACROS
  *
  * // TODO selecció per mouse
  *
  * // TODO undo
- * 
+ *
  * // TODO pestanyes
- * 
+ *
  * // TODO find text/regexp in/sensitive wrap forward/backward + replace (amb
  * grouping si regexp=true)
- * 
+ *
  * // TODO comandos inline (per input)
  *
  */
@@ -100,7 +101,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
     private final EditorManager editorManager;
 
-    private final JTextArea textArea = new JTextArea();
+    private final JTextArea textArea = new JTextArea();// TODO
     private final JMenu fileMenu = new JMenu("File");
     private final JMenuBar menuBar = new JMenuBar();
     private final JMenuItem newItem = new JMenuItem("New");
@@ -114,7 +115,6 @@ public class TextEdit5 extends JFrame implements ActionListener {
     JButton playMacroButton;
 
     JTextField cmdTextField;
-    // JButton cmdButton;
 
     private String filename = null; // set by "Open" or "Save As"
 
@@ -161,27 +161,36 @@ public class TextEdit5 extends JFrame implements ActionListener {
         playMacroButton.addActionListener(this);
         menuBar.add(playMacroButton);
 
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        {
+            GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            Rectangle bounds = env.getMaximumWindowBounds();
+            setSize(new Dimension(bounds.width / 2/* FIXME */, bounds.height / 2/* FIXME */));
+        }
+
+        // JScrollPane scrollPane = new JScrollPane(textArea);
+        // add(scrollPane);
+
+        // https://docs.oracle.com/javase/tutorial/uiswing/components/tabbedpane.html
+        JTabbedPane tabbedPane = new JTabbedPane();
+        // ImageIcon icon = createImageIcon("images/middle.gif");
+        add(tabbedPane);
+
+        // JTextArea textArea = new JTextArea();// TODO
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        tabbedPane.addTab("Tab 1", null, scrollPane, "Does nothing");
+
+        {
+            TextLineNumber tln = new TextLineNumber(textArea);
+            tln.setMinimumDisplayDigits(3);
+            scrollPane.setRowHeaderView(tln);
+        }
         {
             textArea.setLineWrap(true);
             textArea.setWrapStyleWord(textArea.getLineWrap());
 
             Font font = new Font("Monospaced", Font.BOLD, 12);
             textArea.setFont(font);
-
-        }
-
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        add(scrollPane);
-
-        TextLineNumber tln = new TextLineNumber(textArea);
-        tln.setMinimumDisplayDigits(3);
-        scrollPane.setRowHeaderView(tln);
-
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        {
-            GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            Rectangle bounds = env.getMaximumWindowBounds();
-            setSize(new Dimension(bounds.width / 2/* FIXME */, bounds.height / 2/* FIXME */));
         }
 
         textArea.setEditable(true);
@@ -231,11 +240,6 @@ public class TextEdit5 extends JFrame implements ActionListener {
                 }
             });
             menuBar.add(cmdTextField);
-
-            // cmdButton = new JButton(">");
-            // cmdButton.setMargin(new Insets(0, 0, 0, 0));
-            // cmdButton.addActionListener(this);
-            // menuBar.add(cmdButton);
         }
 
         setVisible(true);
@@ -333,9 +337,16 @@ public class TextEdit5 extends JFrame implements ActionListener {
                 delete();
             } else if (cmd.equals("<")) {
                 backSpace();
+            } else if (cmd.startsWith("f")) {
+                findForward(cmd.substring(1));
             } else {
                 throw new RuntimeException("illegal command: " + cmd);
             }
+        }
+
+        private void findForward(String text) {
+            // TODO Auto-generated method stub
+
         }
 
         /////////////////
@@ -696,7 +707,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
                     int key = e.getKeyCode();
 
-                    // XXX https://docs.oracle.com/javase/tutorial/uiswing/components/textarea.html
+                    // https://docs.oracle.com/javase/tutorial/uiswing/components/textarea.html
 
                     switch (key) {
                     case KeyEvent.VK_CONTROL:
@@ -751,13 +762,17 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
                     case KeyEvent.VK_PAGE_UP: {
                         // utils.pageUp(20);
-                        utils.interpret("U");
+                        for (int i = 0; i < 20; i++) {
+                            utils.interpret("U");
+                        }
                         e.consume();
                         break;
                     }
                     case KeyEvent.VK_PAGE_DOWN: {
                         // utils.pageDown(20);
-                        utils.interpret("D");
+                        for (int i = 0; i < 20; i++) {
+                            utils.interpret("D");
+                        }
                         e.consume();
                         break;
                     }

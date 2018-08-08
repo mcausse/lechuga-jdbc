@@ -752,11 +752,13 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
                     case KeyEvent.VK_ENTER: {
                         e.consume();
+                        break;
                     }
 
                     case KeyEvent.VK_ESCAPE: {
                         utils.play();
                         e.consume();
+                        break;
                     }
 
                     default:

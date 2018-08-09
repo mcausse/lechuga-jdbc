@@ -44,7 +44,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -74,7 +73,8 @@ import javax.swing.text.DefaultCaret;
  * Eliminació en ambdós sentits Inserció de tota classe de caràcters regionals
  * (accents, etc)
  *
- * // XXX MACROS
+ * // XXX MACROS: el recording de macros registra tot lo de textarea i del
+ * cmdInputText! Ho reprodeueix tot dins la mateixa pestanya!
  *
  * // TODO selecció per mouse
  *
@@ -182,27 +182,8 @@ public class TextEdit5 extends JFrame {
             playMacroButton.setMargin(new Insets(0, 0, 0, 0));
             menuBar.add(playMacroButton);
 
-            {
-                cmdTextField = new JTextField(50);
-                cmdTextField.addKeyListener(new KeyListener() {
-                    @Override
-                    public void keyTyped(KeyEvent e) {
-                    }
-
-                    @Override
-                    public void keyPressed(KeyEvent e) {
-                        if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
-                            textArea.requestFocus();
-                            e.consume();
-                        }
-                    }
-
-                    @Override
-                    public void keyReleased(KeyEvent e) {
-                    }
-                });
-                menuBar.add(cmdTextField);
-            }
+            cmdTextField = new JTextField();
+            menuBar.add(cmdTextField);
 
             ActionListener actionListener = new ActionListener() {
 
@@ -496,6 +477,23 @@ public class TextEdit5 extends JFrame {
                 if (key == KeyEvent.VK_ALT) {
                     this.altPressed = false;
                     e.consume();
+                }
+            }
+
+            if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == cmdTextField) {
+
+                if (e.getID() == KeyEvent.KEY_TYPED) {
+                    if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+                        macroRecording.getTextArea().requestFocus();
+                        e.consume();
+                    }
+                }
+
+                /**
+                 * IMPORTANTISSIM: REGISTRA TOT LO NO CONSUMIT!!!!!
+                 */
+                if (!e.isConsumed()) {
+                    macroRecording.record(e);
                 }
             }
 

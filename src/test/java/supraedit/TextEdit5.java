@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -86,7 +88,9 @@ import javax.swing.text.DefaultCaret;
  * // TODO find text/regexp in/sensitive wrap forward/backward + replace (amb
  * grouping si regexp=true)
  *
- * // TODO comandos inline (per input)
+ * // TODO (multi) comandos inline (per input)
+ *
+ * // TODO (des)tabulació en bloc
  *
  */
 public class TextEdit5 extends JFrame implements ActionListener {
@@ -119,7 +123,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
     private String filename = null; // set by "Open" or "Save As"
 
     public static void main(String args[]) {
-        JFrame.setDefaultLookAndFeelDecorated(true);
+        // JFrame.setDefaultLookAndFeelDecorated(true);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -131,6 +135,11 @@ public class TextEdit5 extends JFrame implements ActionListener {
     // Constructor: create a text editor with a menu
     public TextEdit5() {
         super("Supra Ed");
+
+        // https://docs.oracle.com/javase/tutorial/uiswing/components/tabbedpane.html
+        JTabbedPane tabbedPane = new JTabbedPane();
+        // ImageIcon icon = createImageIcon("images/middle.gif");
+        add(tabbedPane);
 
         // Create menu and add listeners
         fileMenu.add(newItem);
@@ -161,6 +170,29 @@ public class TextEdit5 extends JFrame implements ActionListener {
         playMacroButton.addActionListener(this);
         menuBar.add(playMacroButton);
 
+        {
+            this.cmdTextField = new JTextField(50);
+            cmdTextField.addActionListener(this);
+            cmdTextField.addKeyListener(new KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent e) {
+                }
+
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+                        textArea.requestFocus();
+                        e.consume();
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                }
+            });
+            menuBar.add(cmdTextField);
+        }
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         {
             GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -171,14 +203,9 @@ public class TextEdit5 extends JFrame implements ActionListener {
         // JScrollPane scrollPane = new JScrollPane(textArea);
         // add(scrollPane);
 
-        // https://docs.oracle.com/javase/tutorial/uiswing/components/tabbedpane.html
-        JTabbedPane tabbedPane = new JTabbedPane();
-        // ImageIcon icon = createImageIcon("images/middle.gif");
-        add(tabbedPane);
-
         // JTextArea textArea = new JTextArea();// TODO
         JScrollPane scrollPane = new JScrollPane(textArea);
-        tabbedPane.addTab("Tab 1", null, scrollPane, "Does nothing");
+        tabbedPane.addTab("jou *", null, scrollPane, "Does nothing");
 
         {
             TextLineNumber tln = new TextLineNumber(textArea);
@@ -205,7 +232,7 @@ public class TextEdit5 extends JFrame implements ActionListener {
         // loadFile("d:/c.properties");
         // loadFile("/home/mhoms/dbman.script");
         loadFile("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
-        // loadFile("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit4.java");
+        // loadFile("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
 
         UIManager.put("Caret.width", 3);
         DefaultCaret c = new DefaultCaret();
@@ -218,29 +245,6 @@ public class TextEdit5 extends JFrame implements ActionListener {
         this.editorManager = new EditorManager(textArea);
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
                 .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager));
-
-        {
-            this.cmdTextField = new JTextField(50);
-            cmdTextField.addActionListener(this);
-            cmdTextField.addKeyListener(new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent e) {
-                }
-
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
-                        textArea.requestFocus();
-                        e.consume();
-                    }
-                }
-
-                @Override
-                public void keyReleased(KeyEvent e) {
-                }
-            });
-            menuBar.add(cmdTextField);
-        }
 
         setVisible(true);
         textArea.getCaret().setVisible(true);
@@ -337,16 +341,94 @@ public class TextEdit5 extends JFrame implements ActionListener {
                 delete();
             } else if (cmd.equals("<")) {
                 backSpace();
+            } else if (cmd.startsWith("@f")) {
+                findForwardRegexp(cmd.substring(2));
+            } else if (cmd.startsWith("@F")) {
+                // findBackwardRegexp(cmd.substring(2)); //TODO
             } else if (cmd.startsWith("f")) {
                 findForward(cmd.substring(1));
+            } else if (cmd.startsWith("F")) {
+                findBackward(cmd.substring(1));
             } else {
                 throw new RuntimeException("illegal command: " + cmd);
             }
         }
 
-        private void findForward(String text) {
-            // TODO Auto-generated method stub
+        /**
+         * @param regexp
+         *            p.ex. "@f\d{5}"
+         */
+        private void findForwardRegexp(String regexp) {
+            Pattern p = Pattern.compile(regexp);
 
+            int findPos = textArea.getCaretPosition() + 1;
+            if (findPos >= getTextLength()) {
+                textArea.setCaretPosition(getTextLength() - 1);
+                return;
+            }
+
+            Matcher m = p.matcher(textArea.getText());
+            if (m.find(findPos)) {
+                textArea.setCaretPosition(m.start());
+            } else {
+                // no troba més: deixa el cursor a final de fitxer
+                textArea.setCaretPosition(getTextLength() - 1);
+            }
+        }
+
+        private void findForward(String text) {
+            int findPos = textArea.getCaretPosition() + 1;
+            if (findPos >= getTextLength()) {
+                textArea.setCaretPosition(getTextLength() - 1);
+                return;
+            }
+            int pos = textArea.getText().indexOf(text, findPos);
+            if (pos < 0) {
+                // no troba més: deixa el cursor a final de fitxer
+                textArea.setCaretPosition(getTextLength() - 1);
+            } else {
+                textArea.setCaretPosition(pos);
+            }
+
+            // TODO
+            // try {
+            // Highlighter highlighter = textArea.getHighlighter();
+            // HighlightPainter painter = new
+            // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+            // highlighter.addHighlight(pos, pos + text.length(), painter);
+            // } catch (BadLocationException e) {
+            // throw new RuntimeException(e);
+            // }
+
+            // TODO
+            // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+        }
+
+        private void findBackward(String text) {
+            int findPos = textArea.getCaretPosition() - 1;
+            if (findPos <= 0) {
+                return;
+            }
+            int pos = textArea.getText().lastIndexOf(text, findPos);
+            if (pos < 0) {
+                // no troba més: deixa el cursor a inici de fitxer
+                textArea.setCaretPosition(0);
+            } else {
+                textArea.setCaretPosition(pos);
+            }
+
+            // TODO
+            // try {
+            // Highlighter highlighter = textArea.getHighlighter();
+            // HighlightPainter painter = new
+            // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+            // highlighter.addHighlight(pos, pos + text.length(), painter);
+            // } catch (BadLocationException e) {
+            // throw new RuntimeException(e);
+            // }
+
+            // TODO
+            // JOptionPane.showMessageDialog(null, new JTePane(textArea));
         }
 
         /////////////////

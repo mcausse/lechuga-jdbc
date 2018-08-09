@@ -31,6 +31,7 @@ if it has been modified since the last "Save" or "Save As" operation.
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
@@ -167,7 +168,7 @@ public class TextEdit5 extends JFrame {
             this.filename = filename;
 
             this.textArea = new JTextArea();
-            EditorManager editorManager = new EditorManager(textArea);
+            MacroRecording macroRecording = new MacroRecording(textArea);
 
             fileMenu.add(newItem);
             fileMenu.add(openItem);
@@ -231,23 +232,24 @@ public class TextEdit5 extends JFrame {
                         textArea.setWrapStyleWord(textArea.getLineWrap());
                         textArea.requestFocus();
                     } else if (e.getSource() == recordMacroButton) {
-                        if (editorManager.isRecording()) {
-                            editorManager.recordMacroStop();
+                        if (macroRecording.isRecording()) {
+                            macroRecording.recordMacroStop();
                             recordMacroButton.setText("Rec");
                             playMacroButton.setEnabled(true);
                         } else {
-                            editorManager.recordMacroStart();
+                            macroRecording.recordMacroStart();
                             recordMacroButton.setText("Recording");
                             playMacroButton.setEnabled(false);
                         }
                         textArea.requestFocus();
                     } else if (e.getSource() == playMacroButton) {
-                        editorManager.playMacro();
+                        macroRecording.playMacro();
                         textArea.requestFocus();
                     } else if (e.getSource() == cmdTextField) {
-                        System.out.println(cmdTextField.getText());
-                        editorManager.interpret(cmdTextField.getText());
-                        textArea.requestFocus();
+                        // TODO això és important: aquí es processa una línia de comanda des de l'input
+                        // System.out.println(cmdTextField.getText());
+                        // macroRecording.interpret(cmdTextField.getText());
+                        // textArea.requestFocus();
                     }
                 }
             };
@@ -296,12 +298,11 @@ public class TextEdit5 extends JFrame {
                 playMacroButton.doClick();
             };
 
-//            KeyEvent e;
-//            KeyboardFocusManager.getCurrentKeyboardFocusManager().dispatchKeyEvent(e);
-            
-            
-            KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                    .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager, cmdTextField, onDoRecord, onDoPlay));
+            // KeyEvent e;
+            // KeyboardFocusManager.getCurrentKeyboardFocusManager().dispatchKeyEvent(e);
+
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(
+                    new MyKeyEventDispatcher(macroRecording, cmdTextField, onDoRecord, onDoPlay));
 
             textArea.requestFocus();
 
@@ -419,20 +420,14 @@ public class TextEdit5 extends JFrame {
         setVisible(true);
     }
 
-    static class EditorManager {
+    static class MacroRecording {
 
         final JTextArea textArea;
 
-        boolean shift = false;
-        boolean selection = false;
-
-        Integer selectionStart = null;
-        Integer selectionEnd = null;
-
         boolean isRecording = false;
-        List<String> commandsRecord = new ArrayList<>();
+        List<KeyEvent> eventsRecorded = new ArrayList<>();
 
-        public EditorManager(JTextArea textArea) {
+        public MacroRecording(JTextArea textArea) {
             super();
             this.textArea = textArea;
         }
@@ -443,518 +438,600 @@ public class TextEdit5 extends JFrame {
 
         public void recordMacroStart() {
             isRecording = true;
-            commandsRecord.clear();
+            eventsRecorded.clear();
         }
 
         public void recordMacroStop() {
             isRecording = false;
-            System.out.println("recorded macro: " + commandsRecord);
+            System.out.println("recorded macro: " + eventsRecorded);
         }
 
-        public void playMacro() {
-            isRecording = false;
-            for (String c : commandsRecord) {
-                interpret(c);
+        public void record(KeyEvent ke) {
+            if (isRecording) {
+                System.out.println("recording: " + ke);
+                this.eventsRecorded.add(ke);
             }
         }
+
+        // public List<KeyEvent> getEventsRecorded() {
+        // return eventsRecorded;
+        // }
 
         public JTextArea getTextArea() {
             return textArea;
         }
 
-        private void interpret(String cmd) {
+        public void playMacro() {
+            isRecording = false;
+            for (KeyEvent e : eventsRecorded) {
+                System.out.println("playing: " + e);
+                // KeyboardFocusManager.getCurrentKeyboardFocusManager().dispatchKeyEvent(e);
+                // KeyboardFocusManager.getCurrentKeyboardFocusManager().redispatchEvent(textArea,
+                // e);
 
-            if (isRecording) {
-                this.commandsRecord.add(cmd);
-                System.out.print(cmd);
-            }
+                // textArea.dispatchEvent(new KeyEvent(e.getSource(), e.getID(),
+                // System.currentTimeMillis(), 0,
+                // e.getKeyCode(), e.getKeyChar()));
 
-            if (cmd.startsWith("~")) {
-                insert(cmd.charAt(1), textArea.getCaretPosition());
-            } else if (cmd.equals("+s")) {
-                shiftPressed();
-            } else if (cmd.equals("-s")) {
-                shiftReleased();
-            } else if (cmd.equals("x")) {
-                cutSelection();
-            } else if (cmd.equals("c")) {
-                copySelection();
-            } else if (cmd.equals("v")) {
-                paste();
-            } else if (cmd.equals("l")) {
-                moveLeft(1);
-            } else if (cmd.equals("r")) {
-                moveRight(1);
-            } else if (cmd.equals("L")) {
-                moveLeftWords(1);
-            } else if (cmd.equals("R")) {
-                moveRightWords(1);
-            } else if (cmd.equals("d")) {
-                moveDown();
-            } else if (cmd.equals("u")) {
-                moveUp();
-            } else if (cmd.equals("U")) {
-                pageUp(1);
-            } else if (cmd.equals("D")) {
-                pageDown(1);
-            } else if (cmd.equals("^")) {
-                bufferHome();
-            } else if (cmd.equals("$")) {
-                bufferEnd();
-            } else if (cmd.equals("b")) {
-                lineHome();
-            } else if (cmd.equals("e")) {
-                lineEnd();
-            } else if (cmd.equals(">")) {
-                delete();
-            } else if (cmd.equals("<")) {
-                backSpace();
-            } else if (cmd.startsWith("@f")) {
-                findForwardRegexp(cmd.substring(2));
-            } else if (cmd.startsWith("@F")) {
-                // findBackwardRegexp(cmd.substring(2)); //TODO
-            } else if (cmd.startsWith("f")) {
-                findForward(cmd.substring(1));
-            } else if (cmd.startsWith("F")) {
-                findBackward(cmd.substring(1));
-            } else {
-                throw new RuntimeException("illegal command: " + cmd);
-            }
-        }
+                // public KeyEvent(Component source, int id, long when, int modifiers,
+                // int keyCode, char keyChar) {
 
-        /**
-         * @param regexp
-         *            p.ex. "@f\d{5}"
-         */
-        private void findForwardRegexp(String regexp) {
-            Pattern p = Pattern.compile(regexp);
+                textArea.dispatchEvent(new KeyEvent((Component) e.getSource(), e.getID(), System.currentTimeMillis(),
+                        e.getModifiers(), e.getKeyCode(), e.getKeyChar()));
 
-            int findPos = textArea.getCaretPosition() + 1;
-            if (findPos >= getTextLength()) {
-                textArea.setCaretPosition(getTextLength() - 1);
-                return;
-            }
-
-            Matcher m = p.matcher(textArea.getText());
-            if (m.find(findPos)) {
-                textArea.setCaretPosition(m.start());
-            } else {
-                // no troba més: deixa el cursor a final de fitxer
-                textArea.setCaretPosition(getTextLength() - 1);
-            }
-        }
-
-        private void findForward(String text) {
-            int findPos = textArea.getCaretPosition() + 1;
-            if (findPos >= getTextLength()) {
-                textArea.setCaretPosition(getTextLength() - 1);
-                return;
-            }
-            int pos = textArea.getText().indexOf(text, findPos);
-            if (pos < 0) {
-                // no troba més: deixa el cursor a final de fitxer
-                textArea.setCaretPosition(getTextLength() - 1);
-            } else {
-                textArea.setCaretPosition(pos);
-            }
-
-            // TODO
-            // try {
-            // Highlighter highlighter = textArea.getHighlighter();
-            // HighlightPainter painter = new
-            // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
-            // highlighter.addHighlight(pos, pos + text.length(), painter);
-            // } catch (BadLocationException e) {
-            // throw new RuntimeException(e);
-            // }
-
-            // TODO
-            // JOptionPane.showMessageDialog(null, new JTePane(textArea));
-        }
-
-        private void findBackward(String text) {
-            int findPos = textArea.getCaretPosition() - 1;
-            if (findPos <= 0) {
-                return;
-            }
-            int pos = textArea.getText().lastIndexOf(text, findPos);
-            if (pos < 0) {
-                // no troba més: deixa el cursor a inici de fitxer
-                textArea.setCaretPosition(0);
-            } else {
-                textArea.setCaretPosition(pos);
-            }
-
-            // TODO
-            // try {
-            // Highlighter highlighter = textArea.getHighlighter();
-            // HighlightPainter painter = new
-            // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
-            // highlighter.addHighlight(pos, pos + text.length(), painter);
-            // } catch (BadLocationException e) {
-            // throw new RuntimeException(e);
-            // }
-
-            // TODO
-            // JOptionPane.showMessageDialog(null, new JTePane(textArea));
-        }
-
-        /////////////////
-
-        public void shiftPressed() {
-            shift = true;
-        }
-
-        public void shiftReleased() {
-            shift = false;
-        }
-
-        private void beforeCursorMoves() {
-            if (shift) {
-                if (!selection) {
-                    selection = true;
-                    selectionStart = textArea.getCaretPosition();
-                    selectionEnd = textArea.getCaretPosition();
-
-                    textArea.setCaretPosition(selectionStart);
-                    textArea.moveCaretPosition(selectionEnd);
-                }
-            } else {
-                selection = false;
-            }
-        }
-
-        private void afterCursorMoves() {
-            if (selection) {
-                selectionEnd = textArea.getCaretPosition();
-
-                textArea.setCaretPosition(selectionStart);
-                textArea.moveCaretPosition(selectionEnd);
-            }
-        }
-
-        private void copySelection() {
-            if (selection) {
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                StringSelection selection = new StringSelection(textArea.getSelectedText());
-                clipboard.setContents(selection, null);
-            }
-        }
-
-        private void cutSelection() {
-            if (selection) {
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                StringSelection selection = new StringSelection(textArea.getSelectedText());
-                clipboard.setContents(selection, null);
-
-                delete();
-            }
-        }
-
-        private void paste() {
-            if (selection) {
-                delete();
-            }
-
-            try {
-                String content = (String) Toolkit.getDefaultToolkit().getSystemClipboard()
-                        .getData(DataFlavor.stringFlavor);
-                textArea.insert(content, textArea.getCaretPosition());
-            } catch (UnsupportedFlavorException e) {
-                // there is nothing in the clipboard
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        /////////////////
-
-        private int getLineNum() {
-            try {
-                return textArea.getLineOfOffset(textArea.getCaretPosition());
-            } catch (BadLocationException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private int getColumnNum() {
-            try {
-                return textArea.getCaretPosition() - textArea.getLineStartOffset(getLineNum());
-            } catch (BadLocationException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private int getLineLength() {
-            try {
-                return textArea.getLineEndOffset(getLineNum()) - 1 - textArea.getLineStartOffset(getLineNum());
-            } catch (BadLocationException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private void gotoLineBegin() {
-            try {
-                textArea.setCaretPosition(textArea.getLineStartOffset(getLineNum()));
-            } catch (BadLocationException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private void gotoLineEnd() {
-            try {
-
-                int pos;
-
-                if (getLineNum() == getLineCount()) {
-                    pos = getTextLength() - 1;
-                } else {
-                    pos = textArea.getLineEndOffset(getLineNum()) - 1;
-                }
-                if (pos > 0) {
-                    textArea.setCaretPosition(pos);
-                }
-
-                textArea.setCaretPosition(pos);
-
-            } catch (BadLocationException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private void dec() {
-            if (textArea.getCaretPosition() - 1 >= 0) {
-                textArea.setCaretPosition(textArea.getCaretPosition() - 1);
-            }
-        }
-
-        private void inc() {
-            if (textArea.getCaretPosition() + 1 < getTextLength()) {
-                textArea.setCaretPosition(textArea.getCaretPosition() + 1);
-            }
-        }
-
-        private void inc(int n) {
-            for (int i = 0; i < n; i++) {
-                inc();
-            }
-        }
-
-        private int getLineCount() {
-            // -1 pq és 1-based
-            return textArea.getLineCount() - 1;
-        }
-
-        private int getTextLength() {
-            return textArea.getDocument().getLength() + 1;
-        }
-
-        private void lineDown() {
-            if (getLineNum() >= getLineCount() - 1) {
-                gotoLineEnd();
-                inc();
-                afterCursorMoves();
-                return;
-            }
-            int cols = getColumnNum();
-            gotoLineEnd();
-            inc();
-            inc(Math.min(cols, getLineLength()));
-        }
-
-        private void lineUp() {
-            if (getLineNum() == 0) {
-                afterCursorMoves();
-                return;
-            }
-            int cols = getColumnNum();
-            gotoLineBegin();
-            dec();
-            gotoLineBegin();
-            inc(Math.min(cols, getLineLength()));
-        }
-
-        /////////////////
-
-        private void moveLeft(int n) {
-            beforeCursorMoves();
-            for (int i = 0; i < n; i++) {
-                if (textArea.getCaretPosition() > 0) {
-                    dec();
-                }
-            }
-            afterCursorMoves();
-        }
-
-        private void moveRight(int n) {
-            beforeCursorMoves();
-            for (int i = 0; i < n; i++) {
-                if (textArea.getCaretPosition() < getTextLength()) {
-                    inc();
-                }
-            }
-            afterCursorMoves();
-        }
-
-        private void moveLeftWords(int n) {
-            beforeCursorMoves();
-            for (int i = 0; i < n; i++) {
-                if (textArea.getCaretPosition() > 0) {
-                    dec();
-                    while (textArea.getCaretPosition() > 0
-                            && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                        dec();
-                    }
-                    while (textArea.getCaretPosition() > 0
-                            && Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                        dec();
-                    }
-                    while (textArea.getCaretPosition() > 0
-                            && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                        dec();
-                    }
-                    if (textArea.getCaretPosition() > 0) {
-                        inc();
-                    }
-                }
-            }
-            afterCursorMoves();
-        }
-
-        private void moveRightWords(int n) {
-            beforeCursorMoves();
-            for (int i = 0; i < n; i++) {
-                if (textArea.getCaretPosition() < getTextLength()) {
-                    while (textArea.getCaretPosition() < getTextLength() - 1
-                            && !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                        inc();
-                    }
-                    while (textArea.getCaretPosition() < getTextLength() - 1
-                            && Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition()))) {
-                        inc();
-                    }
-                }
-            }
-            afterCursorMoves();
-        }
-
-        private void moveDown() {
-            beforeCursorMoves();
-            lineDown();
-            afterCursorMoves();
-        }
-
-        private void moveUp() {
-            beforeCursorMoves();
-            lineUp();
-            afterCursorMoves();
-        }
-
-        private void pageUp(int n) {
-            beforeCursorMoves();
-            for (int i = 0; i < n; i++) {
-                lineUp();
-            }
-            afterCursorMoves();
-        }
-
-        private void pageDown(int n) {
-            beforeCursorMoves();
-            for (int i = 0; i < n; i++) {
-                lineDown();
-            }
-            afterCursorMoves();
-        }
-
-        private void bufferHome() {
-            beforeCursorMoves();
-            textArea.setCaretPosition(0);
-            afterCursorMoves();
-        }
-
-        private void bufferEnd() {
-            beforeCursorMoves();
-            textArea.setCaretPosition(getTextLength() - 1);
-            afterCursorMoves();
-        }
-
-        private void lineHome() {
-            beforeCursorMoves();
-            gotoLineBegin();
-            afterCursorMoves();
-        }
-
-        private void lineEnd() {
-            beforeCursorMoves();
-            gotoLineEnd();
-            afterCursorMoves();
-        }
-
-        private void delete() {
-            if (selection) {
-                int min = Math.min(selectionStart, selectionEnd);
-                int max = Math.max(selectionStart, selectionEnd);
-                textArea.replaceRange("", min, max);
-                textArea.setCaretPosition(min);
-                selection = false;
-            } else {
-                int pos = textArea.getCaretPosition();
-                if (pos + 1 >= getTextLength()) {
-                    return;
-                }
-                textArea.replaceRange("", pos, pos + 1);
-            }
-        }
-
-        private void backSpace() {
-            if (selection) {
-                int min = Math.min(selectionStart, selectionEnd);
-                int max = Math.max(selectionStart, selectionEnd);
-                textArea.replaceRange("", min, max);
-                textArea.setCaretPosition(min);
-                selection = false;
-            } else {
-                int pos = textArea.getCaretPosition();
-                if (pos <= 0) {
-                    return;
-                }
-                textArea.replaceRange("", pos - 1, pos);
-            }
-        }
-
-        private void insert(char c, int atPosition) {
-            String text = String.valueOf(c);
-            if (selection) {
-                int min = Math.min(selectionStart, selectionEnd);
-                int max = Math.max(selectionStart, selectionEnd);
-                textArea.replaceRange(text, min, max);
-                textArea.setCaretPosition(min + text.length());
-                selection = false;
-            } else {
-                textArea.insert(text, atPosition);
             }
         }
 
     }
 
+    // static class EditorManager {
+    //
+    // final JTextArea textArea;
+    //
+    // boolean shift = false;
+    // boolean selection = false;
+    //
+    // Integer selectionStart = null;
+    // Integer selectionEnd = null;
+    //
+    // boolean isRecording = false;
+    // List<String> commandsRecord = new ArrayList<>();
+    //
+    // public EditorManager(JTextArea textArea) {
+    // super();
+    // this.textArea = textArea;
+    // }
+    //
+    // public boolean isRecording() {
+    // return isRecording;
+    // }
+    //
+    // public void recordMacroStart() {
+    // isRecording = true;
+    // commandsRecord.clear();
+    // }
+    //
+    // public void recordMacroStop() {
+    // isRecording = false;
+    // System.out.println("recorded macro: " + commandsRecord);
+    // }
+    //
+    // public void playMacro() {
+    // isRecording = false;
+    // for (String c : commandsRecord) {
+    // interpret(c);
+    // }
+    // }
+    //
+    // public JTextArea getTextArea() {
+    // return textArea;
+    // }
+    //
+    // private void interpret(String cmd) {
+    //
+    // if (isRecording) {
+    // this.commandsRecord.add(cmd);
+    // System.out.print(cmd);
+    // }
+    //
+    // if (cmd.startsWith("~")) {
+    // insert(cmd.charAt(1), textArea.getCaretPosition());
+    // } else if (cmd.equals("+s")) {
+    // shiftPressed();
+    // } else if (cmd.equals("-s")) {
+    // shiftReleased();
+    // } else if (cmd.equals("x")) {
+    // cutSelection();
+    // } else if (cmd.equals("c")) {
+    // copySelection();
+    // } else if (cmd.equals("v")) {
+    // paste();
+    // } else if (cmd.equals("l")) {
+    // moveLeft(1);
+    // } else if (cmd.equals("r")) {
+    // moveRight(1);
+    // } else if (cmd.equals("L")) {
+    // moveLeftWords(1);
+    // } else if (cmd.equals("R")) {
+    // moveRightWords(1);
+    // } else if (cmd.equals("d")) {
+    // moveDown();
+    // } else if (cmd.equals("u")) {
+    // moveUp();
+    // } else if (cmd.equals("U")) {
+    // pageUp(1);
+    // } else if (cmd.equals("D")) {
+    // pageDown(1);
+    // } else if (cmd.equals("^")) {
+    // bufferHome();
+    // } else if (cmd.equals("$")) {
+    // bufferEnd();
+    // } else if (cmd.equals("b")) {
+    // lineHome();
+    // } else if (cmd.equals("e")) {
+    // lineEnd();
+    // } else if (cmd.equals(">")) {
+    // delete();
+    // } else if (cmd.equals("<")) {
+    // backSpace();
+    // } else if (cmd.startsWith("@f")) {
+    // findForwardRegexp(cmd.substring(2));
+    // } else if (cmd.startsWith("@F")) {
+    // // findBackwardRegexp(cmd.substring(2)); //TODO
+    // } else if (cmd.startsWith("f")) {
+    // findForward(cmd.substring(1));
+    // } else if (cmd.startsWith("F")) {
+    // findBackward(cmd.substring(1));
+    // } else {
+    // throw new RuntimeException("illegal command: " + cmd);
+    // }
+    // }
+    //
+    // /**
+    // * @param regexp
+    // * p.ex. "@f\d{5}"
+    // */
+    // private void findForwardRegexp(String regexp) {
+    // Pattern p = Pattern.compile(regexp);
+    //
+    // int findPos = textArea.getCaretPosition() + 1;
+    // if (findPos >= getTextLength()) {
+    // textArea.setCaretPosition(getTextLength() - 1);
+    // return;
+    // }
+    //
+    // Matcher m = p.matcher(textArea.getText());
+    // if (m.find(findPos)) {
+    // textArea.setCaretPosition(m.start());
+    // } else {
+    // // no troba més: deixa el cursor a final de fitxer
+    // textArea.setCaretPosition(getTextLength() - 1);
+    // }
+    // }
+    //
+    // private void findForward(String text) {
+    // int findPos = textArea.getCaretPosition() + 1;
+    // if (findPos >= getTextLength()) {
+    // textArea.setCaretPosition(getTextLength() - 1);
+    // return;
+    // }
+    // int pos = textArea.getText().indexOf(text, findPos);
+    // if (pos < 0) {
+    // // no troba més: deixa el cursor a final de fitxer
+    // textArea.setCaretPosition(getTextLength() - 1);
+    // } else {
+    // textArea.setCaretPosition(pos);
+    // }
+    //
+    // // TODO
+    // // try {
+    // // Highlighter highlighter = textArea.getHighlighter();
+    // // HighlightPainter painter = new
+    // // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+    // // highlighter.addHighlight(pos, pos + text.length(), painter);
+    // // } catch (BadLocationException e) {
+    // // throw new RuntimeException(e);
+    // // }
+    //
+    // // TODO
+    // // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+    // }
+    //
+    // private void findBackward(String text) {
+    // int findPos = textArea.getCaretPosition() - 1;
+    // if (findPos <= 0) {
+    // return;
+    // }
+    // int pos = textArea.getText().lastIndexOf(text, findPos);
+    // if (pos < 0) {
+    // // no troba més: deixa el cursor a inici de fitxer
+    // textArea.setCaretPosition(0);
+    // } else {
+    // textArea.setCaretPosition(pos);
+    // }
+    //
+    // // TODO
+    // // try {
+    // // Highlighter highlighter = textArea.getHighlighter();
+    // // HighlightPainter painter = new
+    // // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+    // // highlighter.addHighlight(pos, pos + text.length(), painter);
+    // // } catch (BadLocationException e) {
+    // // throw new RuntimeException(e);
+    // // }
+    //
+    // // TODO
+    // // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+    // }
+    //
+    // /////////////////
+    //
+    // public void shiftPressed() {
+    // shift = true;
+    // }
+    //
+    // public void shiftReleased() {
+    // shift = false;
+    // }
+    //
+    // private void beforeCursorMoves() {
+    // if (shift) {
+    // if (!selection) {
+    // selection = true;
+    // selectionStart = textArea.getCaretPosition();
+    // selectionEnd = textArea.getCaretPosition();
+    //
+    // textArea.setCaretPosition(selectionStart);
+    // textArea.moveCaretPosition(selectionEnd);
+    // }
+    // } else {
+    // selection = false;
+    // }
+    // }
+    //
+    // private void afterCursorMoves() {
+    // if (selection) {
+    // selectionEnd = textArea.getCaretPosition();
+    //
+    // textArea.setCaretPosition(selectionStart);
+    // textArea.moveCaretPosition(selectionEnd);
+    // }
+    // }
+    //
+    // private void copySelection() {
+    // if (selection) {
+    // Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+    // StringSelection selection = new StringSelection(textArea.getSelectedText());
+    // clipboard.setContents(selection, null);
+    // }
+    // }
+    //
+    // private void cutSelection() {
+    // if (selection) {
+    // Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+    // StringSelection selection = new StringSelection(textArea.getSelectedText());
+    // clipboard.setContents(selection, null);
+    //
+    // delete();
+    // }
+    // }
+    //
+    // private void paste() {
+    // if (selection) {
+    // delete();
+    // }
+    //
+    // try {
+    // String content = (String) Toolkit.getDefaultToolkit().getSystemClipboard()
+    // .getData(DataFlavor.stringFlavor);
+    // textArea.insert(content, textArea.getCaretPosition());
+    // } catch (UnsupportedFlavorException e) {
+    // // there is nothing in the clipboard
+    // } catch (Exception e) {
+    // throw new RuntimeException(e);
+    // }
+    // }
+    //
+    // /////////////////
+    //
+    // private int getLineNum() {
+    // try {
+    // return textArea.getLineOfOffset(textArea.getCaretPosition());
+    // } catch (BadLocationException e) {
+    // throw new RuntimeException(e);
+    // }
+    // }
+    //
+    // private int getColumnNum() {
+    // try {
+    // return textArea.getCaretPosition() -
+    // textArea.getLineStartOffset(getLineNum());
+    // } catch (BadLocationException e) {
+    // throw new RuntimeException(e);
+    // }
+    // }
+    //
+    // private int getLineLength() {
+    // try {
+    // return textArea.getLineEndOffset(getLineNum()) - 1 -
+    // textArea.getLineStartOffset(getLineNum());
+    // } catch (BadLocationException e) {
+    // throw new RuntimeException(e);
+    // }
+    // }
+    //
+    // private void gotoLineBegin() {
+    // try {
+    // textArea.setCaretPosition(textArea.getLineStartOffset(getLineNum()));
+    // } catch (BadLocationException e) {
+    // throw new RuntimeException(e);
+    // }
+    // }
+    //
+    // private void gotoLineEnd() {
+    // try {
+    //
+    // int pos;
+    //
+    // if (getLineNum() == getLineCount()) {
+    // pos = getTextLength() - 1;
+    // } else {
+    // pos = textArea.getLineEndOffset(getLineNum()) - 1;
+    // }
+    // if (pos > 0) {
+    // textArea.setCaretPosition(pos);
+    // }
+    //
+    // textArea.setCaretPosition(pos);
+    //
+    // } catch (BadLocationException e) {
+    // throw new RuntimeException(e);
+    // }
+    // }
+    //
+    // private void dec() {
+    // if (textArea.getCaretPosition() - 1 >= 0) {
+    // textArea.setCaretPosition(textArea.getCaretPosition() - 1);
+    // }
+    // }
+    //
+    // private void inc() {
+    // if (textArea.getCaretPosition() + 1 < getTextLength()) {
+    // textArea.setCaretPosition(textArea.getCaretPosition() + 1);
+    // }
+    // }
+    //
+    // private void inc(int n) {
+    // for (int i = 0; i < n; i++) {
+    // inc();
+    // }
+    // }
+    //
+    // private int getLineCount() {
+    // // -1 pq és 1-based
+    // return textArea.getLineCount() - 1;
+    // }
+    //
+    // private int getTextLength() {
+    // return textArea.getDocument().getLength() + 1;
+    // }
+    //
+    // private void lineDown() {
+    // if (getLineNum() >= getLineCount() - 1) {
+    // gotoLineEnd();
+    // inc();
+    // afterCursorMoves();
+    // return;
+    // }
+    // int cols = getColumnNum();
+    // gotoLineEnd();
+    // inc();
+    // inc(Math.min(cols, getLineLength()));
+    // }
+    //
+    // private void lineUp() {
+    // if (getLineNum() == 0) {
+    // afterCursorMoves();
+    // return;
+    // }
+    // int cols = getColumnNum();
+    // gotoLineBegin();
+    // dec();
+    // gotoLineBegin();
+    // inc(Math.min(cols, getLineLength()));
+    // }
+    //
+    // /////////////////
+    //
+    // private void moveLeft(int n) {
+    // beforeCursorMoves();
+    // for (int i = 0; i < n; i++) {
+    // if (textArea.getCaretPosition() > 0) {
+    // dec();
+    // }
+    // }
+    // afterCursorMoves();
+    // }
+    //
+    // private void moveRight(int n) {
+    // beforeCursorMoves();
+    // for (int i = 0; i < n; i++) {
+    // if (textArea.getCaretPosition() < getTextLength()) {
+    // inc();
+    // }
+    // }
+    // afterCursorMoves();
+    // }
+    //
+    // private void moveLeftWords(int n) {
+    // beforeCursorMoves();
+    // for (int i = 0; i < n; i++) {
+    // if (textArea.getCaretPosition() > 0) {
+    // dec();
+    // while (textArea.getCaretPosition() > 0
+    // &&
+    // !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition())))
+    // {
+    // dec();
+    // }
+    // while (textArea.getCaretPosition() > 0
+    // &&
+    // Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition())))
+    // {
+    // dec();
+    // }
+    // while (textArea.getCaretPosition() > 0
+    // &&
+    // !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition())))
+    // {
+    // dec();
+    // }
+    // if (textArea.getCaretPosition() > 0) {
+    // inc();
+    // }
+    // }
+    // }
+    // afterCursorMoves();
+    // }
+    //
+    // private void moveRightWords(int n) {
+    // beforeCursorMoves();
+    // for (int i = 0; i < n; i++) {
+    // if (textArea.getCaretPosition() < getTextLength()) {
+    // while (textArea.getCaretPosition() < getTextLength() - 1
+    // &&
+    // !Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition())))
+    // {
+    // inc();
+    // }
+    // while (textArea.getCaretPosition() < getTextLength() - 1
+    // &&
+    // Character.isWhitespace(textArea.getText().charAt(textArea.getCaretPosition())))
+    // {
+    // inc();
+    // }
+    // }
+    // }
+    // afterCursorMoves();
+    // }
+    //
+    // private void moveDown() {
+    // beforeCursorMoves();
+    // lineDown();
+    // afterCursorMoves();
+    // }
+    //
+    // private void moveUp() {
+    // beforeCursorMoves();
+    // lineUp();
+    // afterCursorMoves();
+    // }
+    //
+    // private void pageUp(int n) {
+    // beforeCursorMoves();
+    // for (int i = 0; i < n; i++) {
+    // lineUp();
+    // }
+    // afterCursorMoves();
+    // }
+    //
+    // private void pageDown(int n) {
+    // beforeCursorMoves();
+    // for (int i = 0; i < n; i++) {
+    // lineDown();
+    // }
+    // afterCursorMoves();
+    // }
+    //
+    // private void bufferHome() {
+    // beforeCursorMoves();
+    // textArea.setCaretPosition(0);
+    // afterCursorMoves();
+    // }
+    //
+    // private void bufferEnd() {
+    // beforeCursorMoves();
+    // textArea.setCaretPosition(getTextLength() - 1);
+    // afterCursorMoves();
+    // }
+    //
+    // private void lineHome() {
+    // beforeCursorMoves();
+    // gotoLineBegin();
+    // afterCursorMoves();
+    // }
+    //
+    // private void lineEnd() {
+    // beforeCursorMoves();
+    // gotoLineEnd();
+    // afterCursorMoves();
+    // }
+    //
+    // private void delete() {
+    // if (selection) {
+    // int min = Math.min(selectionStart, selectionEnd);
+    // int max = Math.max(selectionStart, selectionEnd);
+    // textArea.replaceRange("", min, max);
+    // textArea.setCaretPosition(min);
+    // selection = false;
+    // } else {
+    // int pos = textArea.getCaretPosition();
+    // if (pos + 1 >= getTextLength()) {
+    // return;
+    // }
+    // textArea.replaceRange("", pos, pos + 1);
+    // }
+    // }
+    //
+    // private void backSpace() {
+    // if (selection) {
+    // int min = Math.min(selectionStart, selectionEnd);
+    // int max = Math.max(selectionStart, selectionEnd);
+    // textArea.replaceRange("", min, max);
+    // textArea.setCaretPosition(min);
+    // selection = false;
+    // } else {
+    // int pos = textArea.getCaretPosition();
+    // if (pos <= 0) {
+    // return;
+    // }
+    // textArea.replaceRange("", pos - 1, pos);
+    // }
+    // }
+    //
+    // private void insert(char c, int atPosition) {
+    // String text = String.valueOf(c);
+    // if (selection) {
+    // int min = Math.min(selectionStart, selectionEnd);
+    // int max = Math.max(selectionStart, selectionEnd);
+    // textArea.replaceRange(text, min, max);
+    // textArea.setCaretPosition(min + text.length());
+    // selection = false;
+    // } else {
+    // textArea.insert(text, atPosition);
+    // }
+    // }
+    //
+    // }
+
     class MyKeyEventDispatcher implements KeyEventDispatcher {
 
-        final EditorManager utils;
+        final MacroRecording macroRecording;
         final JTextField cmdTextField;
 
         final Closure onDoRecord;
         final Closure onDoPlay;
 
-        public MyKeyEventDispatcher(EditorManager utils, JTextField cmdTextField, Closure onDoRecord,
+        public MyKeyEventDispatcher(MacroRecording macroRecording, JTextField cmdTextField, Closure onDoRecord,
                 Closure onDoPlay) {
             super();
-            this.utils = utils;
+            this.macroRecording = macroRecording;
             this.cmdTextField = cmdTextField;
             this.onDoRecord = onDoRecord;
             this.onDoPlay = onDoPlay;
         }
 
-        // boolean controlPressed = false;
+        boolean controlPressed = false;
         boolean altPressed = false;
         // boolean shiftPressed = false;
 
@@ -981,16 +1058,18 @@ public class TextEdit5 extends JFrame {
                 }
             }
 
-            if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == utils.getTextArea()) {
+            if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == macroRecording.getTextArea()) {
+
                 if (e.getID() == KeyEvent.KEY_PRESSED) {
 
                     int key = e.getKeyCode();
 
                     switch (key) {
-                    // case KeyEvent.VK_CONTROL:
-                    // this.controlPressed = true;
-                    // e.consume();
-                    // break;
+                    case KeyEvent.VK_CONTROL:
+                        this.controlPressed = true;
+                        System.out.println(controlPressed);
+                        // e.consume();
+                        break;
                     // case KeyEvent.VK_SHIFT:
                     // if (!shiftPressed) {
                     // utils.interpret("+s");
@@ -1128,18 +1207,34 @@ public class TextEdit5 extends JFrame {
                         e.consume();
                         break;
                     }
+                    case KeyEvent.VK_R: {
+                        if (controlPressed) {
+                            onDoRecord.execute();
+                            e.consume();
+                        }
+                        break;
+                    }
+                    case KeyEvent.VK_P: {
+                        if (controlPressed) {
+                            onDoPlay.execute();
+                            e.consume();
+                        }
+                        break;
+                    }
                     // default:
                     }
 
                 } else if (e.getID() == KeyEvent.KEY_TYPED) {
 
-                    if (altPressed && Character.toUpperCase(e.getKeyChar()) == (char) KeyEvent.VK_R) {
-                        onDoRecord.execute();
-                        e.consume();
-                    } else if (altPressed && Character.toUpperCase(e.getKeyChar()) == (char) KeyEvent.VK_P) {
-                        onDoPlay.execute();
-                        e.consume();
-                    }
+                    // if (altPressed && Character.toUpperCase(e.getKeyChar()) == (char)
+                    // KeyEvent.VK_R) {
+                    // onDoRecord.execute();
+                    // e.consume();
+                    // } else if (altPressed && Character.toUpperCase(e.getKeyChar()) == (char)
+                    // KeyEvent.VK_P) {
+                    // onDoPlay.execute();
+                    // e.consume();
+                    // }
                     // else
                     //
                     // if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() !=
@@ -1152,13 +1247,14 @@ public class TextEdit5 extends JFrame {
 
                 } else if (e.getID() == KeyEvent.KEY_RELEASED) {
 
-                    // int key = e.getKeyCode();
-                    //
-                    // switch (key) {
-                    // case KeyEvent.VK_CONTROL:
-                    // this.controlPressed = false;
-                    // e.consume();
-                    // break;
+                    int key = e.getKeyCode();
+
+                    switch (key) {
+                    case KeyEvent.VK_CONTROL:
+                        this.controlPressed = false;
+                        System.out.println(controlPressed);
+                        // e.consume();
+                        break;
                     // case KeyEvent.VK_SHIFT:
                     // if (shiftPressed) {
                     // utils.interpret("-s");
@@ -1166,10 +1262,18 @@ public class TextEdit5 extends JFrame {
                     // this.shiftPressed = false;
                     // e.consume();
                     // break;
-                    // }
-                    //
+                    }
+
                     // e.consume();
                 }
+
+                /**
+                 * IMPORTANTISSIM: REGISTRA TOT LO NO CONSUMIT!!!!!
+                 */
+                if (!e.isConsumed()) {
+                    macroRecording.record(e);
+                }
+
             }
 
             return false;

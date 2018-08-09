@@ -158,9 +158,6 @@ public class TextEdit5 extends JFrame {
             super(new BorderLayout());
             this.filename = filename;
 
-            this.textArea = new JTextArea();
-            MacroRecording macroRecording = new MacroRecording(textArea);
-
             fileMenu.add(newItem);
             fileMenu.add(openItem);
             fileMenu.add(saveItem);
@@ -184,6 +181,9 @@ public class TextEdit5 extends JFrame {
 
             cmdTextField = new JTextField();
             menuBar.add(cmdTextField);
+
+            this.textArea = new JTextArea();
+            MacroRecording macroRecording = new MacroRecording(textArea, cmdTextField);
 
             ActionListener actionListener = new ActionListener() {
 
@@ -218,13 +218,176 @@ public class TextEdit5 extends JFrame {
                         macroRecording.playMacro();
                         textArea.requestFocus();
                     } else if (e.getSource() == cmdTextField) {
-                        // TODO això és important: aquí es processa una línia de comanda des de l'input
+
+                        /**
+                         * <pre>
+                        recording: java.awt.event.KeyEvent[KEY_PRESSED,keyCode=10,keyText=Enter,keyChar=Enter,keyLocation=KEY_LOCATION_STANDARD,rawCode=36,primaryLevelUnicode=10,scancode=0,extendedKeyCode=0xa] on javax.swing.JTextArea[,0,0,579x10920,layout=javax.swing.plaf.basic.BasicTextUI$UpdateHandler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.border.MatteBorder@261be378,flags=296,maximumSize=,minimumSize=,preferredSize=,caretColor=java.awt.Color[r=255,g=0,b=0],disabledTextColor=javax.swing.plaf.ColorUIResource[r=184,g=207,b=229],editable=true,margin=javax.swing.plaf.InsetsUIResource[top=0,left=0,bottom=0,right=0],selectedTextColor=java.awt.Color[r=255,g=255,b=255],selectionColor=java.awt.Color[r=0,g=0,b=255],colums=0,columWidth=0,rows=0,rowHeight=0,word=true,wrap=true]
+                        recording: java.awt.event.KeyEvent[KEY_TYPED,keyCode=0,keyText=Unknown keyCode: 0x0,keyChar=Enter,keyLocation=KEY_LOCATION_UNKNOWN,rawCode=0,primaryLevelUnicode=10,scancode=0,extendedKeyCode=0x0] on javax.swing.JTextArea[,0,0,579x10920,invalid,layout=javax.swing.plaf.basic.BasicTextUI$UpdateHandler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.border.MatteBorder@261be378,flags=296,maximumSize=,minimumSize=,preferredSize=,caretColor=java.awt.Color[r=255,g=0,b=0],disabledTextColor=javax.swing.plaf.ColorUIResource[r=184,g=207,b=229],editable=true,margin=javax.swing.plaf.InsetsUIResource[top=0,left=0,bottom=0,right=0],selectedTextColor=java.awt.Color[r=255,g=255,b=255],selectionColor=java.awt.Color[r=0,g=0,b=255],colums=0,columWidth=0,rows=0,rowHeight=0,word=true,wrap=true]
+                        recording: java.awt.event.KeyEvent[KEY_RELEASED,keyCode=10,keyText=Enter,keyChar=Enter,keyLocation=KEY_LOCATION_STANDARD,rawCode=36,primaryLevelUnicode=10,scancode=0,extendedKeyCode=0xa] on javax.swing.JTextArea[,0,0,579x10935,layout=javax.swing.plaf.basic.BasicTextUI$UpdateHandler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.border.MatteBorder@261be378,flags=296,maximumSize=,minimumSize=,preferredSize=,caretColor=java.awt.Color[r=255,g=0,b=0],disabledTextColor=javax.swing.plaf.ColorUIResource[r=184,g=207,b=229],editable=true,margin=javax.swing.plaf.InsetsUIResource[top=0,left=0,bottom=0,right=0],selectedTextColor=java.awt.Color[r=255,g=255,b=255],selectionColor=java.awt.Color[r=0,g=0,b=255],colums=0,columWidth=0,rows=0,rowHeight=0,word=true,wrap=true]
+                         * </pre>
+                         */
+                        // Component source, int id, long when, int modifiers,
+                        // int keyCode, char keyChar
+
+                        // FIXME jou
+                        System.err.println(e);
+
+                        // FIXME jou
+                        KeyEvent enter0 = new KeyEvent((Component) e.getSource(), KeyEvent.KEY_TYPED,
+                                System.currentTimeMillis(), e.getModifiers(), 0, (char) 0x10);
+
+                        macroRecording.record(enter0); // FIXME jou
+
+                        // TODO això és important: aquí es processa una línia de comanda des de l'input,
+                        // i ha de poder registrar-se com a macro
                         // System.out.println(cmdTextField.getText());
                         // macroRecording.interpret(cmdTextField.getText());
                         // textArea.requestFocus();
+                        String cmd = cmdTextField.getText();
+                        if (cmd.startsWith("f")) {
+                            String cmdVal = cmd.substring(1);
+                            int textLength = textArea.getDocument().getLength();
+
+                            int findPos = textArea.getCaretPosition() + 1;
+                            if (findPos >= textLength) {
+                                textArea.setCaretPosition(textLength - 1);
+                                textArea.requestFocus();
+                                return;
+                            }
+                            int pos = textArea.getText().indexOf(cmdVal, findPos);
+                            if (pos < 0) {
+                                // no troba més: deixa el cursor a final de fitxer
+                                textArea.setCaretPosition(textLength - 1);
+                            } else {
+                                textArea.setCaretPosition(pos);
+                            }
+
+                            textArea.requestFocus();
+
+                            // TODO
+                            // try {
+                            // Highlighter highlighter = textArea.getHighlighter();
+                            // HighlightPainter painter = new
+                            // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+                            // highlighter.addHighlight(pos, pos + text.length(), painter);
+                            // } catch (BadLocationException e) {
+                            // throw new RuntimeException(e);
+                            // }
+
+                            // TODO
+                            // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+                        } else if (cmd.startsWith("F")) {
+
+                            String cmdVal = cmd.substring(1);
+                            // int textLength = textArea.getDocument().getLength();
+
+                            int findPos = textArea.getCaretPosition() - 1;
+                            if (findPos <= 0) {
+                                return;
+                            }
+                            int pos = textArea.getText().lastIndexOf(cmdVal, findPos);
+                            if (pos < 0) {
+                                // no troba més: deixa el cursor a inici de fitxer
+                                textArea.setCaretPosition(0);
+                            } else {
+                                textArea.setCaretPosition(pos);
+                            }
+
+                            textArea.requestFocus();
+
+                            // TODO
+                            // try {
+                            // Highlighter highlighter = textArea.getHighlighter();
+                            // HighlightPainter painter = new
+                            // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+                            // highlighter.addHighlight(pos, pos + text.length(), painter);
+                            // } catch (BadLocationException e) {
+                            // throw new RuntimeException(e);
+                            // }
+
+                            // TODO
+                            // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+
+                        }
                     }
                 }
             };
+
+            // /**
+            // * @param regexp p.ex. "@f\d{5}"
+            // */
+            // private void findForwardRegexp(String regexp) {
+            // Pattern p = Pattern.compile(regexp);
+            //
+            // int findPos = textArea.getCaretPosition() + 1;
+            // if (findPos >= getTextLength()) {
+            // textArea.setCaretPosition(getTextLength() - 1);
+            // return;
+            // }
+            //
+            // Matcher m = p.matcher(textArea.getText());
+            // if (m.find(findPos)) {
+            // textArea.setCaretPosition(m.start());
+            // } else {
+            // // no troba més: deixa el cursor a final de fitxer
+            // textArea.setCaretPosition(getTextLength() - 1);
+            // }
+            // }
+            //
+            // private void findForward(String text) {
+            // int findPos = textArea.getCaretPosition() + 1;
+            // if (findPos >= getTextLength()) {
+            // textArea.setCaretPosition(getTextLength() - 1);
+            // return;
+            // }
+            // int pos = textArea.getText().indexOf(text, findPos);
+            // if (pos < 0) {
+            // // no troba més: deixa el cursor a final de fitxer
+            // textArea.setCaretPosition(getTextLength() - 1);
+            // } else {
+            // textArea.setCaretPosition(pos);
+            // }
+            //
+            // // TODO
+            // // try {
+            // // Highlighter highlighter = textArea.getHighlighter();
+            // // HighlightPainter painter = new
+            // // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+            // // highlighter.addHighlight(pos, pos + text.length(), painter);
+            // // } catch (BadLocationException e) {
+            // // throw new RuntimeException(e);
+            // // }
+            //
+            // // TODO
+            // // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+            // }
+            //
+            // private void findBackward(String text) {
+            // int findPos = textArea.getCaretPosition() - 1;
+            // if (findPos <= 0) {
+            // return;
+            // }
+            // int pos = textArea.getText().lastIndexOf(text, findPos);
+            // if (pos < 0) {
+            // // no troba més: deixa el cursor a inici de fitxer
+            // textArea.setCaretPosition(0);
+            // } else {
+            // textArea.setCaretPosition(pos);
+            // }
+            //
+            // // TODO
+            // // try {
+            // // Highlighter highlighter = textArea.getHighlighter();
+            // // HighlightPainter painter = new
+            // // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+            // // highlighter.addHighlight(pos, pos + text.length(), painter);
+            // // } catch (BadLocationException e) {
+            // // throw new RuntimeException(e);
+            // // }
+            //
+            // // TODO
+            // // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+            // }
 
             newItem.addActionListener(actionListener);
             openItem.addActionListener(actionListener);
@@ -395,13 +558,15 @@ public class TextEdit5 extends JFrame {
     static class MacroRecording {
 
         final JTextArea textArea;
+        final JTextField cmdTextField;
 
         boolean isRecording = false;
         final List<KeyEvent> eventsRecorded = new ArrayList<>();
 
-        public MacroRecording(JTextArea textArea) {
+        public MacroRecording(JTextArea textArea, JTextField cmdTextField) {
             super();
             this.textArea = textArea;
+            this.cmdTextField = cmdTextField;
         }
 
         public boolean isRecording() {
@@ -420,6 +585,7 @@ public class TextEdit5 extends JFrame {
         public void record(KeyEvent ke) {
             if (isRecording) {
                 this.eventsRecorded.add(ke);
+                System.out.println("recording: " + ke);
             }
         }
 
@@ -430,8 +596,20 @@ public class TextEdit5 extends JFrame {
         public void playMacro() {
             isRecording = false;
             for (KeyEvent e : eventsRecorded) {
-                textArea.dispatchEvent(new KeyEvent((Component) e.getSource(), e.getID(), System.currentTimeMillis(),
-                        e.getModifiers(), e.getKeyCode(), e.getKeyChar()));
+
+                System.out.println("playing: " + e);
+
+                if (e.getSource() == textArea) {
+                    cmdTextField.requestFocus();// TODO ?
+                    textArea.dispatchEvent(new KeyEvent((Component) e.getSource(), e.getID(),
+                            System.currentTimeMillis(), e.getModifiers(), e.getKeyCode(), e.getKeyChar()));
+                } else if (e.getSource() == cmdTextField) {
+                    cmdTextField.requestFocus();// TODO ?
+                    cmdTextField.dispatchEvent(new KeyEvent((Component) e.getSource(), e.getID(),
+                            System.currentTimeMillis(), e.getModifiers(), e.getKeyCode(), e.getKeyChar()));
+                } else {
+                    System.err.println(e);
+                }
             }
         }
 
@@ -480,23 +658,29 @@ public class TextEdit5 extends JFrame {
                 }
             }
 
+            // if (e.getSource() == cmdTextField) {
             if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == cmdTextField) {
 
                 if (e.getID() == KeyEvent.KEY_TYPED) {
                     if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
                         macroRecording.getTextArea().requestFocus();
-                        e.consume();
+                        // e.consume();
                     }
                 }
+
+                // if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+                // System.out.println("enter");
+                // }
 
                 /**
                  * IMPORTANTISSIM: REGISTRA TOT LO NO CONSUMIT!!!!!
                  */
-                if (!e.isConsumed()) {
-                    macroRecording.record(e);
-                }
+                // if (!e.isConsumed()) {
+                macroRecording.record(e);
+                // }
             }
 
+            // if (e.getSource() == macroRecording) {
             if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == macroRecording.getTextArea()) {
 
                 if (e.getID() == KeyEvent.KEY_PRESSED) {

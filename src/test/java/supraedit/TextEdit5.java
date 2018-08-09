@@ -296,6 +296,10 @@ public class TextEdit5 extends JFrame {
                 playMacroButton.doClick();
             };
 
+//            KeyEvent e;
+//            KeyboardFocusManager.getCurrentKeyboardFocusManager().dispatchKeyEvent(e);
+            
+            
             KeyboardFocusManager.getCurrentKeyboardFocusManager()
                     .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager, cmdTextField, onDoRecord, onDoPlay));
 
@@ -950,9 +954,9 @@ public class TextEdit5 extends JFrame {
             this.onDoPlay = onDoPlay;
         }
 
-        boolean controlPressed = false;
+        // boolean controlPressed = false;
         boolean altPressed = false;
-        boolean shiftPressed = false;
+        // boolean shiftPressed = false;
 
         @Override
         public boolean dispatchKeyEvent(KeyEvent e) {
@@ -983,19 +987,19 @@ public class TextEdit5 extends JFrame {
                     int key = e.getKeyCode();
 
                     switch (key) {
-                    case KeyEvent.VK_CONTROL:
-                        this.controlPressed = true;
-                        e.consume();
-                        break;
-                    case KeyEvent.VK_SHIFT:
-                        if (!shiftPressed) {
-                            utils.interpret("+s");
-                        }
-                        this.shiftPressed = true;
-                        e.consume();
-                        break;
+                    // case KeyEvent.VK_CONTROL:
+                    // this.controlPressed = true;
+                    // e.consume();
+                    // break;
+                    // case KeyEvent.VK_SHIFT:
+                    // if (!shiftPressed) {
+                    // utils.interpret("+s");
+                    // }
+                    // this.shiftPressed = true;
+                    // e.consume();
+                    // break;
 
-                    case KeyEvent.VK_LEFT:
+                    case KeyEvent.VK_LEFT: {
 
                         if (altPressed) {
                             JTabbedPane tabs = (JTabbedPane) cmdTextField.getParent().getParent().getParent();
@@ -1003,14 +1007,17 @@ public class TextEdit5 extends JFrame {
                             if (selected > 0) {
                                 tabs.setSelectedIndex(selected - 1);
                             }
-                        } else if (this.controlPressed) {
-                            utils.interpret("L");
-                        } else {
-                            utils.interpret("l");
+                            e.consume();
                         }
-                        e.consume();
+                        // else if (this.controlPressed) {
+                        // utils.interpret("L");
+                        // } else {
+                        // utils.interpret("l");
+                        // }
+                        // e.consume();
                         break;
-                    case KeyEvent.VK_RIGHT:
+                    }
+                    case KeyEvent.VK_RIGHT: {
 
                         if (altPressed) {
                             JTabbedPane tabs = (JTabbedPane) cmdTextField.getParent().getParent().getParent();
@@ -1018,107 +1025,110 @@ public class TextEdit5 extends JFrame {
                             if (selected < tabs.getTabCount() - 1) {
                                 tabs.setSelectedIndex(selected + 1);
                             }
-                        } else if (this.controlPressed) {
-                            utils.interpret("R");
-                        } else {
-                            utils.interpret("r");
-                        }
-                        e.consume();
-                        break;
-                    case KeyEvent.VK_DOWN: {
-                        utils.interpret("d");
-                        e.consume();
-                        break;
-                    }
-                    case KeyEvent.VK_UP: {
-                        utils.interpret("u");
-                        e.consume();
-                        break;
-                    }
-
-                    case KeyEvent.VK_PAGE_UP: {
-                        for (int i = 0; i < 20; i++) {
-                            utils.interpret("U");
-                        }
-                        e.consume();
-                        break;
-                    }
-                    case KeyEvent.VK_PAGE_DOWN: {
-                        for (int i = 0; i < 20; i++) {
-                            utils.interpret("D");
-                        }
-                        e.consume();
-                        break;
-                    }
-                    case KeyEvent.VK_HOME:
-                        if (this.controlPressed) {
-                            utils.interpret("^");
-                        } else {
-                            utils.interpret("b");
-                        }
-                        e.consume();
-                        break;
-                    case KeyEvent.VK_END:
-                        if (this.controlPressed) {
-                            utils.interpret("$");
-                        } else {
-                            utils.interpret("e");
-                        }
-                        e.consume();
-                        break;
-                    case KeyEvent.VK_DELETE: {
-                        utils.interpret(">");
-                        e.consume();
-                        break;
-                    }
-                    case KeyEvent.VK_BACK_SPACE: {
-                        utils.interpret("<");
-                        e.consume();
-                        break;
-                    }
-
-                    case KeyEvent.VK_C: {
-                        if (controlPressed) {
-                            utils.interpret("c");
                             e.consume();
                         }
+                        // else if (this.controlPressed) {
+                        // utils.interpret("R");
+                        // } else {
+                        // utils.interpret("r");
+                        // }
+                        // e.consume();
                         break;
                     }
-                    case KeyEvent.VK_INSERT: {
-                        if (controlPressed) {
-                            utils.interpret("c");
-                        } else if (shiftPressed) {
-                            utils.interpret("v");
-                        }
-                        e.consume();
-                        break;
-                    }
-                    case KeyEvent.VK_X: {
-                        if (controlPressed) {
-                            utils.interpret("x");
-                            e.consume();
-                        }
-                        break;
-                    }
-                    case KeyEvent.VK_V: {
-                        if (controlPressed) {
-                            utils.interpret("v");
-                            e.consume();
-                        }
-                        break;
-                    }
-
-                    case KeyEvent.VK_ENTER: {
-                        e.consume();
-                        break;
-                    }
-
+                    // case KeyEvent.VK_DOWN: {
+                    // utils.interpret("d");
+                    // e.consume();
+                    // break;
+                    // }
+                    // case KeyEvent.VK_UP: {
+                    // utils.interpret("u");
+                    // e.consume();
+                    // break;
+                    // }
+                    //
+                    // case KeyEvent.VK_PAGE_UP: {
+                    // for (int i = 0; i < 20; i++) {
+                    // utils.interpret("U");
+                    // }
+                    // e.consume();
+                    // break;
+                    // }
+                    // case KeyEvent.VK_PAGE_DOWN: {
+                    // for (int i = 0; i < 20; i++) {
+                    // utils.interpret("D");
+                    // }
+                    // e.consume();
+                    // break;
+                    // }
+                    // case KeyEvent.VK_HOME:
+                    // if (this.controlPressed) {
+                    // utils.interpret("^");
+                    // } else {
+                    // utils.interpret("b");
+                    // }
+                    // e.consume();
+                    // break;
+                    // case KeyEvent.VK_END:
+                    // if (this.controlPressed) {
+                    // utils.interpret("$");
+                    // } else {
+                    // utils.interpret("e");
+                    // }
+                    // e.consume();
+                    // break;
+                    // case KeyEvent.VK_DELETE: {
+                    // utils.interpret(">");
+                    // e.consume();
+                    // break;
+                    // }
+                    // case KeyEvent.VK_BACK_SPACE: {
+                    // utils.interpret("<");
+                    // e.consume();
+                    // break;
+                    // }
+                    //
+                    // case KeyEvent.VK_C: {
+                    // if (controlPressed) {
+                    // utils.interpret("c");
+                    // e.consume();
+                    // }
+                    // break;
+                    // }
+                    // case KeyEvent.VK_INSERT: {
+                    // if (controlPressed) {
+                    // utils.interpret("c");
+                    // } else if (shiftPressed) {
+                    // utils.interpret("v");
+                    // }
+                    // e.consume();
+                    // break;
+                    // }
+                    // case KeyEvent.VK_X: {
+                    // if (controlPressed) {
+                    // utils.interpret("x");
+                    // e.consume();
+                    // }
+                    // break;
+                    // }
+                    // case KeyEvent.VK_V: {
+                    // if (controlPressed) {
+                    // utils.interpret("v");
+                    // e.consume();
+                    // }
+                    // break;
+                    // }
+                    //
+                    // case KeyEvent.VK_ENTER: {
+                    // e.consume();
+                    // break;
+                    // }
+                    //
                     case KeyEvent.VK_ESCAPE: {
                         cmdTextField.requestFocus();
                         e.consume();
                         break;
                     }
-                    default:
+                    // default:
                     }
 
                 } else if (e.getID() == KeyEvent.KEY_TYPED) {
@@ -1129,34 +1139,36 @@ public class TextEdit5 extends JFrame {
                     } else if (altPressed && Character.toUpperCase(e.getKeyChar()) == (char) KeyEvent.VK_P) {
                         onDoPlay.execute();
                         e.consume();
-                    } else
-
-                    if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE
-                            && e.getKeyChar() != KeyEvent.VK_ESCAPE && !controlPressed) {
-
-                        utils.interpret("~" + e.getKeyChar());
-                        e.consume();
                     }
+                    // else
+                    //
+                    // if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() !=
+                    // KeyEvent.VK_BACK_SPACE
+                    // && e.getKeyChar() != KeyEvent.VK_ESCAPE && !controlPressed) {
+                    //
+                    // utils.interpret("~" + e.getKeyChar());
+                    // e.consume();
+                    // }
 
                 } else if (e.getID() == KeyEvent.KEY_RELEASED) {
 
-                    int key = e.getKeyCode();
-
-                    switch (key) {
-                    case KeyEvent.VK_CONTROL:
-                        this.controlPressed = false;
-                        e.consume();
-                        break;
-                    case KeyEvent.VK_SHIFT:
-                        if (shiftPressed) {
-                            utils.interpret("-s");
-                        }
-                        this.shiftPressed = false;
-                        e.consume();
-                        break;
-                    }
-
-                    e.consume();new Integer(129).toHexString(129);
+                    // int key = e.getKeyCode();
+                    //
+                    // switch (key) {
+                    // case KeyEvent.VK_CONTROL:
+                    // this.controlPressed = false;
+                    // e.consume();
+                    // break;
+                    // case KeyEvent.VK_SHIFT:
+                    // if (shiftPressed) {
+                    // utils.interpret("-s");
+                    // }
+                    // this.shiftPressed = false;
+                    // e.consume();
+                    // break;
+                    // }
+                    //
+                    // e.consume();
                 }
             }
 

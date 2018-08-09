@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,14 +88,34 @@ import javax.swing.text.DefaultCaret;
  *
  * // TODO undo
  *
- * // TODO pestanyes
+ * // XXX pestanyes
  *
- * // TODO find text/regexp in/sensitive wrap forward/backward + replace (amb
- * grouping si regexp=true)
+ * // XXX find text/regexp in/sensitive wrap forward/backward
+ * 
+ * // TODO replace (amb grouping si regexp=true)
  *
  * // TODO (multi) comandos inline (per input)
  *
  * // TODO (des)tabulació en bloc
+ * 
+ * 
+ * 
+ * 
+ * <h1>Supra Ed <small>the ultimate editor for editing enthusiasts</small></h1>
+ * 
+ * <h2>Navegació bàsica</h2>
+ * 
+ * <p>
+ * Els fitxers en edició s'organitzen en tabs: [Alt+left] i [Alt+right] canvia
+ * de tab actiu.
+ * 
+ * <p>
+ * En cada tab hi ha l'àrea d'edició, i un input text: el cursor conmuta entre
+ * aquests amb [Esc].
+ * 
+ * 
+ * [Alt+R] engega/atura la grabació de macro, [Alt+P] la playa.
+ * 
  *
  */
 public class TextEdit5 extends JFrame {
@@ -115,6 +136,10 @@ public class TextEdit5 extends JFrame {
                 new TextEdit5();
             }
         });
+    }
+
+    interface Closure {
+        void execute();
     }
 
     class EditorPane extends JPanel {
@@ -209,9 +234,11 @@ public class TextEdit5 extends JFrame {
                         if (editorManager.isRecording()) {
                             editorManager.recordMacroStop();
                             recordMacroButton.setText("Rec");
+                            playMacroButton.setEnabled(true);
                         } else {
                             editorManager.recordMacroStart();
                             recordMacroButton.setText("Recording");
+                            playMacroButton.setEnabled(false);
                         }
                         textArea.requestFocus();
                     } else if (e.getSource() == playMacroButton) {
@@ -235,10 +262,6 @@ public class TextEdit5 extends JFrame {
             playMacroButton.addActionListener(actionListener);
             cmdTextField.addActionListener(actionListener);
 
-            // JScrollPane scrollPane = new JScrollPane(textArea);
-            // add(scrollPane);
-
-            // JTextArea textArea = new JTextArea();// TODO
             JScrollPane scrollPane = new JScrollPane(textArea);
             add(scrollPane, BorderLayout.CENTER);
 
@@ -247,41 +270,37 @@ public class TextEdit5 extends JFrame {
                 tln.setMinimumDisplayDigits(3);
                 scrollPane.setRowHeaderView(tln);
             }
-            {
-                textArea.setLineWrap(true);
-                textArea.setWrapStyleWord(textArea.getLineWrap());
-
-                Font font = new Font("Monospaced", Font.BOLD, 12);
-                textArea.setFont(font);
-            }
-
-            textArea.setEditable(true);
-
-            textArea.setSelectionColor(selectionBackgroundColor);
-            textArea.setSelectedTextColor(selectionColor);
-
-            textArea.setBackground(backgroundColor);
-            textArea.setBorder(BorderFactory.createMatteBorder(0, 5, 0, 0, textArea.getBackground()));
 
             loadFile(filename);
 
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(textArea.getLineWrap());
+            Font font = new Font("Monospaced", Font.BOLD, 12);
+            textArea.setFont(font);
+            textArea.setEditable(true);
+            textArea.setSelectionColor(selectionBackgroundColor);
+            textArea.setSelectedTextColor(selectionColor);
+            textArea.setBackground(backgroundColor);
+            textArea.setBorder(BorderFactory.createMatteBorder(0, 5, 0, 0, textArea.getBackground()));
             DefaultCaret c = new DefaultCaret();
             textArea.setCaret(c);
-
             textArea.getCaret().setBlinkRate(500);
             textArea.setCaretColor(cursorColor);
             textArea.setCaretPosition(0);
+            textArea.getCaret().setVisible(true);
+
+            Closure onDoRecord = () -> {
+                recordMacroButton.doClick();
+            };
+            Closure onDoPlay = () -> {
+                playMacroButton.doClick();
+            };
 
             KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                    .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager, cmdTextField));
+                    .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager, cmdTextField, onDoRecord, onDoPlay));
 
-            textArea.getCaret().setVisible(true);
             textArea.requestFocus();
 
-        }
-
-        public void requestFocus() {
-            textArea.requestFocus();
         }
 
         public String getFilenameShort() {
@@ -371,7 +390,6 @@ public class TextEdit5 extends JFrame {
 
         int tabSelected = tabbedPane.getSelectedIndex();
         ((EditorPane) tabbedPane.getComponent(tabSelected)).textArea.requestFocus();
-        // p2.textArea.requestFocus();
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         {
@@ -385,8 +403,7 @@ public class TextEdit5 extends JFrame {
             @Override
             public void focusGained(FocusEvent e) {
                 JTabbedPane tabs = ((JTabbedPane) e.getSource());
-                ((EditorPane)tabs.getSelectedComponent()).textArea.requestFocus();
-                // ((JTabbedPane) e.getSource()).gettextArea.requestFocus();
+                ((EditorPane) tabs.getSelectedComponent()).textArea.requestFocus();
             }
 
             @Override
@@ -921,10 +938,16 @@ public class TextEdit5 extends JFrame {
         final EditorManager utils;
         final JTextField cmdTextField;
 
-        public MyKeyEventDispatcher(EditorManager utils, JTextField cmdTextField) {
+        final Closure onDoRecord;
+        final Closure onDoPlay;
+
+        public MyKeyEventDispatcher(EditorManager utils, JTextField cmdTextField, Closure onDoRecord,
+                Closure onDoPlay) {
             super();
             this.utils = utils;
             this.cmdTextField = cmdTextField;
+            this.onDoRecord = onDoRecord;
+            this.onDoPlay = onDoPlay;
         }
 
         boolean controlPressed = false;
@@ -933,25 +956,39 @@ public class TextEdit5 extends JFrame {
 
         @Override
         public boolean dispatchKeyEvent(KeyEvent e) {
+
+            /*
+             * la gestió de la tecla [Alt] és comuna entre tots els tabs: això permet
+             * conmutar fluidament entre ells sense deixar anar el [Alt] (fent [Alt+left] i
+             * [Alt+right]).
+             */
+            if (e.getID() == KeyEvent.KEY_PRESSED) {
+                int key = e.getKeyCode();
+                if (key == KeyEvent.VK_ALT) {
+                    this.altPressed = true;
+                    e.consume();
+                }
+            }
+            if (e.getID() == KeyEvent.KEY_RELEASED) {
+                int key = e.getKeyCode();
+                if (key == KeyEvent.VK_ALT) {
+                    this.altPressed = false;
+                    e.consume();
+                }
+            }
+
             if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == utils.getTextArea()) {
                 if (e.getID() == KeyEvent.KEY_PRESSED) {
 
                     int key = e.getKeyCode();
-
-                    // https://docs.oracle.com/javase/tutorial/uiswing/components/textarea.html
 
                     switch (key) {
                     case KeyEvent.VK_CONTROL:
                         this.controlPressed = true;
                         e.consume();
                         break;
-                    case KeyEvent.VK_ALT:
-                        this.altPressed = true;
-                        e.consume();
-                        break;
                     case KeyEvent.VK_SHIFT:
                         if (!shiftPressed) {
-                            // utils.shiftPressed();
                             utils.interpret("+s");
                         }
                         this.shiftPressed = true;
@@ -959,40 +996,47 @@ public class TextEdit5 extends JFrame {
                         break;
 
                     case KeyEvent.VK_LEFT:
-                        if (this.controlPressed) {
-                            // utils.moveLeftWords(1);
+
+                        if (altPressed) {
+                            JTabbedPane tabs = (JTabbedPane) cmdTextField.getParent().getParent().getParent();
+                            int selected = tabs.getSelectedIndex();
+                            if (selected > 0) {
+                                tabs.setSelectedIndex(selected - 1);
+                            }
+                        } else if (this.controlPressed) {
                             utils.interpret("L");
                         } else {
-                            // utils.moveLeft(1);
                             utils.interpret("l");
                         }
                         e.consume();
                         break;
                     case KeyEvent.VK_RIGHT:
-                        if (this.controlPressed) {
-                            // utils.moveRightWords(1);
+
+                        if (altPressed) {
+                            JTabbedPane tabs = (JTabbedPane) cmdTextField.getParent().getParent().getParent();
+                            int selected = tabs.getSelectedIndex();
+                            if (selected < tabs.getTabCount() - 1) {
+                                tabs.setSelectedIndex(selected + 1);
+                            }
+                        } else if (this.controlPressed) {
                             utils.interpret("R");
                         } else {
-                            // utils.moveRight(1);
                             utils.interpret("r");
                         }
                         e.consume();
                         break;
                     case KeyEvent.VK_DOWN: {
-                        // utils.moveDown();
                         utils.interpret("d");
                         e.consume();
                         break;
                     }
                     case KeyEvent.VK_UP: {
-                        // utils.moveUp();
                         utils.interpret("u");
                         e.consume();
                         break;
                     }
 
                     case KeyEvent.VK_PAGE_UP: {
-                        // utils.pageUp(20);
                         for (int i = 0; i < 20; i++) {
                             utils.interpret("U");
                         }
@@ -1000,7 +1044,6 @@ public class TextEdit5 extends JFrame {
                         break;
                     }
                     case KeyEvent.VK_PAGE_DOWN: {
-                        // utils.pageDown(20);
                         for (int i = 0; i < 20; i++) {
                             utils.interpret("D");
                         }
@@ -1009,32 +1052,26 @@ public class TextEdit5 extends JFrame {
                     }
                     case KeyEvent.VK_HOME:
                         if (this.controlPressed) {
-                            // utils.bufferHome();
                             utils.interpret("^");
                         } else {
-                            // utils.lineHome();
                             utils.interpret("b");
                         }
                         e.consume();
                         break;
                     case KeyEvent.VK_END:
                         if (this.controlPressed) {
-                            // utils.bufferEnd();
                             utils.interpret("$");
                         } else {
-                            // utils.lineEnd();
                             utils.interpret("e");
                         }
                         e.consume();
                         break;
                     case KeyEvent.VK_DELETE: {
-                        // utils.delete();
                         utils.interpret(">");
                         e.consume();
                         break;
                     }
                     case KeyEvent.VK_BACK_SPACE: {
-                        // utils.backSpace();
                         utils.interpret("<");
                         e.consume();
                         break;
@@ -1042,7 +1079,6 @@ public class TextEdit5 extends JFrame {
 
                     case KeyEvent.VK_C: {
                         if (controlPressed) {
-                            // utils.copySelection();
                             utils.interpret("c");
                             e.consume();
                         }
@@ -1050,10 +1086,8 @@ public class TextEdit5 extends JFrame {
                     }
                     case KeyEvent.VK_INSERT: {
                         if (controlPressed) {
-                            // utils.copySelection();
                             utils.interpret("c");
                         } else if (shiftPressed) {
-                            // utils.paste();
                             utils.interpret("v");
                         }
                         e.consume();
@@ -1061,7 +1095,6 @@ public class TextEdit5 extends JFrame {
                     }
                     case KeyEvent.VK_X: {
                         if (controlPressed) {
-                            // utils.cutSelection();
                             utils.interpret("x");
                             e.consume();
                         }
@@ -1069,7 +1102,6 @@ public class TextEdit5 extends JFrame {
                     }
                     case KeyEvent.VK_V: {
                         if (controlPressed) {
-                            // utils.paste();
                             utils.interpret("v");
                             e.consume();
                         }
@@ -1086,21 +1118,23 @@ public class TextEdit5 extends JFrame {
                         e.consume();
                         break;
                     }
-
                     default:
                     }
 
-                    // e.consume();
-
                 } else if (e.getID() == KeyEvent.KEY_TYPED) {
 
-                    // System.out.println(e.getKeyChar() + "--" + KeyEvent.VK_C);
+                    if (altPressed && Character.toUpperCase(e.getKeyChar()) == (char) KeyEvent.VK_R) {
+                        onDoRecord.execute();
+                        e.consume();
+                    } else if (altPressed && Character.toUpperCase(e.getKeyChar()) == (char) KeyEvent.VK_P) {
+                        onDoPlay.execute();
+                        e.consume();
+                    } else
+
                     if (e.getKeyChar() != KeyEvent.VK_DELETE && e.getKeyChar() != KeyEvent.VK_BACK_SPACE
                             && e.getKeyChar() != KeyEvent.VK_ESCAPE && !controlPressed) {
-                        // textArea.insert(String.valueOf(e.getKeyChar()), textArea.getCaretPosition());
-                        // utils.insert(e.getKeyChar(), textArea.getCaretPosition());
+
                         utils.interpret("~" + e.getKeyChar());
-                        // System.out.println(String.valueOf(e.getKeyChar()));
                         e.consume();
                     }
 
@@ -1113,13 +1147,8 @@ public class TextEdit5 extends JFrame {
                         this.controlPressed = false;
                         e.consume();
                         break;
-                    case KeyEvent.VK_ALT:
-                        this.altPressed = false;
-                        e.consume();
-                        break;
                     case KeyEvent.VK_SHIFT:
                         if (shiftPressed) {
-                            // utils.shiftReleased();
                             utils.interpret("-s");
                         }
                         this.shiftPressed = false;
@@ -1127,7 +1156,7 @@ public class TextEdit5 extends JFrame {
                         break;
                     }
 
-                    e.consume();
+                    e.consume();new Integer(129).toHexString(129);
                 }
             }
 

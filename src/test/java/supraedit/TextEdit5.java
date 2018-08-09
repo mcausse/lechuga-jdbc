@@ -29,6 +29,7 @@ if he/she wishes to save the screen content before "New", "Open" or "Exit"
 if it has been modified since the last "Save" or "Save As" operation.
 */
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -44,6 +45,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
@@ -63,6 +66,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
@@ -93,7 +97,7 @@ import javax.swing.text.DefaultCaret;
  * // TODO (des)tabulació en bloc
  *
  */
-public class TextEdit5 extends JFrame implements ActionListener {
+public class TextEdit5 extends JFrame {
 
     private static final long serialVersionUID = 2054269406974939700L;
 
@@ -102,25 +106,6 @@ public class TextEdit5 extends JFrame implements ActionListener {
     final Color backgroundColor = Color.WHITE;
     final Color selectionBackgroundColor = Color.BLUE;
     final Color selectionColor = Color.WHITE;
-
-    private final EditorManager editorManager;
-
-    private final JTextArea textArea = new JTextArea();// TODO
-    private final JMenu fileMenu = new JMenu("File");
-    private final JMenuBar menuBar = new JMenuBar();
-    private final JMenuItem newItem = new JMenuItem("New");
-    private final JMenuItem openItem = new JMenuItem("Open");
-    private final JMenuItem saveItem = new JMenuItem("Save");
-    private final JMenuItem saveAsItem = new JMenuItem("Save As");
-    private final JMenuItem exitItem = new JMenuItem("Exit");
-
-    JButton lineWrapButton;
-    JButton recordMacroButton;
-    JButton playMacroButton;
-
-    JTextField cmdTextField;
-
-    private String filename = null; // set by "Open" or "Save As"
 
     public static void main(String args[]) {
         // JFrame.setDefaultLookAndFeelDecorated(true);
@@ -132,6 +117,236 @@ public class TextEdit5 extends JFrame implements ActionListener {
         });
     }
 
+    class EditorPane extends JPanel {
+
+        private static final long serialVersionUID = -3040324544220338224L;
+
+        String filename; // set by "Open" or "Save As"
+        final JTextArea textArea;
+
+        final JMenu fileMenu = new JMenu("File");
+        final JMenuBar menuBar = new JMenuBar();
+        final JMenuItem newItem = new JMenuItem("New");
+        final JMenuItem openItem = new JMenuItem("Open");
+        final JMenuItem saveItem = new JMenuItem("Save");
+        final JMenuItem saveAsItem = new JMenuItem("Save As");
+        final JMenuItem exitItem = new JMenuItem("Exit");
+
+        final JButton lineWrapButton;
+        final JButton recordMacroButton;
+        final JButton playMacroButton;
+        final JTextField cmdTextField;
+
+        public EditorPane(String filename) {
+            super(new BorderLayout());
+            this.filename = filename;
+
+            this.textArea = new JTextArea();
+            EditorManager editorManager = new EditorManager(textArea);
+
+            fileMenu.add(newItem);
+            fileMenu.add(openItem);
+            fileMenu.add(saveItem);
+            fileMenu.add(saveAsItem);
+            fileMenu.add(exitItem);
+
+            menuBar.add(fileMenu);
+            add(menuBar, BorderLayout.NORTH);
+
+            lineWrapButton = new JButton("wrap");
+            lineWrapButton.setMargin(new Insets(0, 0, 0, 0));
+            menuBar.add(lineWrapButton);
+
+            recordMacroButton = new JButton("Rec");
+            recordMacroButton.setMargin(new Insets(0, 0, 0, 0));
+            menuBar.add(recordMacroButton);
+
+            playMacroButton = new JButton("Play");
+            playMacroButton.setMargin(new Insets(0, 0, 0, 0));
+            menuBar.add(playMacroButton);
+
+            {
+                cmdTextField = new JTextField(50);
+                cmdTextField.addKeyListener(new KeyListener() {
+                    @Override
+                    public void keyTyped(KeyEvent e) {
+                    }
+
+                    @Override
+                    public void keyPressed(KeyEvent e) {
+                        if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+                            textArea.requestFocus();
+                            e.consume();
+                        }
+                    }
+
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                    }
+                });
+                menuBar.add(cmdTextField);
+            }
+
+            ActionListener actionListener = new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (e.getSource() == newItem) {
+                        textArea.setText("");
+                    } else if (e.getSource() == openItem) {
+                        loadFile();
+                    } else if (e.getSource() == saveItem) {
+                        saveFile(filename);
+                    } else if (e.getSource() == saveAsItem) {
+                        saveFile(null);
+                    } else if (e.getSource() == exitItem) {
+                        System.exit(0);
+                    } else if (e.getSource() == lineWrapButton) {
+                        textArea.setLineWrap(!textArea.getLineWrap());
+                        textArea.setWrapStyleWord(textArea.getLineWrap());
+                        textArea.requestFocus();
+                    } else if (e.getSource() == recordMacroButton) {
+                        if (editorManager.isRecording()) {
+                            editorManager.recordMacroStop();
+                            recordMacroButton.setText("Rec");
+                        } else {
+                            editorManager.recordMacroStart();
+                            recordMacroButton.setText("Recording");
+                        }
+                        textArea.requestFocus();
+                    } else if (e.getSource() == playMacroButton) {
+                        editorManager.playMacro();
+                        textArea.requestFocus();
+                    } else if (e.getSource() == cmdTextField) {
+                        System.out.println(cmdTextField.getText());
+                        editorManager.interpret(cmdTextField.getText());
+                        textArea.requestFocus();
+                    }
+                }
+            };
+
+            newItem.addActionListener(actionListener);
+            openItem.addActionListener(actionListener);
+            saveItem.addActionListener(actionListener);
+            saveAsItem.addActionListener(actionListener);
+            exitItem.addActionListener(actionListener);
+            lineWrapButton.addActionListener(actionListener);
+            recordMacroButton.addActionListener(actionListener);
+            playMacroButton.addActionListener(actionListener);
+            cmdTextField.addActionListener(actionListener);
+
+            // JScrollPane scrollPane = new JScrollPane(textArea);
+            // add(scrollPane);
+
+            // JTextArea textArea = new JTextArea();// TODO
+            JScrollPane scrollPane = new JScrollPane(textArea);
+            add(scrollPane, BorderLayout.CENTER);
+
+            {
+                TextLineNumber tln = new TextLineNumber(textArea);
+                tln.setMinimumDisplayDigits(3);
+                scrollPane.setRowHeaderView(tln);
+            }
+            {
+                textArea.setLineWrap(true);
+                textArea.setWrapStyleWord(textArea.getLineWrap());
+
+                Font font = new Font("Monospaced", Font.BOLD, 12);
+                textArea.setFont(font);
+            }
+
+            textArea.setEditable(true);
+
+            textArea.setSelectionColor(selectionBackgroundColor);
+            textArea.setSelectedTextColor(selectionColor);
+
+            textArea.setBackground(backgroundColor);
+            textArea.setBorder(BorderFactory.createMatteBorder(0, 5, 0, 0, textArea.getBackground()));
+
+            loadFile(filename);
+
+            DefaultCaret c = new DefaultCaret();
+            textArea.setCaret(c);
+
+            textArea.getCaret().setBlinkRate(500);
+            textArea.setCaretColor(cursorColor);
+            textArea.setCaretPosition(0);
+
+            KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                    .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager, cmdTextField));
+
+            textArea.getCaret().setVisible(true);
+            textArea.requestFocus();
+
+        }
+
+        public void requestFocus() {
+            textArea.requestFocus();
+        }
+
+        public String getFilenameShort() {
+            return "(short)";
+        }
+
+        public String getFilenameFull() {
+            return filename;
+        }
+
+        // Prompt user to enter filename and load file. Allow user to cancel.
+        // If file is not found, pop up an error and leave screen contents
+        // and filename unchanged.
+        private void loadFile() {
+            JFileChooser fc = new JFileChooser();
+            String name = null;
+            if (fc.showOpenDialog(null) != JFileChooser.CANCEL_OPTION) {
+                name = fc.getSelectedFile().getAbsolutePath();
+            } else {
+                return; // user cancelled
+            }
+            loadFile(name);
+        }
+
+        private void loadFile(String name) {
+            try {
+                File f = new File(name);
+                Scanner in = new Scanner(f); // might fail
+                filename = name;
+                textArea.setText("");
+                while (in.hasNext()) {
+                    textArea.append(in.nextLine() + "\n");
+                }
+                in.close();
+            } catch (FileNotFoundException e) {
+                JOptionPane.showMessageDialog(null, "File not found: " + name, "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        // Save named file. If name is null, prompt user and assign to filename.
+        // Allow user to cancel, leaving filename null. Tell user if save is
+        // successful.
+        private void saveFile(String name) {
+            if (name == null) { // get filename from user
+                JFileChooser fc = new JFileChooser();
+                if (fc.showSaveDialog(null) != JFileChooser.CANCEL_OPTION) {
+                    name = fc.getSelectedFile().getAbsolutePath();
+                }
+            }
+            if (name != null) { // else user cancelled
+                try {
+                    Formatter out = new Formatter(new File(name)); // might fail
+                    filename = name;
+                    out.format("%s", textArea.getText());
+                    out.close();
+                    JOptionPane.showMessageDialog(null, "Saved to " + filename, "Save File", JOptionPane.PLAIN_MESSAGE);
+                } catch (FileNotFoundException e) {
+                    JOptionPane.showMessageDialog(null, "Cannot write to file: " + name, "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+
+    }
+
     // Constructor: create a text editor with a menu
     public TextEdit5() {
         super("Supra Ed");
@@ -141,57 +356,22 @@ public class TextEdit5 extends JFrame implements ActionListener {
         // ImageIcon icon = createImageIcon("images/middle.gif");
         add(tabbedPane);
 
-        // Create menu and add listeners
-        fileMenu.add(newItem);
-        fileMenu.add(openItem);
-        fileMenu.add(saveItem);
-        fileMenu.add(saveAsItem);
-        fileMenu.add(exitItem);
-        newItem.addActionListener(this);
-        openItem.addActionListener(this);
-        saveItem.addActionListener(this);
-        saveAsItem.addActionListener(this);
-        exitItem.addActionListener(this);
-        menuBar.add(fileMenu);
-        setJMenuBar(menuBar);
+        EditorPane p1 = new EditorPane("/home/mhoms/tableman.properties");
+        tabbedPane.addTab(p1.getFilenameShort(), null, p1, p1.getFilenameFull());
+        tabbedPane.setSelectedComponent(p1);
 
-        lineWrapButton = new JButton("wrap");
-        lineWrapButton.setMargin(new Insets(0, 0, 0, 0));
-        lineWrapButton.addActionListener(this);
-        menuBar.add(lineWrapButton);
+        // loadFile("/home/mhoms/tableman.properties");
+        // loadFile("d:/c.properties");
+        // loadFile("/home/mhoms/dbman.script");
+        // loadFile("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
 
-        recordMacroButton = new JButton("Rec");
-        recordMacroButton.setMargin(new Insets(0, 0, 0, 0));
-        recordMacroButton.addActionListener(this);
-        menuBar.add(recordMacroButton);
+        EditorPane p2 = new EditorPane("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
+        tabbedPane.addTab(p2.getFilenameShort(), null, p2, p2.getFilenameFull());
+        tabbedPane.setSelectedComponent(p2);
 
-        playMacroButton = new JButton("Play");
-        playMacroButton.setMargin(new Insets(0, 0, 0, 0));
-        playMacroButton.addActionListener(this);
-        menuBar.add(playMacroButton);
-
-        {
-            this.cmdTextField = new JTextField(50);
-            cmdTextField.addActionListener(this);
-            cmdTextField.addKeyListener(new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent e) {
-                }
-
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
-                        textArea.requestFocus();
-                        e.consume();
-                    }
-                }
-
-                @Override
-                public void keyReleased(KeyEvent e) {
-                }
-            });
-            menuBar.add(cmdTextField);
-        }
+        int tabSelected = tabbedPane.getSelectedIndex();
+        ((EditorPane) tabbedPane.getComponent(tabSelected)).textArea.requestFocus();
+        // p2.textArea.requestFocus();
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         {
@@ -200,55 +380,22 @@ public class TextEdit5 extends JFrame implements ActionListener {
             setSize(new Dimension(bounds.width / 2/* FIXME */, bounds.height / 2/* FIXME */));
         }
 
-        // JScrollPane scrollPane = new JScrollPane(textArea);
-        // add(scrollPane);
+        tabbedPane.addFocusListener(new FocusListener() {
 
-        // JTextArea textArea = new JTextArea();// TODO
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        tabbedPane.addTab("jou *", null, scrollPane, "Does nothing");
+            @Override
+            public void focusGained(FocusEvent e) {
+                JTabbedPane tabs = ((JTabbedPane) e.getSource());
+                ((EditorPane)tabs.getSelectedComponent()).textArea.requestFocus();
+                // ((JTabbedPane) e.getSource()).gettextArea.requestFocus();
+            }
 
-        {
-            TextLineNumber tln = new TextLineNumber(textArea);
-            tln.setMinimumDisplayDigits(3);
-            scrollPane.setRowHeaderView(tln);
-        }
-        {
-            textArea.setLineWrap(true);
-            textArea.setWrapStyleWord(textArea.getLineWrap());
-
-            Font font = new Font("Monospaced", Font.BOLD, 12);
-            textArea.setFont(font);
-        }
-
-        textArea.setEditable(true);
-
-        textArea.setSelectionColor(selectionBackgroundColor);
-        textArea.setSelectedTextColor(selectionColor);
-
-        textArea.setBackground(backgroundColor);
-        textArea.setBorder(BorderFactory.createMatteBorder(0, 5, 0, 0, textArea.getBackground()));
-
-        // loadFile("/home/mhoms/tableman.properties");
-        // loadFile("d:/c.properties");
-        // loadFile("/home/mhoms/dbman.script");
-        loadFile("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
-        // loadFile("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
+            @Override
+            public void focusLost(FocusEvent e) {
+            }
+        });
 
         UIManager.put("Caret.width", 3);
-        DefaultCaret c = new DefaultCaret();
-        textArea.setCaret(c);
-
-        textArea.getCaret().setBlinkRate(500);
-        textArea.setCaretColor(cursorColor);
-        textArea.setCaretPosition(0);
-
-        this.editorManager = new EditorManager(textArea);
-        KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                .addKeyEventDispatcher(new MyKeyEventDispatcher(editorManager));
-
         setVisible(true);
-        textArea.getCaret().setVisible(true);
-        textArea.requestFocus();
     }
 
     static class EditorManager {
@@ -772,10 +919,12 @@ public class TextEdit5 extends JFrame implements ActionListener {
     class MyKeyEventDispatcher implements KeyEventDispatcher {
 
         final EditorManager utils;
+        final JTextField cmdTextField;
 
-        public MyKeyEventDispatcher(EditorManager utils) {
+        public MyKeyEventDispatcher(EditorManager utils, JTextField cmdTextField) {
             super();
             this.utils = utils;
+            this.cmdTextField = cmdTextField;
         }
 
         boolean controlPressed = false;
@@ -987,92 +1136,4 @@ public class TextEdit5 extends JFrame implements ActionListener {
 
     }
 
-    // Handle menu events
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == newItem) {
-            textArea.setText("");
-        } else if (e.getSource() == openItem) {
-            loadFile();
-        } else if (e.getSource() == saveItem) {
-            saveFile(filename);
-        } else if (e.getSource() == saveAsItem) {
-            saveFile(null);
-        } else if (e.getSource() == exitItem) {
-            System.exit(0);
-        } else if (e.getSource() == lineWrapButton) {
-            textArea.setLineWrap(!textArea.getLineWrap());
-            textArea.setWrapStyleWord(textArea.getLineWrap());
-            textArea.requestFocus();
-        } else if (e.getSource() == recordMacroButton) {
-            if (editorManager.isRecording()) {
-                editorManager.recordMacroStop();
-                recordMacroButton.setText("Rec");
-            } else {
-                editorManager.recordMacroStart();
-                recordMacroButton.setText("Recording");
-            }
-            textArea.requestFocus();
-        } else if (e.getSource() == playMacroButton) {
-            editorManager.playMacro();
-            textArea.requestFocus();
-        } else if (e.getSource() == cmdTextField) {
-            System.out.println(cmdTextField.getText());
-            editorManager.interpret(cmdTextField.getText());
-            textArea.requestFocus();
-        }
-    }
-
-    // Prompt user to enter filename and load file. Allow user to cancel.
-    // If file is not found, pop up an error and leave screen contents
-    // and filename unchanged.
-    private void loadFile() {
-        JFileChooser fc = new JFileChooser();
-        String name = null;
-        if (fc.showOpenDialog(null) != JFileChooser.CANCEL_OPTION) {
-            name = fc.getSelectedFile().getAbsolutePath();
-        } else {
-            return; // user cancelled
-        }
-        loadFile(name);
-    }
-
-    private void loadFile(String name) {
-        try {
-            File f = new File(name);
-            Scanner in = new Scanner(f); // might fail
-            filename = name;
-            textArea.setText("");
-            while (in.hasNext()) {
-                textArea.append(in.nextLine() + "\n");
-            }
-            in.close();
-        } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "File not found: " + name, "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    // Save named file. If name is null, prompt user and assign to filename.
-    // Allow user to cancel, leaving filename null. Tell user if save is
-    // successful.
-    private void saveFile(String name) {
-        if (name == null) { // get filename from user
-            JFileChooser fc = new JFileChooser();
-            if (fc.showSaveDialog(null) != JFileChooser.CANCEL_OPTION) {
-                name = fc.getSelectedFile().getAbsolutePath();
-            }
-        }
-        if (name != null) { // else user cancelled
-            try {
-                Formatter out = new Formatter(new File(name)); // might fail
-                filename = name;
-                out.format("%s", textArea.getText());
-                out.close();
-                JOptionPane.showMessageDialog(null, "Saved to " + filename, "Save File", JOptionPane.PLAIN_MESSAGE);
-            } catch (FileNotFoundException e) {
-                JOptionPane.showMessageDialog(null, "Cannot write to file: " + name, "Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
 }

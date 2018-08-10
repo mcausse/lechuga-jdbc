@@ -1,33 +1,4 @@
 package supraedit;
-/* TextEdit.java - a simple text editor - Matt Mahoney
-
-This program demonstrates simple text editing, menus, and load/save
-operations.  The program displays a menu bar with one menu (File) with
-5 menu items:
-
-New  - clears the screen.
-Open - prompts the user to enter a file name and loads it.
-Save - saves the file using the name specified in the last "Open" or
-       "Save As" command.  If there is no such name, then prompt for
-       a name as in "Save As".
-Save As - Prompts the user to enter a file name and saves the file.
-Exit - quits the program.
-
-"Open" and "Save As" use a dialog box that allows the user to navigate
-directories (a JFileChooser) to select a file.  The user has the option
-to cancel, in which case the screen and disk are not modified and the
-current name of the file is unchanged.  (The program is not exited).
-
-If the user specifies a nonexistent or unreadable file in "Open", then
-the operation is cancelled.  If the user specifies an invalid file name
-or tries to write to a file without write permission in "Save" or
-"Save As", then the operation is cancelled.  In both cases, an error
-dialog appears and the current name of the file (if any) is unchanged.
-
-Unlike most text editors, the program does not bother to ask the user
-if he/she wishes to save the screen content before "New", "Open" or "Exit"
-if it has been modified since the last "Save" or "Save As" operation.
-*/
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -44,13 +15,22 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.List;
-import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -64,9 +44,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
 import javax.swing.text.DefaultCaret;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoManager;
 
 /**
  * moviment de cursor complet, amb selecció. Accés a clipboard de sistema.
@@ -76,9 +62,12 @@ import javax.swing.text.DefaultCaret;
  * // XXX MACROS: el recording de macros registra tot lo de textarea i del
  * cmdInputText! Ho reprodeueix tot dins la mateixa pestanya!
  *
- * // TODO selecció per mouse
+ * // XXX selecció per mouse
  *
- * // TODO undo
+ * // XXX undo:
+ * https://stackoverflow.com/questions/2547404/using-undo-and-redo-for-jtextarea
+ * https://web.archive.org/web/20100114122417/http://exampledepot.com/egs/javax.swing.undo/UndoText.html
+ *
  *
  * // XXX pestanyes
  *
@@ -86,10 +75,11 @@ import javax.swing.text.DefaultCaret;
  *
  * // TODO replace (amb grouping si regexp=true)
  *
- * // TODO (multi) comandos inline (per input)
+ * // XXX (multi) comandos inline (per input)
  *
  * // TODO (des)tabulació en bloc
  *
+ * // TODO autoindent: en enter, segueix la tabulació de l'anterior fila.
  *
  *
  *
@@ -105,8 +95,11 @@ import javax.swing.text.DefaultCaret;
  * En cada tab hi ha l'àrea d'edició, i un input text: el cursor conmuta entre
  * aquests amb [Esc].
  *
- *
  * [Control+R] engega/atura la grabació de macro, [Control+P] la playa.
+ *
+ * [Control+Z] undo, [Control+Y] redo.
+ *
+ *
  *
  *
  */
@@ -114,6 +107,7 @@ public class TextEdit5 extends JFrame {
 
     private static final long serialVersionUID = 2054269406974939700L;
 
+    final Charset CHARSET = TextFileUtils.UTF8;
     final Color fontColor = Color.BLACK;
     final Color cursorColor = Color.RED;
     final Color backgroundColor = Color.WHITE;
@@ -150,6 +144,7 @@ public class TextEdit5 extends JFrame {
         final JMenuItem exitItem = new JMenuItem("Exit");
 
         final JButton lineWrapButton;
+
         final JButton recordMacroButton;
         final JButton playMacroButton;
         final JTextField cmdTextField;
@@ -217,177 +212,10 @@ public class TextEdit5 extends JFrame {
                     } else if (e.getSource() == playMacroButton) {
                         macroRecording.playMacro();
                         textArea.requestFocus();
-                    } else if (e.getSource() == cmdTextField) {
-
-                        /**
-                         * <pre>
-                        recording: java.awt.event.KeyEvent[KEY_PRESSED,keyCode=10,keyText=Enter,keyChar=Enter,keyLocation=KEY_LOCATION_STANDARD,rawCode=36,primaryLevelUnicode=10,scancode=0,extendedKeyCode=0xa] on javax.swing.JTextArea[,0,0,579x10920,layout=javax.swing.plaf.basic.BasicTextUI$UpdateHandler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.border.MatteBorder@261be378,flags=296,maximumSize=,minimumSize=,preferredSize=,caretColor=java.awt.Color[r=255,g=0,b=0],disabledTextColor=javax.swing.plaf.ColorUIResource[r=184,g=207,b=229],editable=true,margin=javax.swing.plaf.InsetsUIResource[top=0,left=0,bottom=0,right=0],selectedTextColor=java.awt.Color[r=255,g=255,b=255],selectionColor=java.awt.Color[r=0,g=0,b=255],colums=0,columWidth=0,rows=0,rowHeight=0,word=true,wrap=true]
-                        recording: java.awt.event.KeyEvent[KEY_TYPED,keyCode=0,keyText=Unknown keyCode: 0x0,keyChar=Enter,keyLocation=KEY_LOCATION_UNKNOWN,rawCode=0,primaryLevelUnicode=10,scancode=0,extendedKeyCode=0x0] on javax.swing.JTextArea[,0,0,579x10920,invalid,layout=javax.swing.plaf.basic.BasicTextUI$UpdateHandler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.border.MatteBorder@261be378,flags=296,maximumSize=,minimumSize=,preferredSize=,caretColor=java.awt.Color[r=255,g=0,b=0],disabledTextColor=javax.swing.plaf.ColorUIResource[r=184,g=207,b=229],editable=true,margin=javax.swing.plaf.InsetsUIResource[top=0,left=0,bottom=0,right=0],selectedTextColor=java.awt.Color[r=255,g=255,b=255],selectionColor=java.awt.Color[r=0,g=0,b=255],colums=0,columWidth=0,rows=0,rowHeight=0,word=true,wrap=true]
-                        recording: java.awt.event.KeyEvent[KEY_RELEASED,keyCode=10,keyText=Enter,keyChar=Enter,keyLocation=KEY_LOCATION_STANDARD,rawCode=36,primaryLevelUnicode=10,scancode=0,extendedKeyCode=0xa] on javax.swing.JTextArea[,0,0,579x10935,layout=javax.swing.plaf.basic.BasicTextUI$UpdateHandler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.border.MatteBorder@261be378,flags=296,maximumSize=,minimumSize=,preferredSize=,caretColor=java.awt.Color[r=255,g=0,b=0],disabledTextColor=javax.swing.plaf.ColorUIResource[r=184,g=207,b=229],editable=true,margin=javax.swing.plaf.InsetsUIResource[top=0,left=0,bottom=0,right=0],selectedTextColor=java.awt.Color[r=255,g=255,b=255],selectionColor=java.awt.Color[r=0,g=0,b=255],colums=0,columWidth=0,rows=0,rowHeight=0,word=true,wrap=true]
-                         * </pre>
-                         */
-                        // Component source, int id, long when, int modifiers,
-                        // int keyCode, char keyChar
-
-                        // FIXME jou
-                        System.err.println(e);
-
-                        // FIXME jou
-                        KeyEvent enter0 = new KeyEvent((Component) e.getSource(), KeyEvent.KEY_TYPED,
-                                System.currentTimeMillis(), e.getModifiers(), 0, (char) 0x10);
-
-                        macroRecording.record(enter0); // FIXME jou
-
-                        // TODO això és important: aquí es processa una línia de comanda des de l'input,
-                        // i ha de poder registrar-se com a macro
-                        // System.out.println(cmdTextField.getText());
-                        // macroRecording.interpret(cmdTextField.getText());
-                        // textArea.requestFocus();
-                        String cmd = cmdTextField.getText();
-                        if (cmd.startsWith("f")) {
-                            String cmdVal = cmd.substring(1);
-                            int textLength = textArea.getDocument().getLength();
-
-                            int findPos = textArea.getCaretPosition() + 1;
-                            if (findPos >= textLength) {
-                                textArea.setCaretPosition(textLength - 1);
-                                textArea.requestFocus();
-                                return;
-                            }
-                            int pos = textArea.getText().indexOf(cmdVal, findPos);
-                            if (pos < 0) {
-                                // no troba més: deixa el cursor a final de fitxer
-                                textArea.setCaretPosition(textLength - 1);
-                            } else {
-                                textArea.setCaretPosition(pos);
-                            }
-
-                            textArea.requestFocus();
-
-                            // TODO
-                            // try {
-                            // Highlighter highlighter = textArea.getHighlighter();
-                            // HighlightPainter painter = new
-                            // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
-                            // highlighter.addHighlight(pos, pos + text.length(), painter);
-                            // } catch (BadLocationException e) {
-                            // throw new RuntimeException(e);
-                            // }
-
-                            // TODO
-                            // JOptionPane.showMessageDialog(null, new JTePane(textArea));
-                        } else if (cmd.startsWith("F")) {
-
-                            String cmdVal = cmd.substring(1);
-                            // int textLength = textArea.getDocument().getLength();
-
-                            int findPos = textArea.getCaretPosition() - 1;
-                            if (findPos <= 0) {
-                                return;
-                            }
-                            int pos = textArea.getText().lastIndexOf(cmdVal, findPos);
-                            if (pos < 0) {
-                                // no troba més: deixa el cursor a inici de fitxer
-                                textArea.setCaretPosition(0);
-                            } else {
-                                textArea.setCaretPosition(pos);
-                            }
-
-                            textArea.requestFocus();
-
-                            // TODO
-                            // try {
-                            // Highlighter highlighter = textArea.getHighlighter();
-                            // HighlightPainter painter = new
-                            // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
-                            // highlighter.addHighlight(pos, pos + text.length(), painter);
-                            // } catch (BadLocationException e) {
-                            // throw new RuntimeException(e);
-                            // }
-
-                            // TODO
-                            // JOptionPane.showMessageDialog(null, new JTePane(textArea));
-
-                        }
                     }
+
                 }
             };
-
-            // /**
-            // * @param regexp p.ex. "@f\d{5}"
-            // */
-            // private void findForwardRegexp(String regexp) {
-            // Pattern p = Pattern.compile(regexp);
-            //
-            // int findPos = textArea.getCaretPosition() + 1;
-            // if (findPos >= getTextLength()) {
-            // textArea.setCaretPosition(getTextLength() - 1);
-            // return;
-            // }
-            //
-            // Matcher m = p.matcher(textArea.getText());
-            // if (m.find(findPos)) {
-            // textArea.setCaretPosition(m.start());
-            // } else {
-            // // no troba més: deixa el cursor a final de fitxer
-            // textArea.setCaretPosition(getTextLength() - 1);
-            // }
-            // }
-            //
-            // private void findForward(String text) {
-            // int findPos = textArea.getCaretPosition() + 1;
-            // if (findPos >= getTextLength()) {
-            // textArea.setCaretPosition(getTextLength() - 1);
-            // return;
-            // }
-            // int pos = textArea.getText().indexOf(text, findPos);
-            // if (pos < 0) {
-            // // no troba més: deixa el cursor a final de fitxer
-            // textArea.setCaretPosition(getTextLength() - 1);
-            // } else {
-            // textArea.setCaretPosition(pos);
-            // }
-            //
-            // // TODO
-            // // try {
-            // // Highlighter highlighter = textArea.getHighlighter();
-            // // HighlightPainter painter = new
-            // // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
-            // // highlighter.addHighlight(pos, pos + text.length(), painter);
-            // // } catch (BadLocationException e) {
-            // // throw new RuntimeException(e);
-            // // }
-            //
-            // // TODO
-            // // JOptionPane.showMessageDialog(null, new JTePane(textArea));
-            // }
-            //
-            // private void findBackward(String text) {
-            // int findPos = textArea.getCaretPosition() - 1;
-            // if (findPos <= 0) {
-            // return;
-            // }
-            // int pos = textArea.getText().lastIndexOf(text, findPos);
-            // if (pos < 0) {
-            // // no troba més: deixa el cursor a inici de fitxer
-            // textArea.setCaretPosition(0);
-            // } else {
-            // textArea.setCaretPosition(pos);
-            // }
-            //
-            // // TODO
-            // // try {
-            // // Highlighter highlighter = textArea.getHighlighter();
-            // // HighlightPainter painter = new
-            // // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
-            // // highlighter.addHighlight(pos, pos + text.length(), painter);
-            // // } catch (BadLocationException e) {
-            // // throw new RuntimeException(e);
-            // // }
-            //
-            // // TODO
-            // // JOptionPane.showMessageDialog(null, new JTePane(textArea));
-            // }
 
             newItem.addActionListener(actionListener);
             openItem.addActionListener(actionListener);
@@ -410,9 +238,56 @@ public class TextEdit5 extends JFrame {
 
             loadFile(filename);
 
+            {
+                final UndoManager undo = new UndoManager();
+                undo.discardAllEdits();
+                undo.setLimit(200);
+
+                textArea.getDocument().addUndoableEditListener(new UndoableEditListener() {
+                    @Override
+                    public void undoableEditHappened(UndoableEditEvent evt) {
+                        undo.addEdit(evt.getEdit());
+                    }
+                });
+
+                // Create an undo action and add it to the text component
+                textArea.getActionMap().put("Undo", new AbstractAction("Undo") {
+
+                    private static final long serialVersionUID = 6230534001961891325L;
+
+                    @Override
+                    public void actionPerformed(ActionEvent evt) {
+                        try {
+                            if (undo.canUndo()) {
+                                undo.undo();
+                            }
+                        } catch (CannotUndoException e) {
+                        }
+                    }
+                });
+
+                textArea.getInputMap().put(KeyStroke.getKeyStroke("control Z"), "Undo");
+
+                textArea.getActionMap().put("Redo", new AbstractAction("Redo") {
+
+                    private static final long serialVersionUID = 3505672699323520092L;
+
+                    @Override
+                    public void actionPerformed(ActionEvent evt) {
+                        try {
+                            if (undo.canRedo()) {
+                                undo.redo();
+                            }
+                        } catch (CannotRedoException e) {
+                        }
+                    }
+                });
+                textArea.getInputMap().put(KeyStroke.getKeyStroke("control Y"), "Redo");
+            }
+
             textArea.setLineWrap(true);
             textArea.setWrapStyleWord(textArea.getLineWrap());
-            Font font = new Font("Monospaced", Font.BOLD, 12);
+            Font font = new Font(Font.MONOSPACED, Font.PLAIN, 12);
             textArea.setFont(font);
             textArea.setEditable(true);
             textArea.setSelectionColor(selectionBackgroundColor);
@@ -433,9 +308,6 @@ public class TextEdit5 extends JFrame {
                 playMacroButton.doClick();
             };
 
-            // KeyEvent e;
-            // KeyboardFocusManager.getCurrentKeyboardFocusManager().dispatchKeyEvent(e);
-
             KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(
                     new MyKeyEventDispatcher(macroRecording, cmdTextField, onDoRecord, onDoPlay));
 
@@ -444,16 +316,13 @@ public class TextEdit5 extends JFrame {
         }
 
         public String getFilenameShort() {
-            return "(short)";
+            return new File(filename).getName();
         }
 
         public String getFilenameFull() {
             return filename;
         }
 
-        // Prompt user to enter filename and load file. Allow user to cancel.
-        // If file is not found, pop up an error and leave screen contents
-        // and filename unchanged.
         private void loadFile() {
             JFileChooser fc = new JFileChooser();
             String name = null;
@@ -463,26 +332,18 @@ public class TextEdit5 extends JFrame {
                 return; // user cancelled
             }
             loadFile(name);
+            this.filename = name;
         }
 
         private void loadFile(String name) {
             try {
                 File f = new File(name);
-                Scanner in = new Scanner(f); // might fail
-                filename = name;
-                textArea.setText("");
-                while (in.hasNext()) {
-                    textArea.append(in.nextLine() + "\n");
-                }
-                in.close();
-            } catch (FileNotFoundException e) {
-                JOptionPane.showMessageDialog(null, "File not found: " + name, "Error", JOptionPane.ERROR_MESSAGE);
+                textArea.setText(TextFileUtils.read(f, CHARSET));
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Cannot load file: " + name, "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
 
-        // Save named file. If name is null, prompt user and assign to filename.
-        // Allow user to cancel, leaving filename null. Tell user if save is
-        // successful.
         private void saveFile(String name) {
             if (name == null) { // get filename from user
                 JFileChooser fc = new JFileChooser();
@@ -492,12 +353,10 @@ public class TextEdit5 extends JFrame {
             }
             if (name != null) { // else user cancelled
                 try {
-                    Formatter out = new Formatter(new File(name)); // might fail
-                    filename = name;
-                    out.format("%s", textArea.getText());
-                    out.close();
+                    File f = new File(name);
+                    TextFileUtils.write(f, CHARSET, textArea.getText());
                     JOptionPane.showMessageDialog(null, "Saved to " + filename, "Save File", JOptionPane.PLAIN_MESSAGE);
-                } catch (FileNotFoundException e) {
+                } catch (Exception e) {
                     JOptionPane.showMessageDialog(null, "Cannot write to file: " + name, "Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
@@ -516,6 +375,8 @@ public class TextEdit5 extends JFrame {
         add(tabbedPane);
 
         EditorPane p1 = new EditorPane("/home/mhoms/tableman.properties");
+        // EditorPane p1 = new
+        // EditorPane("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
         tabbedPane.addTab(p1.getFilenameShort(), null, p1, p1.getFilenameFull());
         tabbedPane.setSelectedComponent(p1);
 
@@ -525,6 +386,7 @@ public class TextEdit5 extends JFrame {
         // loadFile("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
 
         EditorPane p2 = new EditorPane("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
+        // EditorPane p2 = new EditorPane("d:/a.txt");
         tabbedPane.addTab(p2.getFilenameShort(), null, p2, p2.getFilenameFull());
         tabbedPane.setSelectedComponent(p2);
 
@@ -535,7 +397,9 @@ public class TextEdit5 extends JFrame {
         {
             GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
             Rectangle bounds = env.getMaximumWindowBounds();
-            setSize(new Dimension(bounds.width / 2/* FIXME */, bounds.height / 2/* FIXME */));
+            // setSize(new Dimension(bounds.width / 2/* FIXME */, bounds.height / 2/* FIXME
+            // */));
+            setSize(new Dimension(bounds.width, bounds.height));
         }
 
         tabbedPane.addFocusListener(new FocusListener() {
@@ -585,7 +449,7 @@ public class TextEdit5 extends JFrame {
         public void record(KeyEvent ke) {
             if (isRecording) {
                 this.eventsRecorded.add(ke);
-                System.out.println("recording: " + ke);
+                // System.out.println("recording: " + ke);
             }
         }
 
@@ -596,9 +460,6 @@ public class TextEdit5 extends JFrame {
         public void playMacro() {
             isRecording = false;
             for (KeyEvent e : eventsRecorded) {
-
-                System.out.println("playing: " + e);
-
                 if (e.getSource() == textArea) {
                     cmdTextField.requestFocus();// TODO ?
                     textArea.dispatchEvent(new KeyEvent((Component) e.getSource(), e.getID(),
@@ -607,8 +468,6 @@ public class TextEdit5 extends JFrame {
                     cmdTextField.requestFocus();// TODO ?
                     cmdTextField.dispatchEvent(new KeyEvent((Component) e.getSource(), e.getID(),
                             System.currentTimeMillis(), e.getModifiers(), e.getKeyCode(), e.getKeyChar()));
-                } else {
-                    System.err.println(e);
                 }
             }
         }
@@ -658,30 +517,115 @@ public class TextEdit5 extends JFrame {
                 }
             }
 
-            // if (e.getSource() == cmdTextField) {
-            if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == cmdTextField) {
+            if (e.getSource() == cmdTextField) {
 
                 if (e.getID() == KeyEvent.KEY_TYPED) {
                     if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
                         macroRecording.getTextArea().requestFocus();
-                        // e.consume();
                     }
                 }
 
-                // if (e.getKeyChar() == KeyEvent.VK_ENTER) {
-                // System.out.println("enter");
-                // }
+                if (e.getID() == KeyEvent.KEY_TYPED && e.getKeyChar() == KeyEvent.VK_ENTER) {
+                    // System.out.println("enter");
+
+                    JTextArea textArea = macroRecording.getTextArea();
+
+                    String cmd = cmdTextField.getText();
+                    // System.out.println("cmd: " + cmd);
+                    if (cmd.startsWith("f")) {
+                        String cmdVal = cmd.substring(1);
+                        int textLength = macroRecording.getTextArea().getDocument().getLength();
+
+                        int findPos = textArea.getCaretPosition() + 1;
+                        if (findPos >= textLength) {
+                            textArea.setCaretPosition(textLength);
+                            textArea.requestFocus();
+                        } else {
+                            int pos = textArea.getText().indexOf(cmdVal, findPos);
+                            if (pos < 0) {
+                                // no troba més: deixa el cursor a final de fitxer
+                                textArea.setCaretPosition(textLength);
+                            } else {
+                                textArea.setCaretPosition(pos);
+                            }
+                        }
+
+                        textArea.requestFocus();
+
+                        // // TODO
+                        // try {
+                        // int pos = textArea.getCaretPosition();
+                        // Highlighter highlighter = textArea.getHighlighter();
+                        // HighlightPainter painter = new
+                        // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+                        // highlighter.addHighlight(pos, pos + textLength, painter);
+                        // } catch (BadLocationException ex) {
+                        // throw new RuntimeException(ex);
+                        // }
+
+                        // TODO
+                        // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+                    } else if (cmd.startsWith("F")) {
+
+                        String cmdVal = cmd.substring(1);
+                        // int textLength = textArea.getDocument().getLength();
+
+                        int findPos = textArea.getCaretPosition() - 1;
+                        if (findPos <= 0) {
+                        } else {
+                            int pos = textArea.getText().lastIndexOf(cmdVal, findPos);
+                            if (pos < 0) {
+                                // no troba més: deixa el cursor a inici de fitxer
+                                textArea.setCaretPosition(0);
+                            } else {
+                                textArea.setCaretPosition(pos);
+                            }
+                        }
+
+                        textArea.requestFocus();
+
+                        // TODO
+                        // try {
+                        // Highlighter highlighter = textArea.getHighlighter();
+                        // HighlightPainter painter = new
+                        // DefaultHighlighter.DefaultHighlightPainter(Color.pink);
+                        // highlighter.addHighlight(pos, pos + text.length(), painter);
+                        // } catch (BadLocationException e) {
+                        // throw new RuntimeException(e);
+                        // }
+
+                        // TODO
+                        // JOptionPane.showMessageDialog(null, new JTePane(textArea));
+                    } else if (cmd.startsWith("@f")) {
+                        String regexp = cmd.substring(2);
+                        int textLength = textArea.getDocument().getLength();
+
+                        Pattern p = Pattern.compile(regexp);
+
+                        int findPos = textArea.getCaretPosition() + 1;
+                        if (findPos >= textLength) {
+                            textArea.setCaretPosition(textLength);
+                        } else {
+                            Matcher m = p.matcher(textArea.getText());
+                            if (m.find(findPos)) {
+                                textArea.setCaretPosition(m.start());
+                            } else {
+                                // no troba més: deixa el cursor a final de fitxer
+                                textArea.setCaretPosition(textLength);
+                            }
+                        }
+
+                        textArea.requestFocus();
+                    }
+                }
 
                 /**
-                 * IMPORTANTISSIM: REGISTRA TOT LO NO CONSUMIT!!!!!
+                 * IMPORTANTISSIM: REGISTRA TOT LO TECLEJAT EN L'INPUT-TEXT DE COMANDES
                  */
-                // if (!e.isConsumed()) {
                 macroRecording.record(e);
-                // }
             }
 
-            // if (e.getSource() == macroRecording) {
-            if (KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == macroRecording.getTextArea()) {
+            if (e.getSource() == macroRecording.getTextArea()) {
 
                 if (e.getID() == KeyEvent.KEY_PRESSED) {
 
@@ -690,7 +634,6 @@ public class TextEdit5 extends JFrame {
                     switch (key) {
                     case KeyEvent.VK_CONTROL:
                         this.controlPressed = true;
-                        // System.out.println(controlPressed);
                         break;
                     case KeyEvent.VK_LEFT: {
 
@@ -718,7 +661,6 @@ public class TextEdit5 extends JFrame {
                     }
                     case KeyEvent.VK_ESCAPE: {
                         cmdTextField.requestFocus();
-                        e.consume();
                         break;
                     }
                     case KeyEvent.VK_R: {
@@ -763,6 +705,59 @@ public class TextEdit5 extends JFrame {
             return false;
         }
 
+    }
+
+}
+
+class TextFileUtils {
+
+    public static final Charset ISO88591 = Charset.forName("ISO-8859-1");
+    public static final Charset UTF8 = Charset.forName("UTF8");
+    public static final Charset Cp1252 = Charset.forName("Cp1252");
+
+    public static String read(File f, Charset charset) {
+
+        BufferedReader b = null;
+        try {
+            StringBuilder r = new StringBuilder();
+
+            b = new BufferedReader(new InputStreamReader(new FileInputStream(f), charset));
+            String line;
+            while ((line = b.readLine()) != null) {
+                r.append(line);
+                r.append('\n');
+            }
+            return r.toString();
+
+        } catch (IOException e) {
+            throw new RuntimeException("error reading file: " + f, e);
+        } finally {
+            if (b != null) {
+                try {
+                    b.close();
+                } catch (IOException e) {
+                    //
+                }
+            }
+        }
+    }
+
+    public static void write(File f, Charset charset, String text) {
+        Writer w = null;
+        try {
+            w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), charset));
+            w.write(text);
+        } catch (IOException e) {
+            throw new RuntimeException("error writing file: " + f, e);
+        } finally {
+            if (w != null) {
+                try {
+                    w.close();
+                } catch (IOException e) {
+                    //
+                }
+            }
+        }
     }
 
 }

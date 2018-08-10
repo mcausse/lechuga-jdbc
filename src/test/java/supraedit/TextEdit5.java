@@ -68,10 +68,7 @@ import javax.swing.undo.UndoManager;
  *
  * // XXX selecció per mouse
  *
- * // XXX undo:
- * https://stackoverflow.com/questions/2547404/using-undo-and-redo-for-jtextarea
- * https://web.archive.org/web/20100114122417/http://exampledepot.com/egs/javax.swing.undo/UndoText.html
- *
+ * // XXX undo
  *
  * // XXX pestanyes
  *
@@ -85,7 +82,7 @@ import javax.swing.undo.UndoManager;
  *
  * // TODO autoindent: en enter, segueix la tabulació de l'anterior fila.
  *
- * // TODO XXX tractar possibles encodings
+ * // XXX tractar possibles encodings
  *
  *
  * <h1>Supra Ed <small>the ultimate editor for editing enthusiasts</small></h1>
@@ -158,6 +155,8 @@ public class TextEdit5 extends JFrame {
         private static final long serialVersionUID = -3040324544220338224L;
 
         String filename; // set by "Open" or "Save As"
+        String charsetName;
+
         final JTextArea textArea;
 
         final JMenu fileMenu = new JMenu("File");
@@ -174,9 +173,11 @@ public class TextEdit5 extends JFrame {
         final JButton playMacroButton;
         final JTextField cmdTextField;
 
-        public EditorPane(String filename) {
+        public EditorPane() {
+
             super(new BorderLayout());
-            this.filename = filename;
+            // this.filename = filename;
+            // this.charsetName = charsetName;
 
             fileMenu.add(newItem);
             fileMenu.add(openItem);
@@ -214,9 +215,9 @@ public class TextEdit5 extends JFrame {
                     } else if (e.getSource() == openItem) {
                         loadFile();
                     } else if (e.getSource() == saveItem) {
-                        saveFile(filename, encodingStrings[0]);
+                        saveFile(filename);
                     } else if (e.getSource() == saveAsItem) {
-                        saveFile(null, encodingStrings[0]);
+                        saveFile(null);
                     } else if (e.getSource() == exitItem) {
                         System.exit(0);
                     } else if (e.getSource() == lineWrapButton) {
@@ -261,7 +262,8 @@ public class TextEdit5 extends JFrame {
                 scrollPane.setRowHeaderView(tln);
             }
 
-            loadFile(filename, encodingStrings[0]);
+            // if (filename != null)
+            // loadFile(filename, encodingStrings[0]);
 
             {
                 final UndoManager undo = new UndoManager();
@@ -332,9 +334,16 @@ public class TextEdit5 extends JFrame {
             Closure onDoPlay = () -> {
                 playMacroButton.doClick();
             };
+            Closure onCloseCurrTab = () -> {
+                JTabbedPane tabs = (JTabbedPane) cmdTextField.getParent().getParent().getParent();
+                int selectedIndex = tabs.getSelectedIndex();
+                tabs.remove(selectedIndex);
+                tabs.setSelectedIndex(tabs.getTabCount() - 1);
+                tabs.getComponent(tabs.getTabCount() - 1).requestFocus();
+            };
 
             KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(
-                    new MyKeyEventDispatcher(macroRecording, cmdTextField, onDoRecord, onDoPlay));
+                    new MyKeyEventDispatcher(macroRecording, cmdTextField, onDoRecord, onDoPlay, onCloseCurrTab));
 
             textArea.requestFocus();
 
@@ -346,6 +355,13 @@ public class TextEdit5 extends JFrame {
 
         public String getFilenameFull() {
             return filename;
+        }
+
+        protected void updateJTabbedPane() {
+            JTabbedPane tabs = ((JTabbedPane) getParent());
+            int selectedIndex = tabs.getSelectedIndex();
+            tabs.setTitleAt(selectedIndex, getFilenameShort() + "/" + charsetName);
+            tabs.setToolTipTextAt(selectedIndex, getFilenameFull());
         }
 
         private void loadFile() {
@@ -369,36 +385,66 @@ public class TextEdit5 extends JFrame {
             }
 
             // System.out.println(encodingCombo.getSelectedItem());
-            loadFile(name, encodingStrings[0]);
-            this.filename = name;
+            String charsetName = encodingStrings[encodingCombo.getSelectedIndex()];
+            loadFile(name, charsetName);
         }
 
         private void loadFile(String name, String charsetName) {
             try {
+
+                this.filename = name;
+                this.charsetName = charsetName;
+
                 File f = new File(name);
                 Charset charset = Charset.forName(charsetName);
                 textArea.setText(TextFileUtils.read(f, charset));
+
+                updateJTabbedPane();
+
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "Cannot load file: " + name, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Cannot load file: " + name + "\n" + ExceptionUtils.toString(e),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
             }
         }
 
-        private void saveFile(String name, String charsetName) {
+        private void saveFile(String name) {
             if (name == null) { // get filename from user
                 JFileChooser fc = new JFileChooser();
+
+                JComboBox<String> encodingCombo;
+                {
+
+                    encodingCombo = new JComboBox<>(encodingStrings);
+                    if (this.charsetName != null) {
+                        encodingCombo.setSelectedItem(this.charsetName);
+                    }
+                    encodingCombo.setSize(new Dimension(200, 50));
+                    JPanel p = new JPanel(new BorderLayout());
+                    p.add(encodingCombo, BorderLayout.NORTH);
+                    fc.setAccessory(p);
+                }
+
                 if (fc.showSaveDialog(null) != JFileChooser.CANCEL_OPTION) {
                     name = fc.getSelectedFile().getAbsolutePath();
                 }
+
+                this.charsetName = (String) encodingCombo.getSelectedItem();
+                this.filename = name;
             }
             if (name != null) { // else user cancelled
                 try {
                     File f = new File(name);
-                    Charset charset = Charset.forName(charsetName);
+                    Charset charset = Charset.forName(this.charsetName);
                     TextFileUtils.write(f, charset, textArea.getText());
-                    JOptionPane.showMessageDialog(null, "Saved to " + filename, "Save File", JOptionPane.PLAIN_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Saved to " + filename + " in " + charsetName, "Save File",
+                            JOptionPane.PLAIN_MESSAGE);
+                    updateJTabbedPane();
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(null, "Cannot write to file: " + name, "Error",
+                    JOptionPane.showMessageDialog(null,
+                            "Cannot write to file: " + name + "\n" + ExceptionUtils.toString(e), "Error",
                             JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
                 }
             }
         }
@@ -414,21 +460,32 @@ public class TextEdit5 extends JFrame {
         // ImageIcon icon = createImageIcon("images/middle.gif");
         add(tabbedPane);
 
-        EditorPane p1 = new EditorPane("/home/mhoms/tableman.properties");
-        // EditorPane p1 = new
-        // EditorPane("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
-        tabbedPane.addTab(p1.getFilenameShort(), null, p1, p1.getFilenameFull());
+        JPanel p0 = new JPanel();
+        tabbedPane.addTab("+", null, p0, "new buffer");
+        tabbedPane.setSelectedComponent(p0);
+
+        EditorPane p1 = new EditorPane();
+        tabbedPane.addTab("?", null, p1, "???");
         tabbedPane.setSelectedComponent(p1);
+
+        // EditorPane p1 = new EditorPane("/home/mhoms/tableman.properties", "UTF8");
+        // // EditorPane p1 = new
+        // //
+        // EditorPane("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
+        // tabbedPane.addTab(p1.getFilenameShort() + "/UTF8", null, p1,
+        // p1.getFilenameFull());
+        // tabbedPane.setSelectedComponent(p1);
 
         // loadFile("/home/mhoms/tableman.properties");
         // loadFile("d:/c.properties");
         // loadFile("/home/mhoms/dbman.script");
         // loadFile("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
 
-        EditorPane p2 = new EditorPane("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
-        // EditorPane p2 = new EditorPane("d:/a.txt");
-        tabbedPane.addTab(p2.getFilenameShort(), null, p2, p2.getFilenameFull());
-        tabbedPane.setSelectedComponent(p2);
+        // EditorPane p2 = new
+        // EditorPane("/home/mhoms/java/workospace/moncheta-2018-java8/PURITOS.TXT");
+        // // EditorPane p2 = new EditorPane("d:/a.txt");
+        // tabbedPane.addTab(p2.getFilenameShort(), null, p2, p2.getFilenameFull());
+        // tabbedPane.setSelectedComponent(p2);
 
         int tabSelected = tabbedPane.getSelectedIndex();
         ((EditorPane) tabbedPane.getComponent(tabSelected)).textArea.requestFocus();
@@ -445,7 +502,16 @@ public class TextEdit5 extends JFrame {
             @Override
             public void focusGained(FocusEvent e) {
                 JTabbedPane tabs = (JTabbedPane) e.getSource();
-                ((EditorPane) tabs.getSelectedComponent()).textArea.requestFocus();
+                if (tabs.getSelectedComponent() instanceof EditorPane) {
+                    ((EditorPane) tabs.getSelectedComponent()).textArea.requestFocus();
+                } else {
+                    // TODO new buffer
+                    EditorPane p1 = new EditorPane();
+                    // EditorPane p1 = new
+                    // EditorPane("C:\\Users\\mhoms.LINECOM\\git\\moncheta\\src\\test\\java\\supraedit\\TextEdit5.java");
+                    tabbedPane.addTab("?", null, p1, "???");
+                    tabbedPane.setSelectedComponent(p1);
+                }
             }
 
             @Override
@@ -519,14 +585,16 @@ public class TextEdit5 extends JFrame {
 
         final Closure onDoRecord;
         final Closure onDoPlay;
+        final Closure onCloseCurrTab;
 
         public MyKeyEventDispatcher(MacroRecording macroRecording, JTextField cmdTextField, Closure onDoRecord,
-                Closure onDoPlay) {
+                Closure onDoPlay, Closure onCloseCurrTab) {
             super();
             this.macroRecording = macroRecording;
             this.cmdTextField = cmdTextField;
             this.onDoRecord = onDoRecord;
             this.onDoPlay = onDoPlay;
+            this.onCloseCurrTab = onCloseCurrTab;
         }
 
         boolean controlPressed = false;
@@ -547,11 +615,19 @@ public class TextEdit5 extends JFrame {
                     this.altPressed = true;
                     e.consume();
                 }
+                if (key == KeyEvent.VK_CONTROL) {
+                    this.controlPressed = true;
+                    e.consume();
+                }
             }
             if (e.getID() == KeyEvent.KEY_RELEASED) {
                 int key = e.getKeyCode();
                 if (key == KeyEvent.VK_ALT) {
                     this.altPressed = false;
+                    e.consume();
+                }
+                if (key == KeyEvent.VK_CONTROL) {
+                    this.controlPressed = false;
                     e.consume();
                 }
             }
@@ -587,15 +663,16 @@ public class TextEdit5 extends JFrame {
                     int key = e.getKeyCode();
 
                     switch (key) {
-                    case KeyEvent.VK_CONTROL:
-                        this.controlPressed = true;
-                        break;
+                    // case KeyEvent.VK_CONTROL:
+                    // this.controlPressed = true;
+                    // break;
                     case KeyEvent.VK_SHIFT:
                         this.shiftPressed = true;
                         break;
                     case KeyEvent.VK_LEFT: {
 
                         if (altPressed) {
+                            // TODO fer per Closure
                             JTabbedPane tabs = (JTabbedPane) cmdTextField.getParent().getParent().getParent();
                             int selected = tabs.getSelectedIndex();
                             if (selected > 0) {
@@ -608,6 +685,7 @@ public class TextEdit5 extends JFrame {
                     case KeyEvent.VK_RIGHT: {
 
                         if (altPressed) {
+                            // TODO fer per Closure
                             JTabbedPane tabs = (JTabbedPane) cmdTextField.getParent().getParent().getParent();
                             int selected = tabs.getSelectedIndex();
                             if (selected < tabs.getTabCount() - 1) {
@@ -635,6 +713,14 @@ public class TextEdit5 extends JFrame {
                         }
                         break;
                     }
+                    case KeyEvent.VK_W: {
+                        if (controlPressed) {
+                            onCloseCurrTab.execute();
+                            e.consume();
+                        }
+                        break;
+                    }
+
                     case KeyEvent.VK_TAB: {
                         if (macroRecording.getTextArea().getSelectedText() != null) {
 
@@ -683,9 +769,9 @@ public class TextEdit5 extends JFrame {
                     int key = e.getKeyCode();
 
                     switch (key) {
-                    case KeyEvent.VK_CONTROL:
-                        this.controlPressed = false;
-                        break;
+                    // case KeyEvent.VK_CONTROL:
+                    // this.controlPressed = false;
+                    // break;
                     case KeyEvent.VK_SHIFT:
                         this.shiftPressed = false;
                         break;
@@ -728,8 +814,6 @@ public class TextEdit5 extends JFrame {
                         textArea.select(pos, pos + cmdVal.length());
                     }
                 }
-
-                // textArea.requestFocus();
 
                 // // TODO
                 // try {
@@ -805,7 +889,7 @@ public class TextEdit5 extends JFrame {
 
                 int gotoLine;
                 try {
-                    gotoLine = Integer.parseInt(cmd.substring(1));
+                    gotoLine = Integer.parseInt(cmd.substring(1)) - 1;
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(null, new JTextArea(ExceptionUtils.toString(e)));
                     throw new RuntimeException(e);
